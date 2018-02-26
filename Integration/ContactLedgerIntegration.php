@@ -17,7 +17,7 @@ class ContactLedgerIntegration extends AbstractIntegration
 {
     public function getName()
     {
-        return 'ClientLedger';
+        return 'ContactLedger';
     }
     
     public function getDisplayName()

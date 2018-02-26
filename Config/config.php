@@ -6,19 +6,17 @@ return [
     'author'      => 'Nicholai Bush',
     
     'services' => [
-        'other' => [
-            'mauticplugin.contactledger.entity.listener' => [
-                'class' => \MauticPlugin\MauticContactLedgerBundle\Entity\ContactListenr::class,
-                'arguments' => [
-                    'logger'
-                ],
+        'events' => [
+            'mautic.contactledger.eventlistener.lead' => [
+                'class' => \MauticPlugin\MauticContactLedgerBundle\EventListener\LeadSubscriber::class,
+                'arguments' => [],
             ],
         ],
     ],
     'models' => [
         'mautic.contactledger.model.entry' => [
             'class' => \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel::class,
-            'arguments' => []
+            'arguments' => [],
         ],
     ],
 ];
