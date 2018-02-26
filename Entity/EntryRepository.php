@@ -7,6 +7,17 @@ use Mautic\LeadBundle\Entity\Lead;
 
 class EntryEntity extends CommonRepository
 {
+
+    /**
+     * Defines default table alias for contact_ledger table.
+     *
+     * @return string
+     */
+    public function getTableAlias()
+    {
+        return 'cl';
+    }
+    
     /**
      * @param Lead
      *

@@ -1,0 +1,3 @@
+.gitignore
+mautic-contact-ledger.komodoproject
+/vendor
