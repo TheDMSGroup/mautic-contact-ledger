@@ -7,7 +7,7 @@ return [
     
     'services' => [
         'other' => [
-            'mautic.contactledger.helper.entity_listener' => [
+            'mauticplugin.contactledger.entity.listener' => [
                 'class' => \MauticPlugin\MauticContactLedgerBundle\Helper\ContactListenr::class,
                 'arguments' => [
                     'logger'
@@ -19,8 +19,8 @@ return [
         'mautic.contactledger.model.entry' => [
             'class' => \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel::class,
             'arguments' => []
-        ]
-    ]
+        ],
+    ],
 ];
 
 
