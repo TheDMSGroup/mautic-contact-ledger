@@ -9,17 +9,12 @@ return [
         'events' => [
             'mautic.contactledger.eventlistener.lead' => [
                 'class' => \MauticPlugin\MauticContactLedgerBundle\EventListener\LeadSubscriber::class,
-                'arguments' => [],
             ],
         ],
     ],
     'models' => [
         'mautic.contactledger.model.entry' => [
             'class' => \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel::class,
-            'arguments' => [],
         ],
     ],
 ];
-
-
-// 
