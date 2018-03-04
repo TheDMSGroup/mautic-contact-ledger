@@ -23,22 +23,28 @@ class EntryModel extends AbstractCommonModel
     }
     
     
-    public function buildActorFromObject($object_instance)
+    private function buildActorFromObject($object_instance)
     {
         $class = get_class($object_instance);
+        $id = $object_instance->getId();
         
     }
     
-    public function buildActorFromIdClass(int $id, string $class)
+    private function buildActorFromIdClass(int $id, string $class_name)
     {
-        if (!in_array($class, get_declared_classes())) {
-            $a = true;
-        }
     }
 
-    protected function findBundle($class)
+    protected function findBundle($class_name)
     {
-            
+        foreach (get_declared_classes() as $declared_class) {
+            if (preg_match('//', $declared_class)) {
+                
+                
+            }
+        }
+        if (in_array($class, get_declared_classes())) {
+                            
+        }
     }
 
     /**
