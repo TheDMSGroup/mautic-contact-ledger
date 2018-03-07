@@ -36,19 +36,17 @@ class Entry extends CommonEntity
     protected $campaign;
 
     /**
-     * Collectively, the bundle_name, class_name, and actor_id define the acting entity
-     *
      * @var string $bundleName package class_name is found in
      */
     private $bundleName;
 
     /**
-     * @var string $class_name type the actor belongs to
+     * @var string $className type the actor belongs to
      */
     private $className;
 
     /**
-     * @var int $actor_id identity of actor
+     * @var int $actorId identity of actor
      */
     private $actorId;
 
@@ -73,8 +71,6 @@ class Entry extends CommonEntity
     private $revenue;
 
     /**
-     * Metadata used by the ORM to handle the entity
-     *
      * @param Doctrine\ORM\Mapping\ClassMetadata $metadata
      */
     public static function loadMetadata(ORM\ClassMetadata $metadata)
@@ -218,7 +214,7 @@ class Entry extends CommonEntity
      */
     public function getClassName()
     {
-        return $this->class_name;
+        return $this->className;
     }
 
     /**

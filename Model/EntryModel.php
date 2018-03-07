@@ -5,16 +5,13 @@ namespace MauticPlugin\MauticContactLedgerBundle\Model;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
 use MauticPlugin\MauticContactLedgerBundle\Entity\Entry;
+
 /**
  * class EntryModel extends {@see \Mautic\CoreBundle\Model\AbstractCommonModel}
- *
- * @package \MauticPlugin\MauticContactLedgerBundle\Model
  */
 class EntryModel extends AbstractCommonModel
 {
     /**
-     * {@inheritdoc}
-     *
      * @return \MauticPlugin\MauticContactLedgerBundle\Entity\EntryRepository
      */
     public function getRepository()
@@ -64,7 +61,7 @@ class EntryModel extends AbstractCommonModel
                 foreach (get_declared_classes() as $namespaced) {
                     $pathParts = explode('\\', $namespaced);
                     $className = array_pop($pathParts);
-                    if ($pathPart === $entryActor[1]) {
+                    if ($className === $entryActor[1]) {
                         foreach($pathParts as $pathPart) {
                             if (strstr($pathPart, 'Bundle')) {
                                 $entryActor[0] = $pathPart;
@@ -75,6 +72,7 @@ class EntryModel extends AbstractCommonModel
                 }
             }
         }
+
         return $entryActor;
     }
 
@@ -110,7 +108,7 @@ class EntryModel extends AbstractCommonModel
      * @param string|float                              $cost       decimal dollar amount of tranaction
      * @param string|float                              $revenue    decimal dollar amount of tranaction
      */
-    protected function addEntry(Lead $lead, Campaign $campaign, $actor, $activity, $cost = null, $revenue = null)
+    protected function addEntry(Lead $lead, Campaign $campaign, $actor, $activity = 'unknown', $cost = null, $revenue = null)
     {
         $bundleName = $className = $actorId = null;
 
@@ -119,10 +117,13 @@ class EntryModel extends AbstractCommonModel
 
         } elseif (is_object($actor)) {
             list($bundleName, $className, $actorId) = $this->getActorFromObject($actor);
+        } else {
+            list($bundleName, $className, $actorId) = array(null, null, -1);
         }
 
-        $entry = $this->getRepository()->getEntity(0);
-        $entry
+        $entry;
+        $entry = $this->getRepository()
+            ->getEntity(0)
             ->setContact($lead)
             ->setCampaign($campaign)
             ->setBundleName($bundleName)
