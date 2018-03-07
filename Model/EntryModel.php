@@ -21,68 +21,118 @@ class EntryModel extends AbstractCommonModel
     {
         return $this->em->getRepository('MauticContactLedgerBundle:Entry');
     }
-    
-    
-    private function buildActorFromObject($object_instance)
-    {
-        $class = get_class($object_instance);
-        $id = $object_instance->getId();
-        
-    }
-    
-    private function buildActorFromIdClass(int $id, string $class_name)
-    {
-    }
 
-    protected function findBundle($class_name)
+    /**
+     * @param object $object
+     *
+     * @return array
+     */
+    protected function getActorFromObject($object)
     {
-        foreach (get_declared_classes() as $declared_class) {
-            if (preg_match('//', $declared_class)) {
-                
-                
+        $entryActor = [null, null, null];
+
+        if (is_object($actor)) {
+            $entryActor[2] = $actor->getId();
+            $pathParts = explode('\\', get_class($actor));
+            $entryActor[1] = array_pop($pathParts);
+            foreach($pathParts as $pathPart) {
+                if (strstr($pathPart, 'Bundle')) {
+                    $entryActor[0] = $pathPart;
+                    break;
+                }
             }
         }
-        if (in_array($class, get_declared_classes())) {
-                            
-        }
+
+        return $entryActor;
     }
 
     /**
-     * Writes a revenue (credit) to the ledger
+     * @param array $array
      *
-     * @param \Mautic\LeadBundle\Entity\Lead    $lead       target of transaction
-     * @param string|float                      $amount     decimal dollar amount of tranaction
-     * @param string                            $activity   cause for transaction
-     * @param mixed                             $actor      [bundle, object, id] that acted
+     * @return array
      */
-    public function writeRevenue(Lead $lead, $amount, $activity, $actor)
+    protected function getActorFromArray(array $array)
     {
-        if (is_object($actor)) {
-            
+        $entryActor = [null, null, null];
+
+        if (is_array($actor)) {
+            $entryActor[2] = array_pop($actor); //id
+            $entryActor[1] = array_pop($actor); //Class
+            if (!empty($actor)) {
+                $entryActor[0] = array_pop($actor); //Bundle
+            } else { //the hard way
+                foreach (get_declared_classes() as $namespaced) {
+                    $pathParts = explode('\\', $namespaced);
+                    $className = array_pop($pathParts);
+                    if ($pathPart === $entryActor[1]) {
+                        foreach($pathParts as $pathPart) {
+                            if (strstr($pathPart, 'Bundle')) {
+                                $entryActor[0] = $pathPart;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
         }
-        elseif (is_array($actor)) {
-            
+        return $entryActor;
+    }
+
+    /**
+     * @param \Mautic\LeadBundle\Entity\Lead            $lead       target of transaction
+     * @param \Mautic\CampaignBundle\Entity\Campaign    $campaign   campaign
+     * @param array|object                              $actor      [Class, id] or object that acted
+     * @param string                                    $activity   cause for transaction
+     * @param string|float                              $amount     decimal dollar amount of tranaction
+     */
+    public function writeRevenue(Lead $lead, Campaign $campaign, $actor, $activity, $amount)
+    {
+        $this->addEntry($lead, $campaign, $actor, $activity, null, $amount);
+    }
+
+    /**
+     * @param \Mautic\LeadBundle\Entity\Lead            $lead       target of transaction
+     * @param \Mautic\CampaignBundle\Entity\Campaign    $campaign   campaign
+     * @param array|object                              $actor      [Class, id] or object that acted
+     * @param string                                    $activity   cause for transaction
+     * @param string|float                              $amount     decimal dollar amount of tranaction
+     */
+    public function writeCost(Lead $lead, Campaign $campaign, $actor, $activity, $amount)
+    {
+        $this->addEntry($lead, $campaign, $actor, $activity, $amount);
+    }
+
+    /**
+     * @param \Mautic\LeadBundle\Entity\Lead            $lead       target of transaction
+     * @param \Mautic\CampaignBundle\Entity\Campaign    $campaign   campaign
+     * @param array|object                              $actor      [Class, id] or object that acted
+     * @param string                                    $activity   cause for transaction
+     * @param string|float                              $cost       decimal dollar amount of tranaction
+     * @param string|float                              $revenue    decimal dollar amount of tranaction
+     */
+    protected function addEntry(Lead $lead, Campaign $campaign, $actor, $activity, $cost = null, $revenue = null)
+    {
+        $bundleName = $className = $actorId = null;
+
+        if (is_array($actor)) {
+            list($bundleName, $className, $actorId) = $this->getActorFromArray($actor);
+
+        } elseif (is_object($actor)) {
+            list($bundleName, $className, $actorId) = $this->getActorFromObject($actor);
         }
-        
+
         $entry = $this->getRepository()->getEntity(0);
-        $entry->setCost($amount)
+        $entry
             ->setContact($lead)
-            ->setActivity($activity);
-            
-    }
+            ->setCampaign($campaign)
+            ->setBundleName($bundleName)
+            ->setClassName($className)
+            ->setActorId($actorId)
+            ->setActivity($activity)
+            ->setCost($cost)
+            ->setRevenue($revenue);
 
-    /**
-     * Writes a cost (debit) to the ledger
-     *
-     * @param \Mautic\LeadBundle\Entity\Lead    $lead       target of transaction
-     * @param string|float                      $amount     decimal dollar amount of tranaction
-     * @param string                            $activity   cause for transaction
-     * @param mixed[]                           $actor      [bundle, object, id] that acted
-     */
-    public function writeCost(Lead $lead, $amount, $activity, $actor)
-    {
-
+        $this->getRepository()->saveEntity($entry);
+        $this->em->flush();
     }
-    
-    
 }
