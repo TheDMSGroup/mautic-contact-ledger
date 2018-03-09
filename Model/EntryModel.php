@@ -25,7 +25,7 @@ class EntryModel extends AbstractCommonModel
     /**
      * @param \Mautic\LeadBundle\Event\LeadEvent $event
      */
-    public function processAttributionChange(LeadEvent $event, array $routingInfo = [])
+    public function processAttributionChange(LeadEvent &$event, array $routingInfo = [])
     {
         $this->logger->warning('PROCESSING ' . strtoupper($event->getName()));
 
