@@ -41,13 +41,14 @@ class LeadSubscriber extends CommonSubscriber
      */
     public function preSaveLeadAttributionCheck(LeadEvent $event)
     {
-        $changes = $event->getChanges();
         $this->logger->warning('Checking for attribution changes');
 
+        $changes = $event->getChanges();
+
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
-            $this->logger->warning('Found a change! Send for processing');
+            $this->logger->debug('Found a change! Send for processing');
             $routingInfo = $this->router->match($this->request->getPathInfo());
-            $this->logger->warning('sending ' . print_r($routingInfo, true) . ' with event for processing');
+            $this->logger->debug('sending ' . print_r($routingInfo, true) . ' with event for processing');
             $this->entryModel->processAttributionChange($event, $routingInfo);
         }
     }
