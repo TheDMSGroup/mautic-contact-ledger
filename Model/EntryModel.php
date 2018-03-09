@@ -2,6 +2,7 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Model;
 
+use DateTime;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
 use Mautic\LeadBundle\Event\LeadEvent;
@@ -31,7 +32,10 @@ class EntryModel extends AbstractCommonModel
         $changes = $event->getChanges();
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
 
-            $price = $changes['fields']['attribution'];
+            $oldPrice = $changes['fields']['attribution'][0];
+            $newPrice = $changes['fields']['attribution'][1];
+
+            $price = $newPrice - $oldPrice;
             $contact = $event->getLead();
 
             if (!$contact->getId()) { //new leads handled this way
@@ -53,9 +57,70 @@ class EntryModel extends AbstractCommonModel
                     $logger->alert("Unable to properly log cost of new Lead, ContactSource not found.");
                     return false;
                 }
-                $this->writeCost($contact, $campaign, $actor, $action, $price);
+                $this->addCostEntry($contact, $campaign, $actor, $action, $price);
             }
         }
+    }
+
+    /**
+     * @param \Mautic\LeadBundle\Entity\Lead            $lead       target of transaction
+     * @param \Mautic\CampaignBundle\Entity\Campaign    $campaign   campaign
+     * @param array|object                              $actor      [Class, id] or object that acted
+     * @param string                                    $activity   cause for transaction
+     * @param string|float                              $amount     decimal dollar amount of tranaction
+     */
+    public function addRevenueEntry(Lead $lead, Campaign $campaign, $actor, $activity, $amount)
+    {
+        $this->addEntry($lead, $campaign, $actor, $activity, null, $amount);
+    }
+
+    /**
+     * @param \Mautic\LeadBundle\Entity\Lead            $lead       target of transaction
+     * @param \Mautic\CampaignBundle\Entity\Campaign    $campaign   campaign
+     * @param array|object                              $object      [Class, id] or object that acted
+     * @param string                                    $activity   cause for transaction
+     * @param string|float                              $amount     decimal dollar amount of tranaction
+     */
+    public function addCostEntry(Lead $lead, Campaign $campaign, $actor, $activity, $amount)
+    {
+        $this->addEntry($lead, $campaign, $actor, $activity, $amount);
+    }
+
+    /**
+     * @param \Mautic\LeadBundle\Entity\Lead            $lead       target of transaction
+     * @param \Mautic\CampaignBundle\Entity\Campaign    $campaign   campaign
+     * @param array|object                              $actor      [Class, id] or object that acted
+     * @param string                                    $activity   cause for transaction
+     * @param string|float                              $cost       decimal dollar amount of tranaction
+     * @param string|float                              $revenue    decimal dollar amount of tranaction
+     */
+    protected function addEntry(Lead $lead, Campaign $campaign, $actor, $activity = 'unknown', $cost = null, $revenue = null)
+    {
+        $bundleName = $className = $objectId = null;
+
+        if (is_array($actor)) {
+            list($bundleName, $className, $objectId) = $this->getActorFromArray($actor);
+
+        } elseif (is_object($object)) {
+            list($bundleName, $className, $objectId) = $this->getActorFromObject($actor);
+        } else {
+            list($bundleName, $className, $objectId) = array(null, null, -1);
+        }
+
+
+        $entry = new Entry();
+        $entry
+            ->setDateAdded(new DateTime())
+            ->setContact($lead)
+            ->setCampaign($campaign)
+            ->setBundleName($bundleName)
+            ->setClassName($className)
+            ->setObjectId($objectId)
+            ->setActivity($activity)
+            ->setCost($cost)
+            ->setRevenue($revenue);
+        $this->em->persist($entry);
+
     }
 
     /**
@@ -91,10 +156,10 @@ class EntryModel extends AbstractCommonModel
     {
         $entryObject = [null, null, null];
 
-        $entryObject[2] = array_pop($object); //id
-        $entryObject[1] = array_pop($object); //Class
-        if (!empty($object)) {
-            $entryObject[0] = array_pop($object); //Bundle
+        $entryObject[2] = array_pop($array); //id
+        $entryObject[1] = array_pop($array); //Class
+        if (!empty($array)) {
+            $entryObject[0] = array_pop($array); //Bundle
         } else { //the hard way
             foreach (get_declared_classes() as $namespaced) {
                 $pathParts = explode('\\', $namespaced);
@@ -110,64 +175,5 @@ class EntryModel extends AbstractCommonModel
             }
         }
         return $entryObject;
-    }
-
-    /**
-     * @param \Mautic\LeadBundle\Entity\Lead            $lead       target of transaction
-     * @param \Mautic\CampaignBundle\Entity\Campaign    $campaign   campaign
-     * @param array|object                              $actor      [Class, id] or object that acted
-     * @param string                                    $activity   cause for transaction
-     * @param string|float                              $amount     decimal dollar amount of tranaction
-     */
-    public function writeRevenue(Lead $lead, Campaign $campaign, $actor, $activity, $amount)
-    {
-        $this->addEntry($lead, $campaign, $actor, $activity, null, $amount);
-    }
-
-    /**
-     * @param \Mautic\LeadBundle\Entity\Lead            $lead       target of transaction
-     * @param \Mautic\CampaignBundle\Entity\Campaign    $campaign   campaign
-     * @param array|object                              $object      [Class, id] or object that acted
-     * @param string                                    $activity   cause for transaction
-     * @param string|float                              $amount     decimal dollar amount of tranaction
-     */
-    public function writeCost(Lead $lead, Campaign $campaign, $actor, $activity, $amount)
-    {
-        $this->addEntry($lead, $campaign, $actor, $activity, $amount);
-    }
-
-    /**
-     * @param \Mautic\LeadBundle\Entity\Lead            $lead       target of transaction
-     * @param \Mautic\CampaignBundle\Entity\Campaign    $campaign   campaign
-     * @param array|object                              $actor      [Class, id] or object that acted
-     * @param string                                    $activity   cause for transaction
-     * @param string|float                              $cost       decimal dollar amount of tranaction
-     * @param string|float                              $revenue    decimal dollar amount of tranaction
-     */
-    protected function addEntry(Lead $lead, Campaign $campaign, $actor, $activity = 'unknown', $cost = null, $revenue = null)
-    {
-        $bundleName = $className = $objectId = null;
-
-        if (is_array($actor)) {
-            list($bundleName, $className, $objectId) = $this->getActorFromArray($actor);
-
-        } elseif (is_object($object)) {
-            list($bundleName, $className, $objectId) = $this->getActorFromObject($actor);
-        } else {
-            list($bundleName, $className, $objectId) = array(null, null, -1);
-        }
-
-        $entry = $this->getRepository()->getEntity()
-            ->setContact($lead)
-            ->setCampaign($campaign)
-            ->setBundleName($bundleName)
-            ->setClassName($className)
-            ->setObjectId($objectId)
-            ->setActivity($activity)
-            ->setCost($cost)
-            ->setRevenue($revenue);
-
-        $this->getRepository()->saveEntity($entry);
-        $this->em->flush();
     }
 }
