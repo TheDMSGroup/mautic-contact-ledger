@@ -42,6 +42,7 @@ class Entry extends CommonEntity
         $builder->createField('bundleName', 'string')
             ->columnname('bundle_name')
             ->length(100)
+            ->nullable()
             ->build();
 
         $builder->createField('className', 'string')

@@ -7,10 +7,17 @@ return [
 
     'services' => [
         'events' => [
-            'mautic.contactledger.eventlistener.lead' => [
+            'mautic.contactledger.subcriber.lead' => [
                 'class' => \MauticPlugin\MauticContactLedgerBundle\EventListener\LeadSubscriber::class,
                 'arguments' => [
-                    '@mautic.contactledger.model.entry'
+                    '@mautic.contactledger.model.entry',
+                ],
+            ],
+            'mautic.contactledger.subcriber.enhancer' => [
+                'class' => \MauticPlugin\MauticContactLedgerBundle\EventListener\EnhancerSubscriber::class,
+                'arguments' => [
+                    '@mautic.contactledger.model.entry',
+                    '@logger'
                 ],
             ],
         ],

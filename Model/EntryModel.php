@@ -24,6 +24,7 @@ class EntryModel extends AbstractCommonModel
 
     /**
      * @param \Mautic\LeadBundle\Event\LeadEvent $event
+     * @param array $routingInfo
      */
     public function processAttributionChange(LeadEvent &$event, array $routingInfo = [])
     {
@@ -57,33 +58,9 @@ class EntryModel extends AbstractCommonModel
                     $logger->alert("Unable to properly log cost of new Lead, ContactSource not found.");
                     return false;
                 }
-                $this->addCostEntry($contact, $campaign, $actor, $action, $price);
+                $this->addEntry($contact, $campaign, $actor, $action, $price);
             }
         }
-    }
-
-    /**
-     * @param \Mautic\LeadBundle\Entity\Lead            $lead       target of transaction
-     * @param \Mautic\CampaignBundle\Entity\Campaign    $campaign   campaign
-     * @param array|object                              $actor      [Class, id] or object that acted
-     * @param string                                    $activity   cause for transaction
-     * @param string|float                              $amount     decimal dollar amount of tranaction
-     */
-    public function addRevenueEntry(Lead $lead, Campaign $campaign, $actor, $activity, $amount)
-    {
-        $this->addEntry($lead, $campaign, $actor, $activity, null, $amount);
-    }
-
-    /**
-     * @param \Mautic\LeadBundle\Entity\Lead            $lead       target of transaction
-     * @param \Mautic\CampaignBundle\Entity\Campaign    $campaign   campaign
-     * @param array|object                              $object      [Class, id] or object that acted
-     * @param string                                    $activity   cause for transaction
-     * @param string|float                              $amount     decimal dollar amount of tranaction
-     */
-    public function addCostEntry(Lead $lead, Campaign $campaign, $actor, $activity, $amount)
-    {
-        $this->addEntry($lead, $campaign, $actor, $activity, $amount);
     }
 
     /**
@@ -94,14 +71,14 @@ class EntryModel extends AbstractCommonModel
      * @param string|float                              $cost       decimal dollar amount of tranaction
      * @param string|float                              $revenue    decimal dollar amount of tranaction
      */
-    protected function addEntry(Lead $lead, Campaign $campaign, $actor, $activity = 'unknown', $cost = null, $revenue = null)
+    public function addEntry(Lead $lead, Campaign $campaign, $actor, $activity = 'unknown', $cost = null, $revenue = null)
     {
         $bundleName = $className = $objectId = null;
 
         if (is_array($actor)) {
             list($bundleName, $className, $objectId) = $this->getActorFromArray($actor);
 
-        } elseif (is_object($object)) {
+        } elseif (is_object($actor)) {
             list($bundleName, $className, $objectId) = $this->getActorFromObject($actor);
         } else {
             list($bundleName, $className, $objectId) = array(null, null, -1);

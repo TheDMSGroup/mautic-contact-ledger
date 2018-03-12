@@ -41,7 +41,7 @@ class LeadSubscriber extends CommonSubscriber
      */
     public function preSaveLeadAttributionCheck(LeadEvent $event)
     {
-        $this->logger->warning('Checking for attribution changes');
+        $this->logger->warning('LeadSubcriber Checking for attribution changes');
 
         $changes = $event->getChanges();
 
