@@ -58,7 +58,13 @@ class EntryModel extends AbstractCommonModel
                     $logger->alert("Unable to properly log cost of new Lead, ContactSource not found.");
                     return false;
                 }
-                $this->addEntry($contact, $campaign, $actor, $action, $price);
+                //TODO: Verify accurascy
+                if ($price < 0) {
+                    $price *= -1;
+                    $this->addEntry($contact, $campaign, $actor, $action, $price);
+                } elseif ($price > 0) {
+                    $this->addEntry($contact, $campaign, $actor, $action, null, $price);
+                }
             }
         }
     }
