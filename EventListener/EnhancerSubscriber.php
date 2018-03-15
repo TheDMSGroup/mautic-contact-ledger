@@ -48,12 +48,14 @@ class EnhancerSubscriber implements EventSubscriberInterface
     {
         $this->logger->warning('EnhancerSubcriber Responding to enhancer complete');
         $enhancer     = $enhancerEvent->getEnhancer();
-        $enhancerCost = $enhancer->getCostPerEnhancement();
-        if ($enhancerCost) {
-            $lead     = $enhancerEvent->getLead();
-            $campaign = $enhancerEvent->getCampaign();
-            $enhancer = $enhancerEvent->getEnhancer();
-            $this->entryModel->addEntry($lead, $campaign, $enhancer, 'enhacement', $enhancerCost);
+        if (method_exists($enhancer, 'getCostPerEnhancement')) {
+            $enhancerCost = $enhancer->getCostPerEnhancement();
+            if ($enhancerCost) {
+                $lead     = $enhancerEvent->getLead();
+                $campaign = $enhancerEvent->getCampaign();
+                $enhancer = $enhancerEvent->getEnhancer();
+                $this->entryModel->addEntry($lead, $campaign, $enhancer, 'enhacement', $enhancerCost);
+            }
         }
     }
 }
