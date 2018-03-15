@@ -2,23 +2,23 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
 use Mautic\CoreBundle\Entity\CommonEntity;
 use Mautic\LeadBundle\Entity\Lead;
 
 /**
- * class Entry extends {@see \Mautic\CoreBundle\Entity\CommonEntity}
+ * Class Entry
  *
  * @package \MauticPlugin\MauticContactLedgerBundle\Entity
  */
 class Entry extends CommonEntity
 {
     /**
-     * @param Doctrine\ORM\Mapping\ClassMetadata $metadata
+     * @param \Doctrine\ORM\Mapping\ClassMetadata $metadata
      */
-    public static function loadMetadata(ORM\ClassMetadata $metadata)
+    public static function loadMetadata(ClassMetadata $metadata)
     {
         $builder = new ClassMetadataBuilder($metadata);
 
@@ -31,12 +31,12 @@ class Entry extends CommonEntity
             ->columnName('date_added')
             ->build();
 
-        $builder->createManyToOne('contact', 'Mautic\LeadBundle\Entity\Lead')
-            ->addJoinColumn('contact_id', 'id', false)
+        $builder->createField('contactId', 'integer')
+            ->columnName('contact_id')
             ->build();
 
-        $builder->createManyToOne('campaign', 'Mautic\CampaignBundle\Entity\Campaign')
-            ->addJoinColumn('campaign_id', 'id', false)
+        $builder->createField('campaignId', 'integer')
+            ->columnName('campaign_id')
             ->build();
 
         $builder->createField('bundleName', 'string')
@@ -79,57 +79,57 @@ class Entry extends CommonEntity
     /**
      * @var int $id primary key read-only
      */
-    private $id;
+    protected $id;
 
     /**
      * @var datetime $dateAdded time entry was made
      */
-    private $dateAdded;
+    protected $dateAdded;
 
     /**
-     * @var  \Mautic\LeadBundle\Entity\Lead $contact
+     * @var int $contactId
      */
-    private $contact;
+    protected $contactId;
 
     /**
-     * @var \Mautic\CampaignBundle\Entity\Campaign $campaign
+     * @var int $campaignId
      */
-    protected $campaign;
+    protected $campaignId;
 
     /**
      * @var string $bundleName
      */
-    private $bundleName;
+    protected $bundleName;
 
     /**
      * @var string $className
      */
-    private $className;
+    protected $className;
 
     /**
      * @var int $objectId
      */
-    private $objectId;
+    protected $objectId;
 
     /**
      * @var string $activity
      */
-    private $activity;
+    protected $activity;
 
     /**
      * @var string $memo
      */
-    private $memo;
+    protected $memo;
 
     /**
      * @var string|float $cost
      */
-    private $cost;
+    protected $cost;
 
     /**
      * @var string|float $revenue
      */
-    private $revenue;
+    protected $revenue;
 
     /**
      * @return int
@@ -159,42 +159,56 @@ class Entry extends CommonEntity
     }
 
     /**
-     * @return \Mautic\LeadBundle\Entity\Lead
+     * @return integer
      */
-    public function getContact()
+    public function getContactId()
     {
-        return $this->contact;
+        return $this->contactId;
     }
 
     /**
-     * @param \Mautic\LeadBundle\Entity\Lead $contact
+     * @param \Mautic\LeadBundle\Entity\Lead|int $contact
      *
      * @return $this
+     *
+     * @throws \InvalidArgumentException
      */
-    public function setContact(Lead $contact)
+    public function setContactId($contact)
     {
-        $this->contact = $contact;
-
+        if ($contact instanceof Lead) {
+            $this->contactId = $contact->getId();
+        } elseif ( is_int($contact)) {
+            $this->contactId = $contact;
+        } else {
+            throw new \InvalidArgumentException('$contact must be an integer or instance of "\\Mautic\\LeadBundle\\Entity\\Lead"');
+        }
         return $this;
     }
 
     /**
-     * @return \Mautic\CampaignBundle\Entity\Campaign
+     * @return integer
      */
-    public function getCampaign()
+    public function getCampaignId()
     {
-        return $this->campaign;
+        return $this->campaignId;
     }
 
     /**
-     * @param \Mautic\CampaignBundle\Entity\Campaign
+     * @param \Mautic\CampaignBundle\Entity\Campaign|int $campaign
      *
      * @return $this
+     *
+     * @throws \InvalidArgumentException
      */
-    public function setCampaign(Campaign $campaign)
+    public function setCampaignId($campaign)
     {
-        $this->campaign = $campaign;
-
+        if ($campaign instanceof Campaign) {
+            $this->capaignId = $campaign->getId();
+        } elseif (is_int($campaign)) {
+            $this->campaignId = $campaign;
+        } else {
+            throw new \InvalidArgumentException('$campaign must be an integer or instance of "\\Mautic\\CampaignBundle\\Entity\\Campaign"');
+        }
         return $this;
     }
 
@@ -285,7 +299,7 @@ class Entry extends CommonEntity
     /**
      * @param string $memo
      *
-     * @retun $this
+     * @return $this
      */
     public function setMemo($memo)
     {
@@ -317,7 +331,7 @@ class Entry extends CommonEntity
      */
     public function getRevenue()
     {
-        return $this->revnue;
+        return $this->revenue;
     }
 
     /**
