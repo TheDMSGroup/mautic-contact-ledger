@@ -1,0 +1,16 @@
+{
+    "name": "thedmsgroup/mautic-contact-ledger-bundle",
+    "description": "Historical accounting for contacts",
+    "keywords": ["mautic","marketing","marketing automation","plugin"],
+    "type": "mautic-plugin",
+    "require": {
+        "mautic/composer-plugin": "^1.0"
+    },
+    "license": "GPL-3.0-only",
+    "authors": [
+        {
+            "name": "Nicholai Bush",
+            "email": "nicholaibush@yahoo.com"
+        }
+    ]
+}
