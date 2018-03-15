@@ -8,17 +8,17 @@ use MauticPlugin\MauticContactLedgerBundle\Entity\Entry;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class EntryTest
+ * Class EntryTest.
  */
 class EntryTest extends TestCase
 {
     /**
-     * @var Entry $entry
+     * @var Entry
      */
     protected $entry;
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function setUp()
     {
@@ -28,7 +28,7 @@ class EntryTest extends TestCase
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function tearDown()
     {
@@ -39,7 +39,7 @@ class EntryTest extends TestCase
     {
         return [
             ['testing'],
-            ["\\n"],
+            ['\\n'],
             [null],
             [''],
             ['words and space'],
@@ -59,10 +59,10 @@ class EntryTest extends TestCase
     public function decimalProvider()
     {
         return [
-            ["90.22"],
-            ["0.001"],
-            ["-0.001"],
-            ["3.030303030303"],
+            ['90.22'],
+            ['0.001'],
+            ['-0.001'],
+            ['3.030303030303'],
         ];
     }
 
@@ -88,14 +88,14 @@ class EntryTest extends TestCase
 
     public function testCampaign()
     {
-        $campaign = new Campaign();
+        $campaign       = new Campaign();
         $setGetCampaign = $this->entry->setCampaign($campaign)->getCampaign();
 
         $this->assertEquals($campaign, $setGetCampaign, 'Entry()->campaign is behaving abnormally');
     }
 
     /**
-     * @dataProvider stringProvider
+     * @param $className
      */
     public function testClassName($className)
     {
@@ -104,9 +104,12 @@ class EntryTest extends TestCase
         $this->assertEquals($className, $setGetClassName, 'Entry()->className is behaving abnormally');
     }
 
-    public function testContact()
+    /**
+     * @param $className
+     */
+    public function testContact($className)
     {
-        $contact = new Lead();
+        $contact         = new Lead();
         $setGetClassName = $this->entry->setContact($contact)->getContact();
 
         $this->assertEquals($className, $setGetClassName, 'Entry()->contact is behaving abnormally');
@@ -114,17 +117,19 @@ class EntryTest extends TestCase
 
     /**
      * @dataProvider decimalProvider
+     *
+     * @param $cost
      */
     public function testCost($cost)
     {
         $setGetCost = $this->entry->setCost($cost)->getCost();
 
-        $this->assertEquals($cost, $setGetCosr,  'Entry()->cost is behaving abnormally');
+        $this->assertEquals($cost, $setGetCost, 'Entry()->cost is behaving abnormally');
     }
 
     public function testDateAdded()
     {
-        $dateAdded = new DateTime();
+        $dateAdded       = new \DateTime();
         $setGetDateAdded = $this->entry->setDateAdded($dateAdded)->getDateAdded();
 
         $this->assertEquals($dateAdded, $setGetDateAdded, 'Entry()->dateAdded is behaving abnormally');
@@ -157,6 +162,6 @@ class EntryTest extends TestCase
     {
         $setGetRevenue = $this->entry->setRevenue($revenue)->getRevenue();
 
-        $this->assertEquals($revenue, $setGetCosr,  'Entry()->revenue is behaving abnormally');
+        $this->assertEquals($revenue, $setGetCosr, 'Entry()->revenue is behaving abnormally');
     }
 }

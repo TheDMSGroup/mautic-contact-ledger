@@ -6,13 +6,10 @@ use Mautic\CoreBundle\Entity\CommonRepository;
 use Mautic\LeadBundle\Entity\Lead;
 
 /**
- * class EntryRepository extends {@see \Mautic\CoreBundle\Entity\CommonRepository}
- *
- * @package \MauticPlugin\MauticContactLedgerBundle\Entity
+ * Class EntryRepository extends {@see \Mautic\CoreBundle\Entity\CommonRepository}.
  */
 class EntryRepository extends CommonRepository
 {
-
     /**
      * Defines default table alias for contact_ledger table.
      *
@@ -22,7 +19,7 @@ class EntryRepository extends CommonRepository
     {
         return 'cl';
     }
-    
+
     /**
      * @param \Mautic\LeadBundle\Entity\Lead $contact
      *
@@ -30,7 +27,6 @@ class EntryRepository extends CommonRepository
      */
     public function getContactLedger(Lead $contact)
     {
-
     }
 
     /**
@@ -40,7 +36,6 @@ class EntryRepository extends CommonRepository
      */
     public function getContactCost(Lead $contact)
     {
-
     }
 
     /**
@@ -50,6 +45,5 @@ class EntryRepository extends CommonRepository
      */
     public function getContactRevenue(Lead $contact)
     {
-
     }
 }

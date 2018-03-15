@@ -5,12 +5,12 @@ namespace MauticPlugin\MauticContactLedgerBundle\Model;
 use DateTime;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
-use Mautic\LeadBundle\Event\LeadEvent;
 use Mautic\LeadBundle\Entity\Lead;
+use Mautic\LeadBundle\Event\LeadEvent;
 use MauticPlugin\MauticContactLedgerBundle\Entity\Entry;
 
 /**
- * class EntryModel
+ * class EntryModel.
  */
 class EntryModel extends AbstractCommonModel
 {
@@ -23,39 +23,44 @@ class EntryModel extends AbstractCommonModel
     }
 
     /**
-     * @param \Mautic\LeadBundle\Event\LeadEvent $event
-     * @param array $routingInfo
+     * @param LeadEvent $event
+     * @param array     $routingInfo
+     *
+     * @return bool
      */
     public function processAttributionChange(LeadEvent &$event, array $routingInfo = [])
     {
-        $this->logger->warning('PROCESSING ' . strtoupper($event->getName()));
+        $this->logger->warning('PROCESSING '.strtoupper($event->getName()));
 
         $changes = $event->getChanges();
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
-
             $oldPrice = $changes['fields']['attribution'][0];
             $newPrice = $changes['fields']['attribution'][1];
 
-            $price = $newPrice - $oldPrice;
+            $price   = $newPrice - $oldPrice;
             $contact = $event->getLead();
 
             if (!$contact->getId()) { //new leads handled this way
-
-                $actor = [null, null, null];
+                $actor    = [null, null, null];
                 $campaign = null;
-                $action = 'contactBuy';
+                $action   = 'contactBuy';
 
                 if (isset($routingInfo['campaignId'])) {
-                    $campaign = $this->em->getRepository('Mautic\\CampaignBundle\\Entity\\Campaign')->find($routingInfo['campaignId']);
+                    /** @var Campaign $campaign */
+                    $campaign = $this->em->getRepository('Mautic\\CampaignBundle\\Entity\\Campaign')->find(
+                        $routingInfo['campaignId']
+                    );
                 } else {
-                    $logger->alert("Unable to properly log cost of new Lead, Campaign not found");
+                    $this->logger->alert('Unable to properly log cost of new Lead, Campaign not found');
+
                     return false;
                 }
 
                 if (isset($routingInfo['sourceId'])) {
-                    $actor = ['MauticContactSourceBundle','ContactSource', $routingInfo['sourceId']];
+                    $actor = ['MauticContactSourceBundle', 'ContactSource', $routingInfo['sourceId']];
                 } else {
-                    $logger->alert("Unable to properly log cost of new Lead, ContactSource not found.");
+                    $this->logger->alert('Unable to properly log cost of new Lead, ContactSource not found.');
+
                     return false;
                 }
                 //TODO: Verify accurascy
@@ -70,26 +75,30 @@ class EntryModel extends AbstractCommonModel
     }
 
     /**
-     * @param \Mautic\LeadBundle\Entity\Lead            $lead       target of transaction
-     * @param \Mautic\CampaignBundle\Entity\Campaign    $campaign   campaign
-     * @param array|object                              $actor      [Class, id] or object that acted
-     * @param string                                    $activity   cause for transaction
-     * @param string|float                              $cost       decimal dollar amount of tranaction
-     * @param string|float                              $revenue    decimal dollar amount of tranaction
+     * @param \Mautic\LeadBundle\Entity\Lead         $lead     target of transaction
+     * @param \Mautic\CampaignBundle\Entity\Campaign $campaign campaign
+     * @param array|object                           $actor    [Class, id] or object that acted
+     * @param string                                 $activity cause for transaction
+     * @param string|float                           $cost     decimal dollar amount of tranaction
+     * @param string|float                           $revenue  decimal dollar amount of tranaction
      */
-    public function addEntry(Lead $lead, Campaign $campaign, $actor, $activity = 'unknown', $cost = null, $revenue = null)
-    {
+    public function addEntry(
+        Lead $lead,
+        Campaign $campaign,
+        $actor,
+        $activity = 'unknown',
+        $cost = null,
+        $revenue = null
+    ) {
         $bundleName = $className = $objectId = null;
 
         if (is_array($actor)) {
             list($bundleName, $className, $objectId) = $this->getActorFromArray($actor);
-
         } elseif (is_object($actor)) {
             list($bundleName, $className, $objectId) = $this->getActorFromObject($actor);
         } else {
-            list($bundleName, $className, $objectId) = array(null, null, -1);
+            list($bundleName, $className, $objectId) = [null, null, -1];
         }
-
 
         $entry = new Entry();
         $entry
@@ -103,31 +112,6 @@ class EntryModel extends AbstractCommonModel
             ->setCost($cost)
             ->setRevenue($revenue);
         $this->em->persist($entry);
-
-    }
-
-    /**
-     * @param object $object
-     *
-     * @return array
-     */
-    protected function getActorFromObject($object)
-    {
-        $entryObject = [null, null, null];
-
-        if (is_object($object)) {
-            $entryObject[2] = $object->getId();
-            $pathParts = explode('\\', get_class($object));
-            $entryObject[1] = array_pop($pathParts);
-            foreach($pathParts as $pathPart) {
-                if (strstr($pathPart, 'Bundle')) {
-                    $entryObject[0] = $pathPart;
-                    break;
-                }
-            }
-        }
-
-        return $entryObject;
     }
 
     /**
@@ -148,7 +132,7 @@ class EntryModel extends AbstractCommonModel
                 $pathParts = explode('\\', $namespaced);
                 $className = array_pop($pathParts);
                 if ($className === $entryObject[1]) {
-                    foreach($pathParts as $pathPart) {
+                    foreach ($pathParts as $pathPart) {
                         if (false !== strstr($pathPart, 'Bundle')) {
                             $entryObject[0] = $pathPart;
                             break 2;
@@ -157,6 +141,31 @@ class EntryModel extends AbstractCommonModel
                 }
             }
         }
+
+        return $entryObject;
+    }
+
+    /**
+     * @param object $object
+     *
+     * @return array
+     */
+    protected function getActorFromObject($object)
+    {
+        $entryObject = [null, null, null];
+
+        if (is_object($object)) {
+            $entryObject[2] = $object->getId();
+            $pathParts      = explode('\\', get_class($object));
+            $entryObject[1] = array_pop($pathParts);
+            foreach ($pathParts as $pathPart) {
+                if (strstr($pathPart, 'Bundle')) {
+                    $entryObject[0] = $pathPart;
+                    break;
+                }
+            }
+        }
+
         return $entryObject;
     }
 }

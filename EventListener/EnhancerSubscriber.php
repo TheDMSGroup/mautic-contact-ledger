@@ -2,58 +2,57 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use MauticPlugin\MauticEnhancerBundle\MauticEnhancerEvents;
+use MauticPlugin\MauticContactLedgerBundle\Model\EntryModel;
 use MauticPlugin\MauticEnhancerBundle\Event\MauticEnhancerEvent;
 use MauticPlugin\MauticEnhancerBundle\Integration\NonFreeEnhancerInterface;
-use MauticPlugin\MauticContactLedgerBundle\Model\EntryModel;
+use MauticPlugin\MauticEnhancerBundle\MauticEnhancerEvents;
 use Symfony\Bridge\Monolog\Logger;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Class EnhancerSubscriber
+ * Class EnhancerSubscriber.
  */
 class EnhancerSubscriber implements EventSubscriberInterface
 {
-    public static function getSubscribedEvents()
-    {
-        return [
-            MauticEnhancerEvents::ENHANCER_COMPLETED => [ 'enhancerAttributionCheck', 0]
-        ];
-    }
-
     /**
-     * @var \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel $entryModel
+     * @var \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel
      */
     protected $entryModel;
 
     /**
-     * @var \Symfony\Bridge\Monolog\Logger $logger
+     * @var \Symfony\Bridge\Monolog\Logger
      */
     protected $logger;
 
     /**
      * @param \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel $entryModel
-     * @param  \Symfony\Bridge\Monolog\Logger $logger
+     * @param \Symfony\Bridge\Monolog\Logger                           $logger
      */
     public function __construct(EntryModel $entryModel, Logger $logger)
     {
         $this->entryModel = $entryModel;
-        $this->logger = $logger;
+        $this->logger     = $logger;
+    }
+
+    public static function getSubscribedEvents()
+    {
+        return [
+            MauticEnhancerEvents::ENHANCER_COMPLETED => ['enhancerAttributionCheck', 0],
+        ];
     }
 
     /**
-     * @param \MauticPlugh\MauticEnhancerBundle\Event\MauticEnhancerEvent $enhancerEvent
+     * @param MauticEnhancerEvent $enhancerEvent
      */
     public function enhancerAttributionCheck(MauticEnhancerEvent $enhancerEvent)
     {
         $this->logger->warning('EnhancerSubcriber Responding to enhancer complete');
         $enhancer = $enhancerEvent->getEnhancer();
         if ($enhancer instanceof NonFreeEnhancerInterface) {
-            $lead = $enhancerEvent->getLead();
+            $lead     = $enhancerEvent->getLead();
             $campaign = $enhancerEvent->getCampaign();
             $enhancer = $enhancerEvent->getEnhancer();
-            $this->entryModel->addEntry($lead, $campaign, $enhancer, 'enhacement',$enhancer->getCostPerEnhancement());
+            $this->entryModel->addEntry($lead, $campaign, $enhancer, 'enhacement', $enhancer->getCostPerEnhancement());
         }
     }
-
 }

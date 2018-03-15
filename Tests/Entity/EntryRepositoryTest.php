@@ -5,12 +5,13 @@ namespace MauticPlugin\MauticContactLedgerBundle\Tests\Entity;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\QueryBuilder;
-use PHPUnit\Frameork\TestCase;
+use MauticPlugin\MauticContactLedgerBundle\Entity\EntryRepository;
+use PHPUnit\Framework\TestCase;
 
 class EntryRepositoryTest extends TestCase
 {
     /**
-     * @var CommonRepository
+     * @var \Mautic\CoreBundle\Entity\CommonRepository
      */
     private $repo;
 
@@ -18,6 +19,22 @@ class EntryRepositoryTest extends TestCase
      * @var QueryBuilder
      */
     private $qb;
+
+    public function testGetTableAlias()
+    {
+    }
+
+    public function testGetContactCost()
+    {
+    }
+
+    public function testGetContactRevenue()
+    {
+    }
+
+    public function testGetContactLedger()
+    {
+    }
 
     protected function setUp()
     {
@@ -32,25 +49,5 @@ class EntryRepositoryTest extends TestCase
 
         $this->repo = new EntryRepository($emMock, $metaMock);
         $this->qb   = new QueryBuilder($emMock);
-    }
-
-    public function testGetTableAlias()
-    {
-
-    }
-    
-    public function testGetContactCost()
-    {
-
-    }
-
-    public function testGetContactRevenue()
-    {
-
-    }
-
-    public function testGetContactLedger()
-    {
-
     }
 }

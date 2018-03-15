@@ -14,7 +14,7 @@ namespace MauticPlugin\MauticContactLedgerBundle\Integration;
 use Mautic\PluginBundle\Integration\AbstractIntegration;
 
 /**
- * Class ContactLedgerIntegration
+ * Class ContactLedgerIntegration.
  */
 class ContactLedgerIntegration extends AbstractIntegration
 {

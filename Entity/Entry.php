@@ -9,12 +9,65 @@ use Mautic\CoreBundle\Entity\CommonEntity;
 use Mautic\LeadBundle\Entity\Lead;
 
 /**
- * Class Entry
- *
- * @package \MauticPlugin\MauticContactLedgerBundle\Entity
+ * Class Entry.
  */
 class Entry extends CommonEntity
 {
+    /**
+     * @var int primary key read-only
+     */
+    protected $id;
+
+    /**
+     * @var \DateTime time entry was made
+     */
+    protected $dateAdded;
+
+    /**
+     * @var int
+     */
+    protected $contactId;
+
+    /**
+     * @var int
+     */
+    protected $campaignId;
+
+    /**
+     * @var string
+     */
+    protected $bundleName;
+
+    /**
+     * @var string
+     */
+    protected $className;
+
+    /**
+     * @var int
+     */
+    protected $objectId;
+
+    /**
+     * @var string
+     */
+    protected $activity;
+
+    /**
+     * @var string
+     */
+    protected $memo;
+
+    /**
+     * @var string|float
+     */
+    protected $cost;
+
+    /**
+     * @var string|float
+     */
+    protected $revenue;
+
     /**
      * @param \Doctrine\ORM\Mapping\ClassMetadata $metadata
      */
@@ -77,61 +130,6 @@ class Entry extends CommonEntity
     }
 
     /**
-     * @var int $id primary key read-only
-     */
-    protected $id;
-
-    /**
-     * @var datetime $dateAdded time entry was made
-     */
-    protected $dateAdded;
-
-    /**
-     * @var int $contactId
-     */
-    protected $contactId;
-
-    /**
-     * @var int $campaignId
-     */
-    protected $campaignId;
-
-    /**
-     * @var string $bundleName
-     */
-    protected $bundleName;
-
-    /**
-     * @var string $className
-     */
-    protected $className;
-
-    /**
-     * @var int $objectId
-     */
-    protected $objectId;
-
-    /**
-     * @var string $activity
-     */
-    protected $activity;
-
-    /**
-     * @var string $memo
-     */
-    protected $memo;
-
-    /**
-     * @var string|float $cost
-     */
-    protected $cost;
-
-    /**
-     * @var string|float $revenue
-     */
-    protected $revenue;
-
-    /**
      * @return int
      */
     public function getId()
@@ -155,11 +153,12 @@ class Entry extends CommonEntity
     public function setDateAdded($dateAdded)
     {
         $this->dateAdded = $dateAdded;
+
         return $this;
     }
 
     /**
-     * @return integer
+     * @return int
      */
     public function getContactId()
     {
@@ -177,16 +176,19 @@ class Entry extends CommonEntity
     {
         if ($contact instanceof Lead) {
             $this->contactId = $contact->getId();
-        } elseif ( is_int($contact)) {
+        } elseif (is_int($contact)) {
             $this->contactId = $contact;
         } else {
-            throw new \InvalidArgumentException('$contact must be an integer or instance of "\\Mautic\\LeadBundle\\Entity\\Lead"');
+            throw new \InvalidArgumentException(
+                '$contact must be an integer or instance of "\\Mautic\\LeadBundle\\Entity\\Lead"'
+            );
         }
+
         return $this;
     }
 
     /**
-     * @return integer
+     * @return int
      */
     public function getCampaignId()
     {
@@ -203,12 +205,15 @@ class Entry extends CommonEntity
     public function setCampaignId($campaign)
     {
         if ($campaign instanceof Campaign) {
-            $this->capaignId = $campaign->getId();
+            $this->campaignId = $campaign->getId();
         } elseif (is_int($campaign)) {
             $this->campaignId = $campaign;
         } else {
-            throw new \InvalidArgumentException('$campaign must be an integer or instance of "\\Mautic\\CampaignBundle\\Entity\\Campaign"');
+            throw new \InvalidArgumentException(
+                '$campaign must be an integer or instance of "\\Mautic\\CampaignBundle\\Entity\\Campaign"'
+            );
         }
+
         return $this;
     }
 
@@ -228,11 +233,12 @@ class Entry extends CommonEntity
     public function setBundleName($bundleName)
     {
         $this->bundleName = $bundleName;
+
         return $this;
     }
 
     /**
-     * @return sting
+     * @return string
      */
     public function getClassName()
     {
@@ -247,6 +253,7 @@ class Entry extends CommonEntity
     public function setClassName($className)
     {
         $this->className = $className;
+
         return $this;
     }
 
@@ -266,6 +273,7 @@ class Entry extends CommonEntity
     public function setObjectId($objectId)
     {
         $this->objectId = $objectId;
+
         return $this;
     }
 
@@ -285,6 +293,7 @@ class Entry extends CommonEntity
     public function setActivity($activity)
     {
         $this->activity = $activity;
+
         return $this;
     }
 
@@ -304,6 +313,7 @@ class Entry extends CommonEntity
     public function setMemo($memo)
     {
         $this->memo = $memo;
+
         return $this;
     }
 
@@ -323,6 +333,7 @@ class Entry extends CommonEntity
     public function setCost($cost)
     {
         $this->cost = $cost;
+
         return $this;
     }
 
@@ -342,6 +353,7 @@ class Entry extends CommonEntity
     public function setRevenue($revenue)
     {
         $this->revenue = $revenue;
+
         return $this;
     }
 }
