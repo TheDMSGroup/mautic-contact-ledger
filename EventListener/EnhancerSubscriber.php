@@ -3,9 +3,6 @@
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use MauticPlugin\MauticContactLedgerBundle\Model\EntryModel;
-use MauticPlugin\MauticEnhancerBundle\Event\MauticEnhancerEvent;
-use MauticPlugin\MauticEnhancerBundle\Integration\NonFreeEnhancerInterface;
-use MauticPlugin\MauticEnhancerBundle\MauticEnhancerEvents;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -34,25 +31,29 @@ class EnhancerSubscriber implements EventSubscriberInterface
         $this->logger     = $logger;
     }
 
+    /**
+     * @return array
+     */
     public static function getSubscribedEvents()
     {
         return [
-            MauticEnhancerEvents::ENHANCER_COMPLETED => ['enhancerAttributionCheck', 0],
+            'mauticplugin.mautic_enhancer.enhancer_complete' => ['enhancerAttributionCheck', 0],
         ];
     }
 
     /**
-     * @param MauticEnhancerEvent $enhancerEvent
+     * @param \MauticPlugin\MauticEnhancerBundle\Event\MauticEnhancerEvent $enhancerEvent
      */
-    public function enhancerAttributionCheck(MauticEnhancerEvent $enhancerEvent)
+    public function enhancerAttributionCheck($enhancerEvent)
     {
         $this->logger->warning('EnhancerSubcriber Responding to enhancer complete');
-        $enhancer = $enhancerEvent->getEnhancer();
-        if ($enhancer instanceof NonFreeEnhancerInterface) {
+        $enhancer     = $enhancerEvent->getEnhancer();
+        $enhancerCost = $enhancer->getCostPerEnhancement();
+        if ($enhancerCost) {
             $lead     = $enhancerEvent->getLead();
             $campaign = $enhancerEvent->getCampaign();
             $enhancer = $enhancerEvent->getEnhancer();
-            $this->entryModel->addEntry($lead, $campaign, $enhancer, 'enhacement', $enhancer->getCostPerEnhancement());
+            $this->entryModel->addEntry($lead, $campaign, $enhancer, 'enhacement', $enhancerCost);
         }
     }
 }
