@@ -8,7 +8,7 @@ use Mautic\LeadBundle\Entity\Lead;
 /**
  * Class EntryRepository extends {@see \Mautic\CoreBundle\Entity\CommonRepository}.
  */
-class EntryRepository extends CommonRepository
+class LedgerEntryRepository extends CommonRepository
 {
     /**
      * Defines default table alias for contact_ledger table.
