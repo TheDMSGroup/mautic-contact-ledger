@@ -2,60 +2,23 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
+use Mautic\CoreBundle\Entity\CommonEntity;
 use Mautic\LeadBundle\Entity\Lead;
 
-class Entry
+/**
+ * Class Entry
+ *
+ * @package \MauticPlugin\MauticContactLedgerBundle\Entity
+ */
+class Entry extends CommonEntity
 {
     /**
-     * @var int primary key
+     * @param \Doctrine\ORM\Mapping\ClassMetadata $metadata
      */
-    private $id;
-
-    /**
-     * @var \DateTime
-     */
-    private $dateAdded;
-    /**
-     * @var Lead
-     */
-    private $contact;
-
-    /**
-     * @var string
-     */
-    private $bundle;
-
-    /**
-     * @var string
-     */
-    private $object;
-
-    private $objectId;
-
-    /**
-     * @var string
-     */
-    private $action;
-
-    /**
-     * @var string
-     */
-    private $memo;
-
-    /**
-     * @var string  decimal(19,4)
-     */
-    private $credit;
-
-    /**
-     * @var string represents decimal(19,4)
-     */
-    private $debit;
-
-    public static function loadMetadata(ORM\ClassMetadata $metadata)
+    public static function loadMetadata(ClassMetadata $metadata)
     {
         $builder = new ClassMetadataBuilder($metadata);
 
@@ -63,14 +26,27 @@ class Entry
             ->setCustomRepositoryClass('MauticPlugin\MauticContactLedgerBundle\Entity\EntryRepository');
 
         $builder->addId();
-        $builder->addDateAdded();
-        $builder->addContact();
 
-        $builder->createField('bundle', 'string')
-            ->length(50)
+        $builder->createField('dateAdded', 'datetime')
+            ->columnName('date_added')
             ->build();
 
-        $builder->createField('object', 'string')
+        $builder->createField('contactId', 'integer')
+            ->columnName('contact_id')
+            ->build();
+
+        $builder->createField('campaignId', 'integer')
+            ->columnName('campaign_id')
+            ->build();
+
+        $builder->createField('bundleName', 'string')
+            ->columnname('bundle_name')
+            ->length(100)
+            ->nullable()
+            ->build();
+
+        $builder->createField('className', 'string')
+            ->columnName('class_name')
             ->length(50)
             ->build();
 
@@ -78,7 +54,7 @@ class Entry
             ->columnName('object_id')
             ->build();
 
-        $builder->createField('action', 'string')
+        $builder->createField('activity', 'string')
             ->length(50)
             ->build();
 
@@ -87,120 +63,285 @@ class Entry
             ->nullable()
             ->build();
 
-        $builder->createField('credit', Type::DECIMAL)
+        $builder->createField('cost', 'decimal')
             ->precision(19)
             ->scale(4)
             ->nullable()
             ->build();
 
-        $builder->createField('debit', Type::DECIMAL)
+        $builder->createField('revenue', 'decimal')
             ->precision(19)
             ->scale(4)
             ->nullable()
             ->build();
     }
 
+    /**
+     * @var int $id primary key read-only
+     */
+    protected $id;
+
+    /**
+     * @var datetime $dateAdded time entry was made
+     */
+    protected $dateAdded;
+
+    /**
+     * @var int $contactId
+     */
+    protected $contactId;
+
+    /**
+     * @var int $campaignId
+     */
+    protected $campaignId;
+
+    /**
+     * @var string $bundleName
+     */
+    protected $bundleName;
+
+    /**
+     * @var string $className
+     */
+    protected $className;
+
+    /**
+     * @var int $objectId
+     */
+    protected $objectId;
+
+    /**
+     * @var string $activity
+     */
+    protected $activity;
+
+    /**
+     * @var string $memo
+     */
+    protected $memo;
+
+    /**
+     * @var string|float $cost
+     */
+    protected $cost;
+
+    /**
+     * @var string|float $revenue
+     */
+    protected $revenue;
+
+    /**
+     * @return int
+     */
     public function getId()
     {
         return $this->id;
     }
 
+    /**
+     * @return string when the entry was added
+     */
     public function getDateAdded()
     {
         return $this->dateAdded;
     }
 
+    /**
+     * @param string $dateAdded
+     *
+     * @return $this
+     */
     public function setDateAdded($dateAdded)
     {
         $this->dateAdded = $dateAdded;
         return $this;
     }
 
-    public function getContact()
+    /**
+     * @return integer
+     */
+    public function getContactId()
     {
-        return $this->contact;
+        return $this->contactId;
     }
 
-    public function setContact(Lead $contact)
+    /**
+     * @param \Mautic\LeadBundle\Entity\Lead|int $contact
+     *
+     * @return $this
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function setContactId($contact)
     {
-        $this->contact = $contact;
+        if ($contact instanceof Lead) {
+            $this->contactId = $contact->getId();
+        } elseif ( is_int($contact)) {
+            $this->contactId = $contact;
+        } else {
+            throw new \InvalidArgumentException('$contact must be an integer or instance of "\\Mautic\\LeadBundle\\Entity\\Lead"');
+        }
         return $this;
     }
 
-    public function getBundle()
+    /**
+     * @return integer
+     */
+    public function getCampaignId()
     {
-        return $this->bundle;
+        return $this->campaignId;
     }
 
-    public function setBundle($bundle)
+    /**
+     * @param \Mautic\CampaignBundle\Entity\Campaign|int $campaign
+     *
+     * @return $this
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function setCampaignId($campaign)
     {
-        $this->bundle = $bundle;
+        if ($campaign instanceof Campaign) {
+            $this->capaignId = $campaign->getId();
+        } elseif (is_int($campaign)) {
+            $this->campaignId = $campaign;
+        } else {
+            throw new \InvalidArgumentException('$campaign must be an integer or instance of "\\Mautic\\CampaignBundle\\Entity\\Campaign"');
+        }
         return $this;
     }
 
-    public function getObject()
+    /**
+     * @return string
+     */
+    public function getBundleName()
     {
-        return $this->object;
+        return $this->bundleName;
     }
 
-    public function setObjact($object)
+    /**
+     * @param string $bundleName
+     *
+     * @return $this
+     */
+    public function setBundleName($bundleName)
     {
-        $this->object = $object;
+        $this->bundleName = $bundleName;
         return $this;
     }
 
+    /**
+     * @return sting
+     */
+    public function getClassName()
+    {
+        return $this->className;
+    }
+
+    /**
+     * @param string $className
+     *
+     * @return $this
+     */
+    public function setClassName($className)
+    {
+        $this->className = $className;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
     public function getObjectId()
     {
         return $this->objectId;
     }
 
-    public function setObjactId($objectId)
+    /**
+     * @param int $objectId
+     *
+     * @return $this
+     */
+    public function setObjectId($objectId)
     {
         $this->objectId = $objectId;
         return $this;
     }
 
-    public function getAction()
+    /**
+     * @return string
+     */
+    public function getActivity()
     {
-        return $this->action;
+        return $this->activity;
     }
 
-    public function setAction($action)
+    /**
+     * @param string $activity
+     *
+     * @return $this
+     */
+    public function setActivity($activity)
     {
-        $this->action = $action;
+        $this->activity = $activity;
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function getMemo()
     {
         return $this->memo;
     }
 
+    /**
+     * @param string $memo
+     *
+     * @return $this
+     */
     public function setMemo($memo)
     {
         $this->memo = $memo;
         return $this;
     }
 
-    public function getCredit()
+    /**
+     * @return string|float
+     */
+    public function getCost()
     {
-        return $this->credit;
+        return $this->cost;
     }
 
-    public function setCredit($credit)
+    /**
+     * @param string|float $cost
+     *
+     * @return $this
+     */
+    public function setCost($cost)
     {
-        $this->credit = $credit;
+        $this->cost = $cost;
         return $this;
     }
 
-    public function getDebit()
+    /**
+     * @return string|float
+     */
+    public function getRevenue()
     {
-        return $this->debit;
+        return $this->revenue;
     }
 
-    public function setDebit($debit)
+    /**
+     * @param string|float $revenue
+     *
+     * @return $this
+     */
+    public function setRevenue($revenue)
     {
-        $this->debit = $debit;
+        $this->revenue = $revenue;
         return $this;
     }
 }
