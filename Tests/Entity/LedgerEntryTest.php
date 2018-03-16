@@ -161,19 +161,6 @@ class LedgerEntryTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->entry->setContactId('bad arg');
     }
-    /*
-    public function testCampaignId()
-    {
-        $testId           = rand(1,1000);
-        $setGetCampaignId = $this->entry->setCampaignId($testId)->getCampaignId();
-        $this->assertEquals($testId, $setGetCampaignId, 'Entry()->campaign is behaving abnormally');
-
-        $campaign         = $this->createMock(Campaign::class);
-        $campaign->method('getId')->willReturn($testId);
-        $setGetCampaignId = $this->entry->setCampaignId($campaign)->getCampaignId();
-        $this->assertEquals($testId, $setGetCampaignId, 'Entry()->campaign is behaving abnormally');
-    }
-*/
 
     /**
      * @dataProvider decimalProvider

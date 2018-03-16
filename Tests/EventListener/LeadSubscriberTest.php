@@ -9,4 +9,12 @@ use PHPUnit\Framework\TestCase;
  */
 class LeadSubscriberTest extends TestCase
 {
+
+    /**
+     *
+     */
+    public function testNothing()
+    {
+        $this->doesNotPerformAssertions();
+    }
 }
