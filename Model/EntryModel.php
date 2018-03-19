@@ -30,7 +30,7 @@ class EntryModel extends AbstractCommonModel
      */
     public function processAttributionChange(LeadEvent &$event, array $routingInfo = [])
     {
-        $this->logger->warning('PROCESSING '.strtoupper($event->getName()));
+        $this->logger->debug('PROCESSING '.strtoupper($event->getName()));
 
         $changes = $event->getChanges();
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {

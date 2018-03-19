@@ -46,7 +46,7 @@ class EnhancerSubscriber implements EventSubscriberInterface
      */
     public function enhancerAttributionCheck($enhancerEvent)
     {
-        $this->logger->warning('EnhancerSubcriber Responding to enhancer complete');
+        $this->logger->debug('EnhancerSubscriber Responding to enhancer complete');
         $enhancer     = $enhancerEvent->getEnhancer();
         if (method_exists($enhancer, 'getCostPerEnhancement')) {
             $enhancerCost = $enhancer->getCostPerEnhancement();
