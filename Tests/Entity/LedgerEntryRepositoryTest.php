@@ -2,28 +2,30 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Tests\Entity;
 
-use Doctrine\DBAL\Query\QueryBuilder;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Mapping\ClassMetadata;
+use Mautic\CoreBundle\Tests\CommonMocks;
 use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository;
 
-class LedgerEntryRepositoryTest extends \PHPUnit_Framework_TestCase
+class LedgerEntryRepositoryTest extends CommonMocks
 {
-    /**
-     * @var \Mautic\CoreBundle\Entity\CommonRepository
-     */
+
+    /** @var \Mautic\CoreBundle\Entity\CommonRepository */
     private $repo;
 
     /**
-     * @var \Doctrine\ORM\\QueryBuilder
+     * {@inheritdoc}
      */
-    private $qb;
+    public function setUp()
+    {
+        parent::setUp();
+
+        $this->repo = $this->getMockBuilder(LedgerEntryRepository::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+    }
 
     public function testGetTableAlias()
     {
-        $value = $this->repo->getTableAlias();
-
-        $this->assertEquals('cl', $value, 'LedgerEntry reposiort reporting unexpected table alias');
     }
 
     public function testGetContactCost()
@@ -36,15 +38,5 @@ class LedgerEntryRepositoryTest extends \PHPUnit_Framework_TestCase
 
     public function testGetContactLedger()
     {
-    }
-
-    protected function setUp()
-    {
-        $emMock = $this->createMock(EntityManager::class);
-
-        $metaMock = $this->createMock(ClassMetadata::class);
-
-        $this->repo = new LedgerEntryRepository($emMock, $metaMock);
-        $this->qb   = new QueryBuilder($emMock);
     }
 }
