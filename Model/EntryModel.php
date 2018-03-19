@@ -32,4 +32,21 @@ class EntryModel extends AbstractCommonModel
     {
 
     }
+
+
+    /**
+     * @param Array $params
+     *
+     * @return mixed
+     */
+    public function getDataForRevenueWidget($params) {
+
+        $data = [];
+        $entries = $this->getRepository->getDashboardRevenueWidgetData($params);
+
+        $data['entries'] = $entries;
+        // do stuff to make it table friendly and add it to $data
+
+        return $data;
+    }
 }
