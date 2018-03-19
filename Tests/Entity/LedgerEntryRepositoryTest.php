@@ -4,6 +4,7 @@ namespace MauticPlugin\MauticContactLedgerBundle\Tests\Entity;
 
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository;
 
 class LedgerEntryRepositoryTest extends \PHPUnit_Framework_TestCase
