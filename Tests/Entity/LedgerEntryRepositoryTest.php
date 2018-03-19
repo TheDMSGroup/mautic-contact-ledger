@@ -7,7 +7,6 @@ use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository;
 
 class LedgerEntryRepositoryTest extends CommonMocks
 {
-
     /** @var \Mautic\CoreBundle\Entity\CommonRepository */
     private $repo;
 
@@ -21,7 +20,6 @@ class LedgerEntryRepositoryTest extends CommonMocks
         $this->repo = $this->getMockBuilder(LedgerEntryRepository::class)
             ->disableOriginalConstructor()
             ->getMock();
-
     }
 
     public function testGetTableAlias()

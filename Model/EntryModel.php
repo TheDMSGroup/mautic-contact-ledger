@@ -7,7 +7,7 @@ use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Event\LeadEvent;
-use MauticPlugin\MauticContactLedgerBundle\Entity\Entry;
+use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry;
 
 /**
  * class EntryModel.
@@ -15,7 +15,7 @@ use MauticPlugin\MauticContactLedgerBundle\Entity\Entry;
 class EntryModel extends AbstractCommonModel
 {
     /**
-     * @return \MauticPlugin\MauticContactLedgerBundle\Entity\EntryRepository
+     * @return \Doctrine\ORM\EntityRepository
      */
     public function getEntryRepository()
     {
@@ -100,7 +100,7 @@ class EntryModel extends AbstractCommonModel
             list($bundleName, $className, $objectId) = [null, null, -1];
         }
 
-        $entry = new Entry();
+        $entry = new LedgerEntry();
         $entry
             ->setDateAdded(new DateTime())
             ->setContact($lead)

@@ -42,7 +42,7 @@ class EnhancerSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @param \MauticPlugin\MauticEnhancerBundle\Event\MauticEnhancerEvent $enhancerEvent
+     * @param $enhancerEvent
      */
     public function enhancerAttributionCheck($enhancerEvent)
     {

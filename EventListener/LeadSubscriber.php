@@ -30,7 +30,7 @@ class LeadSubscriber extends CommonSubscriber
     public function __construct(EntryModel $entryModel, Logger $logger)
     {
         $this->entryModel = $entryModel;
-        $this->logger = $logger;
+        $this->logger     = $logger;
     }
 
     /**
@@ -49,7 +49,7 @@ class LeadSubscriber extends CommonSubscriber
      */
     public function preSaveLeadAttributionCheck(LeadEvent $event)
     {
-        $lead = $event->getLead();
+        $lead    = $event->getLead();
         $changes = $lead->getChanges(false);
 
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
