@@ -183,6 +183,7 @@ class LedgerEntry extends CommonEntity
         if (null !== $this->contact) {
             return $this->contact;
         }
+
         return $this->contactId;
     }
 
@@ -210,6 +211,7 @@ class LedgerEntry extends CommonEntity
 
     /**
      * @param Lead $contact
+     *
      * @return $this
      */
     public function setContact(Lead $contact)
@@ -227,7 +229,6 @@ class LedgerEntry extends CommonEntity
     {
         return $this->campaignId;
     }
-
 
     /**
      * @return int|Campaign
@@ -263,9 +264,9 @@ class LedgerEntry extends CommonEntity
         return $this;
     }
 
-
     /**
      * @param Campaign $campaign
+     *
      * @return $this
      */
     public function setCampaign(Campaign $campaign)
@@ -356,7 +357,7 @@ class LedgerEntry extends CommonEntity
      */
     public function setActivity($activity)
     {
-        if (null === $activity)  {
+        if (null === $activity) {
             $activity = 'unknown';
         }
         $this->activity = $activity;

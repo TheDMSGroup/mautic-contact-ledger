@@ -2,17 +2,11 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Tests\EventListener;
 
-use PHPUnit\Framework\TestCase;
-
 /**
  * Class LeadSubsciberTest.
  */
-class LeadSubscriberTest extends TestCase
+class LeadSubscriberTest extends \PHPUnit_Framework_TestCase
 {
-
-    /**
-     *
-     */
     public function testNothing()
     {
         $this->doesNotPerformAssertions();

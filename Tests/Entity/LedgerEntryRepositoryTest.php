@@ -6,9 +6,8 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\QueryBuilder;
 use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository;
-use PHPUnit\Framework\TestCase;
 
-class LedgerEntryRepositoryTest extends TestCase
+class LedgerEntryRepositoryTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @var \Mautic\CoreBundle\Entity\CommonRepository
@@ -29,7 +28,6 @@ class LedgerEntryRepositoryTest extends TestCase
 
     public function testGetContactCost()
     {
-
     }
 
     public function testGetContactRevenue()

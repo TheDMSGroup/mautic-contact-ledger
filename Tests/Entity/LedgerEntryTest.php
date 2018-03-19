@@ -5,12 +5,11 @@ namespace MauticPlugin\MauticContactLedgerBundle\Tests\Entity;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Class EntryTest.
  */
-class LedgerEntryTest extends TestCase
+class LedgerEntryTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @var LedgerEntry
@@ -91,8 +90,8 @@ class LedgerEntryTest extends TestCase
 
     public function testCampaign()
     {
-        $testId         = rand(1,1000);
-        $campaign       = $this->createMock(Campaign::class);
+        $testId   = rand(1, 1000);
+        $campaign = $this->createMock(Campaign::class);
         $campaign->expects($this->any())
             ->method('getId')
             ->willReturn($testId);
@@ -104,18 +103,17 @@ class LedgerEntryTest extends TestCase
 
     public function testCampaignId()
     {
-        $testId           = rand(1,1000);
+        $testId           = rand(1, 1000);
         $setGetCampaignId = $this->entry->setCampaignId($testId)->getCampaignId();
         $this->assertEquals($testId, $setGetCampaignId, 'Entry()->campaign is behaving abnormally');
 
-        $campaign         = $this->createMock(Campaign::class);
+        $campaign = $this->createMock(Campaign::class);
         $campaign->method('getId')->willReturn($testId);
         $setGetCampaignId = $this->entry->setCampaignId($campaign)->getCampaignId();
         $this->assertEquals($testId, $setGetCampaignId, 'Entry()->campaign is behaving abnormally');
 
         $this->expectException(\InvalidArgumentException::class);
         $this->entry->setCampaignId('bad arg');
-
     }
 
     /**
@@ -136,8 +134,8 @@ class LedgerEntryTest extends TestCase
 
     public function testContact()
     {
-        $testId = rand(1, 1000);
-        $contact         = $this->createMock(Lead::class);
+        $testId  = rand(1, 1000);
+        $contact = $this->createMock(Lead::class);
         $contact->expects($this->any())
             ->method('getId')
             ->willReturn($testId);
@@ -149,11 +147,11 @@ class LedgerEntryTest extends TestCase
 
     public function testContactId()
     {
-        $testId           = rand(1,1000);
+        $testId          = rand(1, 1000);
         $setGetContactId = $this->entry->setContactId($testId)->getContactId();
         $this->assertEquals($testId, $setGetContactId, 'Entry()->contact is behaving abnormally');
 
-        $contact         = $this->createMock(Lead::class);
+        $contact = $this->createMock(Lead::class);
         $contact->method('getId')->willReturn($testId);
         $setGetContactId = $this->entry->setContactId($contact)->getContactId();
         $this->assertEquals($testId, $setGetContactId, 'Entry()->contact is behaving abnormally');

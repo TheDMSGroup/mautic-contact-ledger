@@ -2,12 +2,10 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Tests\Model;
 
-use PHPUnit\Framework\TestCase;
-
 /**
  * Class EntryModelTest.
  */
-class EntryModelTest extends TestCase
+class EntryModelTest extends \PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
