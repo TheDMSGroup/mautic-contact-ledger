@@ -12,6 +12,7 @@ return [
                 'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\LeadSubscriber::class,
                 'arguments' => [
                     '@mautic.contactledger.model.entry',
+                    '@logger',
                 ],
             ],
             'mautic.contactledger.subcriber.enhancer' => [

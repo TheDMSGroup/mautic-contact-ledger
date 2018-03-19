@@ -6,6 +6,7 @@ use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\LeadBundle\Event\LeadEvent;
 use Mautic\LeadBundle\LeadEvents;
 use MauticPlugin\MauticContactLedgerBundle\Model\EntryModel;
+use Symfony\Bridge\Monolog\Logger;
 
 /**
  * Class LeadSubscriber.
@@ -17,14 +18,19 @@ class LeadSubscriber extends CommonSubscriber
      */
     protected $entryModel;
 
+    /** @var Logger */
+    protected $logger;
+
     /**
      * LeadSubscriber constructor.
      *
      * @param EntryModel $entryModel
+     * @param Logger     $logger
      */
-    public function __construct(EntryModel $entryModel)
+    public function __construct(EntryModel $entryModel, Logger $logger)
     {
         $this->entryModel = $entryModel;
+        $this->logger = $logger;
     }
 
     /**
