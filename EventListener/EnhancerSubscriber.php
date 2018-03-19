@@ -54,7 +54,7 @@ class EnhancerSubscriber implements EventSubscriberInterface
                 $lead     = $enhancerEvent->getLead();
                 $campaign = $enhancerEvent->getCampaign();
                 $enhancer = $enhancerEvent->getEnhancer();
-                $this->entryModel->addEntry($lead, $campaign, $enhancer, 'enhacement', $enhancerCost);
+                $this->entryModel->addEntry($lead, $campaign, $enhancer, 'enhancement', $enhancerCost);
             }
         }
     }
