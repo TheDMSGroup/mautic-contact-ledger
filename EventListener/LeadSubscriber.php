@@ -44,7 +44,7 @@ class LeadSubscriber extends CommonSubscriber
     {
         $this->logger->debug('LeadSubscriber Checking for attribution changes');
 
-        $changes = $event->getChanges();
+        $changes = $event->getLead()->getChanges(true);
 
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
             $this->logger->debug('Found a change! Send for processing');
