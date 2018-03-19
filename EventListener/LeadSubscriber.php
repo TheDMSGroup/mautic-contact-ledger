@@ -38,6 +38,7 @@ class LeadSubscriber extends CommonSubscriber
      */
     public static function getSubscribedEvents()
     {
+        // @todo - Try FIELD_PRE_SAVE for a tighter focus?
         return [
             LeadEvents::LEAD_PRE_SAVE => ['preSaveLeadAttributionCheck', -1],
         ];
@@ -48,15 +49,20 @@ class LeadSubscriber extends CommonSubscriber
      */
     public function preSaveLeadAttributionCheck(LeadEvent $event)
     {
-        $this->logger->debug('LeadSubscriber Checking for attribution changes');
-
-        $changes = $event->getLead()->getChanges(true);
+        $lead = $event->getLead();
+        $changes = $lead->getChanges(false);
 
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
-            $this->logger->debug('Found a change! Send for processing');
-            $routingInfo = $this->router->match($this->request->getPathInfo());
-            $this->logger->debug('sending '.print_r($routingInfo, true).' with event for processing');
+            $this->logger->debug('Found an attribution change! Send for processing');
+            $routingInfo = [];
+            // @todo - Make $this->router work here?
+            if (isset($this->router)) {
+                $routingInfo = $this->router->match($this->request->getPathInfo());
+                $this->logger->debug('sending '.print_r($routingInfo, true).' with event for processing');
+            }
             $this->entryModel->processAttributionChange($event, $routingInfo);
+            unset($changes['fields']['attribution']);
+            $lead->setChanges($changes);
         }
     }
 }
