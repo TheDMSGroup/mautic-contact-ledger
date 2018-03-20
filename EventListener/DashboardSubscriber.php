@@ -9,7 +9,7 @@
  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-namespace MauticPlugin\MauticContactLedgerBundle;
+namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use Mautic\DashboardBundle\Event\WidgetDetailEvent;
 use Mautic\DashboardBundle\EventListener\DashboardSubscriber as MainDashboardSubscriber;
@@ -25,7 +25,7 @@ class DashboardSubscriber extends MainDashboardSubscriber
      *
      * @var string
      */
-    protected $bundle = 'contact_ledger';
+    protected $bundle = 'campaign';
 
     /**
      * Define the widget(s).
@@ -33,7 +33,7 @@ class DashboardSubscriber extends MainDashboardSubscriber
      * @var string
      */
     protected $types = [
-        'campaign.revenue'      => [],
+        'campaign.revenue' => [],
     ];
 
     /**
@@ -44,11 +44,11 @@ class DashboardSubscriber extends MainDashboardSubscriber
     /**
      * DashboardSubscriber constructor.
      *
-     * @param EventModel    $campaignEventModel
+     * @param EventModel $campaignEventModel
      */
-    public function __construct(EntryModel $entryModel, EventModel $campaignEventModel)
+    public function __construct(EntryModel $entryModel)
     {
-        $this->entryModel      = $entryModel;
+        $this->entryModel = $entryModel;
     }
 
     /**
@@ -59,17 +59,21 @@ class DashboardSubscriber extends MainDashboardSubscriber
     public function onWidgetDetailGenerate(WidgetDetailEvent $event)
     {
         if ($event->getType() == 'campaign.revenue') {
-            if (!$event->isCached()) {
-                $widget = $event->getWidget();
-                $height = $widget->getHeight();
-                $data   = $this->entryModel->getDataForRevenueWidget($event);
-
+     //       if (!$event->isCached()) {
+                $widget           = $event->getWidget();
+                $params= $widget->getParams();
+                $params['limit'] = ($widget->getHeight() - 200) / 35;
+                $params['orderby'] = 'revenue';
+                $data             = $this->entryModel->getDataForRevenueWidget($params);
+                $data['height']   = $widget->getHeight();
+                $data['page']     = 1;
+                $data['maxPages'] = 10;
+                $data['total']    = $data['summary']['count'];
                 $event->setTemplateData(['data' => $data]);
             }
 
-
             $event->setTemplate('MauticContactLedgerBundle:Widgets:revenue.html.php');
             $event->stopPropagation();
-        }
+      //  }
     }
 }
