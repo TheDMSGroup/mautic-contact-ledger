@@ -11,11 +11,10 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle;
 
-use Mautic\PluginBundle\Bundle\PluginBundleBase;
-
 /**
- * Class MauticContactLedgerBundle.
+ * Class MauticContactLedgerEvents.
  */
-class MauticContactLedgerBundle extends PluginBundleBase
+final class MauticContactLedgerEvents
 {
+    const CREATE_CONTEXT = 'mauticplugin.contact_ledger.create_context';
 }
