@@ -1,23 +1,27 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: nbush
- * Date: 3/20/18
- * Time: 2:29 PM
+
+/*
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Mautic Community
+ *
+ * @link        http://mautic.org
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
+use Mautic\CampaignBundle\Entity\Campaign;
 use MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEvent;
 
 class ContactLedgerContextSubscriber
 {
-
+    /** @var Campaign */
     protected $campaign;
 
     protected $actor;
 
-    protected $entryType;
+    protected $eventType;
 
     /**
      * @return array
@@ -34,9 +38,9 @@ class ContactLedgerContextSubscriber
      */
     public function setContext(ContactLedgerContextEvent $event)
     {
-        $this->campaign = $event->getCampaign();
-        $this->actor    = $event->getActor();
-        $this->entryType = $event->getEventType();
+        $this->campaign  = $event->getCampaign();
+        $this->actor     = $event->getActor();
+        $this->eventType = $event->getEventType();
     }
 
     /**
