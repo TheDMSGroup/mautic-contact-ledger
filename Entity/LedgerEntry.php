@@ -100,6 +100,7 @@ class LedgerEntry extends CommonEntity
 
         $builder->createField('campaignId', 'integer')
             ->columnName('campaign_id')
+            ->nullable()
             ->build();
 
         $builder->createField('bundleName', 'string')
@@ -111,14 +112,17 @@ class LedgerEntry extends CommonEntity
         $builder->createField('className', 'string')
             ->columnName('class_name')
             ->length(50)
+            ->nullable()
             ->build();
 
         $builder->createField('objectId', 'integer')
             ->columnName('object_id')
+            ->nullable()
             ->build();
 
         $builder->createField('activity', 'string')
             ->length(50)
+            ->nullable()
             ->build();
 
         $builder->createField('memo', 'string')
