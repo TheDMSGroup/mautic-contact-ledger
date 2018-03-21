@@ -78,15 +78,17 @@ class LeadSubscriber extends CommonSubscriber
             $actor = $this->context->getActor();
             $type = $this->context->getType();
 
+
             if ('cost' === $type) {
-                $this->model->addEntry($lead, $campaign, $actor, 'received', $price);
+                $activity = $price < 0.0 ? 'received' : 'scrubbed';
+                $this->model->addEntry($lead, $campaign, $actor, $activity, $price);
             } elseif ('revenue' === $type) {
                 $this->model->addEntry($lead, $campaign, $actor, 'converted', null, $price);
             } else {
-                $this->model->addEntry($lead, $campaign, $actor, 'notated', null, null, $price);
+                $this->model->addEntry($lead, $campaign, $actor, 'memo', null, null, $price);
             }
 
-            //Lead has nuo beeb saved yet?
+            //TODO: Lead has not been saved yet?
             unset($changes['fields']['attribution']);
             $lead->setChanges($changes);
         }

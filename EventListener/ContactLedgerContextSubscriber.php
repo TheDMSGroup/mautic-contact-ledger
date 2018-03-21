@@ -12,18 +12,22 @@
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use Mautic\CampaignBundle\Entity\Campaign;
-use MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEventInterface;
+use MauticPlugin\MauticContactLedgerBundle\MauticContactLedgerEvents;
+use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ContactLedgerContextSubscriber implements EventSubscriberInterface
 {
-    /** @var Campaign */
+    /** @var Campaign|null */
     protected $campaign;
 
+    /** @var object|null */
     protected $actor;
 
+    /** @var string */
     protected $type;
 
+    /** @var string|float|null */
     protected $amount;
 
     /**
@@ -32,19 +36,32 @@ class ContactLedgerContextSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            'mauticplugin.contactledger.create_context' => ['setContext', 0],
+            MauticContactLedgerEvents::CREATE_CONTEXT => ['setContext', 0],
+
         ];
     }
 
     /**
-     * @param ContactLedgerContextEventInterface $event
+     * This method expects an event compatable with the definition in
+     * \MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEventInterface
+     * However, to minimize inter-plugin dependecies, any \Symfony\Component\EventDispatcher\Event
+     * is allowed
+     *
      */
-    public function setContext(ContactLedgerContextEventInterface $event)
+    public function setContext(Event $event)
     {
-        $this->campaign = $event->getCampaign();
-        $this->actor    = $event->getActor();
-        $this->type     = $event->getType();
-        $this->amount   = $event->getAmount();
+        if (method_exists($event, 'getCampaign')) {
+           $this->campaign = $event->getCampaign();
+    }
+        if (method_exists($event, 'getActor')) {
+            $this->actor    = $event->getActor();
+        }
+        if (method_exists($event, 'getType')) {
+            $this->type     = $event->getType();
+        }
+        if (method_exists($event, 'getAmount')) {
+            $this->amount = $event->getAmount();
+        }
     }
 
     /**
