@@ -66,10 +66,10 @@ class DashboardSubscriber extends MainDashboardSubscriber
             }
             $params         = $widget->getParams();
             // check date params and set defaults if not exist
-            if(!isset($params['dateTo']) || !$params['dateTo'] instanceof \DateTime){
+            if (!isset($params['dateTo']) || !$params['dateTo'] instanceof \DateTime) {
                 $params['toDate'] = new \DateTime();
             }
-            if(!isset($params['dateFrom']) || !$params['dateFrom'] instanceof \DateTime){
+            if (!isset($params['dateFrom']) || !$params['dateFrom'] instanceof \DateTime) {
                 $params['dateFrom'] = $params['dateTo']->modify('-1 day');
             }
 

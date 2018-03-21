@@ -13,7 +13,6 @@ namespace MauticPlugin\MauticContactLedgerBundle\Controller;
 
 use Mautic\CoreBundle\Controller\AjaxController as CommonAjaxController;
 use Mautic\CoreBundle\Controller\AjaxLookupControllerTrait;
-use Mautic\CoreBundle\Helper\InputHelper;
 use Mautic\CoreBundle\Helper\UTF8Helper;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -39,20 +38,26 @@ class AjaxController extends CommonAjaxController
         $params['dateTo']   = $_SESSION['_sf2_attributes']['mautic.dashboard.date.to'];
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
-        $entryModel      = $this->get('mautic.contactledger.model.entry');
-        $ledgerRepo      = $entryModel->getEntryRepository();
-        $data            = $ledgerRepo->getDashboardRevenueWidgetData($params);
-        $data['columns'] = [
-            $this->translator->trans('mautic.contactledger.dashboard.revenue.header.active'),
-            $this->translator->trans('mautic.contactledger.dashboard.revenue.header.name'),
-            $this->translator->trans('mautic.contactledger.dashboard.revenue.header.received'),
-            $this->translator->trans('mautic.contactledger.dashboard.revenue.header.converted'),
-            $this->translator->trans('mautic.contactledger.dashboard.revenue.header.revenue'),
-            $this->translator->trans('mautic.contactledger.dashboard.revenue.header.cost'),
-            $this->translator->trans('mautic.contactledger.dashboard.revenue.header.gm'),
-            $this->translator->trans('mautic.contactledger.dashboard.revenue.header.margin'),
-            $this->translator->trans('mautic.contactledger.dashboard.revenue.header.ecpm'),
+        $entryModel = $this->get('mautic.contactledger.model.entry');
+        $ledgerRepo = $entryModel->getEntryRepository();
+        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params);
+        $headers    = [
+            'mautic.contactledger.dashboard.revenue.header.active',
+            'mautic.contactledger.dashboard.revenue.header.id',
+            'mautic.contactledger.dashboard.revenue.header.name',
+            'mautic.contactledger.dashboard.revenue.header.received',
+            'mautic.contactledger.dashboard.revenue.header.converted',
+            'mautic.contactledger.dashboard.revenue.header.revenue',
+            'mautic.contactledger.dashboard.revenue.header.cost',
+            'mautic.contactledger.dashboard.revenue.header.gm',
+            'mautic.contactledger.dashboard.revenue.header.margin',
+            'mautic.contactledger.dashboard.revenue.header.ecpm',
         ];
+        foreach ($headers as $header) {
+            $data['columns'][] = [
+                'title' => $this->translator->trans($header)
+            ];
+        }
         $data            = UTF8Helper::fixUTF8($data);
 
         return $this->sendJsonResponse($data);

@@ -13,7 +13,6 @@ namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
 use Mautic\CoreBundle\Entity\CommonRepository;
 use Mautic\LeadBundle\Entity\Lead;
-use Symfony\Bundle\FrameworkBundle\Translation\Translator;
 
 const MAUTIC_CONVERSION_STATUS = 'sell';
 /**
@@ -99,18 +98,14 @@ class LedgerEntryRepository extends CommonRepository
         if ($count['count']) {
             // get the actual IDs to use from this date range
 
-
-            $q->resetQueryParts('select');
+            $q->resetQueryPart('select');
             $q->select('l.id');
 
             $leads = $q->execute()->fetchAll();
-            $leads = array_column($leads, "id");
+            $leads = array_column($leads, 'id');
 
             // get financials from ledger based on returned Lead list
             $f = $this->_em->getConnection()->createQueryBuilder();
-
-            // OK, now get the actual results from the ledger
-            $f->resetQueryParts('select');
             $f->select(
                 'c.name, c.is_published, c.id as campaign_id, SUM(cl.cost) as cost, SUM(cl.revenue) as revenue, COUNT(cl.contact_id) as received'
             )->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'cl');
@@ -122,9 +117,9 @@ class LedgerEntryRepository extends CommonRepository
 
             $f->orderBy('COUNT(cl.contact_id)', 'DESC');
 
-            if ($params['limit']) {
+            if (isset($params['limit'])) {
                 $f->setMaxResults($params['limit']);
-            };
+            }
 
             $financials = $f->execute()->fetchAll();
 
@@ -148,6 +143,7 @@ class LedgerEntryRepository extends CommonRepository
             $conversions = array_column($conversions, 'converted', 'campaign_id');
 
             foreach ($financials as $financial) {
+                // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
                 $financial['revenue']   = floatval($financial['revenue']);
                 $financial['cost']      = floatval($financial['cost']);
                 $financial['gm']        = $financial['revenue'] - $financial['cost'];
@@ -155,15 +151,26 @@ class LedgerEntryRepository extends CommonRepository
                 $financial['ecpm']      = $financial['gm'] / 1000;
                 $financial['received']  = intval($financial['received']);
                 $financial['converted'] = $conversions[$financial['campaign_id']];
-                $results['rows'][]      = $financial;
-
-                $results['summary']['gmTotal']        = $results['summary']['gmTotal'] + $financial['gm'];
-                $results['summary']['costTotal']      = $results['summary']['costTotal'] + $financial['cost'];
-                $results['summary']['revenueTotal']   = $results['summary']['revenueTotal'] + $financial['revenue'];
-                $results['summary']['ecpmTotal']      = $results['summary']['gmTotal'] / 1000;
-                $results['summary']['marginTotal']    = $results['summary']['revenueTotal'] ? ($results['summary']['gmTotal'] / $results['summary']['revenueTotal']) * 100 : 0;
-                $results['summary']['receivedTotal']  = $results['summary']['receivedTotal'] + $financial['received'];
-                $results['summary']['convertedTotal'] = $results['summary']['convertedTotal'] + $financial['converted'];
+                $results['rows'][]      = [
+                    $financial['is_published'],
+                    $financial['campaign_id'],
+                    $financial['name'],
+                    $financial['received'],
+                    $financial['converted'],
+                    $financial['revenue'],
+                    $financial['cost'],
+                    $financial['gm'],
+                    $financial['margin'],
+                    $financial['ecpm']
+                ];
+                //
+                // $results['summary']['gmTotal']        = $results['summary']['gmTotal'] + $financial['gm'];
+                // $results['summary']['costTotal']      = $results['summary']['costTotal'] + $financial['cost'];
+                // $results['summary']['revenueTotal']   = $results['summary']['revenueTotal'] + $financial['revenue'];
+                // $results['summary']['ecpmTotal']      = $results['summary']['gmTotal'] / 1000;
+                // $results['summary']['marginTotal']    = $results['summary']['revenueTotal'] ? ($results['summary']['gmTotal'] / $results['summary']['revenueTotal']) * 100 : 0;
+                // $results['summary']['receivedTotal']  = $results['summary']['receivedTotal'] + $financial['received'];
+                // $results['summary']['convertedTotal'] = $results['summary']['convertedTotal'] + $financial['converted'];
             }
         }
 

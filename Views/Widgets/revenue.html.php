@@ -19,22 +19,22 @@ echo $view['assets']->includeStylesheet('plugins/MauticContactLedgerBundle/Asset
     $params = $data['params'];
 ?>
 
-<?php if (isset($data['entries']) && $data['entries']) : ?>
+
     <div class="chart-wrapper">
         <div class="pt-sd pr-md pb-md pl-md">
             <div id="campaign-revenue-table" style="height:<?php echo $data['height']; ?>px">
                 <!-- Revenue By Campaign -->
-                <div id="global-revenue" class="table-responsive">
-
+                <div class="responsive-table">
+                    <table id="global-revenue" class="display cell-border stripe hover order-column" width="100%">
+                    </table>
                 </div>
                 <!--/ Revenue By Campaign -->
             </div>
         </div>
     </div>
-<?php endif; ?>
+
 <script>
     mQuery(document).ready(function() {
-        console.log('gettin the json');
         mQuery.ajax({
             url: mauticAjaxUrl,
             type: 'POST',
@@ -44,10 +44,22 @@ echo $view['assets']->includeStylesheet('plugins/MauticContactLedgerBundle/Asset
             cache: true,
             dataType: 'json',
             success: function (response) {
-                console.log(response);
                 mQuery('#global-revenue').DataTable( {
-                    data: response.dataRows,
-                    columns: response.dataHeader
+                    data: response.rows,
+                    columns: response.columns
+                    columnDefs : [
+                        {
+                            render: function ( data, type, row ) {
+                                if (data==0){
+                                    return "No"
+                                } else {
+                                    return "Yes"
+                                }
+                            },
+                            targets: 0
+                        },
+                        { visible: false,  targets: [ 1 ] }
+                    ]
                 } );
             }
         });
