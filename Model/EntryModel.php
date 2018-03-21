@@ -168,27 +168,4 @@ class EntryModel extends AbstractCommonModel
 
         return $entryObject;
     }
-
-
-    /**
-     * @param Array $params
-     *
-     * @return mixed
-     */
-    public function getDataForRevenueWidget($params) {
-
-        $data = [];
-        $entries = $this->getEntryRepository()->getDashboardRevenueWidgetData($params);
-
-        $data['entries'] = $entries['financials'];
-        $data['summary'] = $entries['summary'];
-        // do stuff to make it table friendly and add it to $data
-
-        return $data;
-    }
 }
-
-// gm = rev-cost
-// margin = gm/cost
-// eCPM = gm per 1000 leads
-// received =

@@ -59,21 +59,27 @@ class DashboardSubscriber extends MainDashboardSubscriber
     public function onWidgetDetailGenerate(WidgetDetailEvent $event)
     {
         if ($event->getType() == 'campaign.revenue') {
-     //       if (!$event->isCached()) {
-                $widget           = $event->getWidget();
-                $params= $widget->getParams();
-                $params['limit'] = ($widget->getHeight() - 200) / 35;
-                $params['orderby'] = 'revenue';
-                $data             = $this->entryModel->getDataForRevenueWidget($params);
-                $data['height']   = $widget->getHeight();
-                $data['page']     = 1;
-                $data['maxPages'] = 10;
-                $data['total']    = $data['summary']['count'];
-                $event->setTemplateData(['data' => $data]);
+            //       if (!$event->isCached()) {
+            $widget = $event->getWidget();
+            if ($widget->getHeight() < 330) {
+                $widget->setHeight(330);
+            }
+            $params         = $widget->getParams();
+            // check date params and set defaults if not exist
+            if(!isset($params['dateTo']) || !$params['dateTo'] instanceof \DateTime){
+                $params['toDate'] = new \DateTime();
+            }
+            if(!isset($params['dateFrom']) || !$params['dateFrom'] instanceof \DateTime){
+                $params['dateFrom'] = $params['dateTo']->modify('-1 day');
             }
 
-            $event->setTemplate('MauticContactLedgerBundle:Widgets:revenue.html.php');
-            $event->stopPropagation();
-      //  }
+            $data['params'] = $params;
+            $data['height'] = $widget->getHeight();
+            $event->setTemplateData(['data' => $data]);
+        }
+
+        $event->setTemplate('MauticContactLedgerBundle:Widgets:revenue.html.php');
+        $event->stopPropagation();
+        //  }
     }
 }
