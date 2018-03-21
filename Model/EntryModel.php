@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Mautic Community
+ *
+ * @link        http://mautic.org
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
+ */
+
 namespace MauticPlugin\MauticContactLedgerBundle\Model;
 
 use DateTime;
@@ -19,7 +28,7 @@ class EntryModel extends AbstractCommonModel
      */
     public function getEntryRepository()
     {
-        return $this->em->getRepository('MauticPlugin\\MauticContactLedgerBundle\\Entity\\Entry');
+        return $this->em->getRepository('MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry');
     }
 
     /**

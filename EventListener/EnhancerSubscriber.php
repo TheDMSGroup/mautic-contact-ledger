@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Mautic Community
+ *
+ * @link        http://mautic.org
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
+ */
+
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use MauticPlugin\MauticContactLedgerBundle\Model\EntryModel;
@@ -47,7 +56,7 @@ class EnhancerSubscriber implements EventSubscriberInterface
     public function enhancerAttributionCheck($enhancerEvent)
     {
         $this->logger->debug('EnhancerSubscriber Responding to enhancer complete');
-        $enhancer     = $enhancerEvent->getEnhancer();
+        $enhancer = $enhancerEvent->getEnhancer();
         if (method_exists($enhancer, 'getCostPerEnhancement')) {
             $enhancerCost = $enhancer->getCostPerEnhancement();
             if ($enhancerCost) {

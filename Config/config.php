@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Mautic Community
+ *
+ * @link        http://mautic.org
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
+ */
+
 return [
     'name'        => 'Mautic Contact Ledger',
     'description' => 'Adds cost and revenue tracking on a per ler lead basis.',
@@ -20,6 +29,12 @@ return [
                 'arguments' => [
                     '@mautic.contactledger.model.entry',
                     '@logger',
+                ],
+            ],
+            'mautic.contactledger.dashboard.subscriber' => [
+                'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\DashboardSubscriber::class,
+                'arguments' => [
+                    'mautic.contactledger.model.entry',
                 ],
             ],
         ],
