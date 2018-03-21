@@ -32,7 +32,7 @@ class ContactLedgerContextSubscriber
     public static function getSubscribedEvents()
     {
         return [
-            'mauticplugin.contact_ledger.create_context' => ['setContext', 0],
+            'mauticplugin.contactledger.create_context' => ['setContext', 0],
         ];
     }
 

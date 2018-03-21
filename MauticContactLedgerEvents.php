@@ -22,5 +22,5 @@ final class MauticContactLedgerEvents
      * MauticPlugin\MaucticContactLedgerBundle\Event\ContactLedgerContextEvent
      * or a compatible event
      */
-    const CREATE_CONTEXT = 'mauticplugin.contact_ledger.create_context';
+    const CREATE_CONTEXT = 'mauticplugin.contactledger.create_context';
 }
