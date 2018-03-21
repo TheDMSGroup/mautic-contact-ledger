@@ -28,7 +28,7 @@ class LeadSubscriber extends CommonSubscriber
     protected $model;
 
     /**
-     * @var ContactLedgerContextSubscriber
+     * @var mixed
      */
     protected $context;
 
@@ -39,10 +39,10 @@ class LeadSubscriber extends CommonSubscriber
      * LeadSubscriber constructor.
      *
      * @param EntryModel $model
-     * @param ContactLedgerContextSubscriber $context
+     * @param mixed      $context
      * @param Logger     $logger
      */
-    public function __construct(EntryModel $model, ContactLedgerContextSubscriber $context, Logger $logger)
+    public function __construct(EntryModel $model, $context = null, Logger $logger)
     {
         $this->model   = $model;
         $this->context = $context;
@@ -72,12 +72,11 @@ class LeadSubscriber extends CommonSubscriber
 
             $oldPrice = $changes['fields']['attribution'][0];
             $newPrice = $changes['fields']['attribution'][1];
-            $price   = $newPrice - $oldPrice;
+            $price    = $newPrice - $oldPrice;
 
             $campaign = $this->context->getCampaign();
-            $actor = $this->context->getActor();
-            $type = $this->context->getType();
-
+            $actor    = $this->context->getActor();
+            $type     = $this->context->getType();
 
             if ('cost' === $type) {
                 $activity = $price < 0.0 ? 'received' : 'scrubbed';

@@ -30,7 +30,6 @@ class EntryModel extends AbstractCommonModel
         return $this->em->getRepository('MauticPlugin\\MauticContactLedgerBundle\\Entity\\Entry');
     }
 
-
     /**
      * @param Lead              $lead
      * @param Campaign|null     $campaign

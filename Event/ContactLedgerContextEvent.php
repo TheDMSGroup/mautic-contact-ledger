@@ -17,12 +17,12 @@ use Symfony\Component\EventDispatcher\Event;
 class ContactLedgerContextEvent extends Event implements ContactLedgerContextEventInterface
 {
     /**
-     * This type will use the cost collumn to record entryAmount
+     * This type will use the cost collumn to record entryAmount.
      */
     const ENTRY_TYPE_COST    = 'cost';
 
     /**
-     * This type wil use the revenue colloumn to record entryAmount
+     * This type wil use the revenue colloumn to record entryAmount.
      */
     const ENTRY_TYPE_REVENUE = 'revenue';
 
@@ -55,9 +55,9 @@ class ContactLedgerContextEvent extends Event implements ContactLedgerContextEve
     /**
      * ContactLedgerContextEvent constructor.
      *
-     * @param Campaign $campaign
-     * @param object $actor
-     * @param string $type
+     * @param Campaign          $campaign
+     * @param object            $actor
+     * @param string            $type
      * @param string|float|null $amount
      */
     public function __construct(Campaign $campaign=null, $actor=null, $type='memo', $amount=null)

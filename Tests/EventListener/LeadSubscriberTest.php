@@ -47,8 +47,10 @@ class LeadSubscriberTest extends CommonMocks
         $entryModel->expects($this->once())
             ->method('processAttributionChange');
 
-        $logger     = new Logger('test');
-        $subscriber = new LeadSubscriber($entryModel, $logger);
+        $logger = new Logger('test');
+        // @todo - create context.
+        $context    = null;
+        $subscriber = new LeadSubscriber($entryModel, $context, $logger);
 
         $leadEvent = $this->getMockBuilder(LeadEvent::class)
             ->disableOriginalConstructor()

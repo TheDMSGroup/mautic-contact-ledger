@@ -37,7 +37,6 @@ class ContactLedgerContextSubscriber implements EventSubscriberInterface
     {
         return [
             MauticContactLedgerEvents::CREATE_CONTEXT => ['setContext', 0],
-
         ];
     }
 
@@ -45,14 +44,13 @@ class ContactLedgerContextSubscriber implements EventSubscriberInterface
      * This method expects an event compatable with the definition in
      * \MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEventInterface
      * However, to minimize inter-plugin dependecies, any \Symfony\Component\EventDispatcher\Event
-     * is allowed
-     *
+     * is allowed.
      */
     public function setContext(Event $event)
     {
         if (method_exists($event, 'getCampaign')) {
-           $this->campaign = $event->getCampaign();
-    }
+            $this->campaign = $event->getCampaign();
+        }
         if (method_exists($event, 'getActor')) {
             $this->actor    = $event->getActor();
         }

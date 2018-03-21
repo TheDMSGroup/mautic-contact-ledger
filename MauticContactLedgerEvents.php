@@ -17,7 +17,7 @@ namespace MauticPlugin\MauticContactLedgerBundle;
 final class MauticContactLedgerEvents
 {
     /**
-     * To use this plugin properly, dispatch a
+     * To use this plugin properly, dispatch a.
      *
      * MauticPlugin\MaucticContactLedgerBundle\Event\ContactLedgerContextEvent
      * or a compatible event
