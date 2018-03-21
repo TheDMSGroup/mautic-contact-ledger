@@ -11,7 +11,7 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
-use Doctrine\ORM\Mapping\ClassMetadata as CLClassMetadata;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
 use Mautic\CoreBundle\Entity\CommonEntity;
@@ -90,7 +90,7 @@ class LedgerEntry extends CommonEntity
     /**
      * @param \Doctrine\ORM\Mapping\ClassMetadata $metadata
      */
-    public static function loadMetadata(CLClassMetadata $metadata)
+    public static function loadMetadata(ClassMetadata $metadata)
     {
         $builder = new ClassMetadataBuilder($metadata);
 

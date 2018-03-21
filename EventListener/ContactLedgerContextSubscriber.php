@@ -12,10 +12,10 @@
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use Mautic\CampaignBundle\Entity\Campaign;
-use MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEvent;
 use MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEventInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class ContactLedgerContextSubscriber
+class ContactLedgerContextSubscriber implements EventSubscriberInterface
 {
     /** @var Campaign */
     protected $campaign;
@@ -37,7 +37,7 @@ class ContactLedgerContextSubscriber
     }
 
     /**
-     * @param ContactLedgerContextEvent $event
+     * @param ContactLedgerContextEventInterface $event
      */
     public function setContext(ContactLedgerContextEventInterface $event)
     {

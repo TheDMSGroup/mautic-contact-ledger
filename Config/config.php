@@ -22,7 +22,7 @@ return [
             'mauticplugin.contactledger.subcriber.enhancer' => [
                 'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\EnhancerSubscriber::class,
                 'arguments' => [
-                    '@mautic.contactledger.model.entry',
+                    '@mauticplugin.contactledger.model.entry',
                     '@logger',
                 ],
             ],
