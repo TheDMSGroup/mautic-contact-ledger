@@ -9,15 +9,20 @@
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEvent;
+use MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEventInterface;
 
 class ContactLedgerContextSubscriber
 {
-
-    protected $campaign;
+    /**
+     * @var
+     */
+    protected $campaignId;
 
     protected $actor;
 
-    protected $entryType;
+    protected $type;
+
+    protected $amount;
 
     /**
      * @return array
@@ -25,22 +30,35 @@ class ContactLedgerContextSubscriber
     public static function getSubscribedEvents()
     {
         return [
-            'mauticplugin.contact_ledger.create_context' => ['setContext', 0],
+            'mautic.contact_ledger.create_context' => ['setContext', 0],
         ];
     }
 
     /**
      * @param ContactLedgerContextEvent $event
      */
-    public function setContext(ContactLedgerContextEvent $event)
+    public function setContext(ContactLedgerContextEventInterface $event)
     {
         $this->campaign = $event->getCampaign();
         $this->actor    = $event->getActor();
-        $this->entryType = $event->getEventType();
+        $this->type     = $event->getType();
+        $this->amount   = $event->getAmount();
     }
 
     /**
-     * @return Campaign
+     * @return CampaignId|null
+     */
+    public function getCampaignId()
+    {
+        if (isset($this->campaign)) {
+            return $this->campaign->getId();
+        }
+
+        return null;
+    }
+
+    /**
+     * @return Campaign|null
      */
     public function getCampaign()
     {
@@ -48,7 +66,7 @@ class ContactLedgerContextSubscriber
     }
 
     /**
-     * @return object
+     * @return object|null
      */
     public function getActor()
     {
@@ -58,8 +76,16 @@ class ContactLedgerContextSubscriber
     /**
      * @return string
      */
-    public function getEventType()
+    public function getType()
     {
-        return $this->eventType;
+        return $this->type;
+    }
+
+    /**
+     * @return string|float|null
+     */
+    public function getAmount()
+    {
+        return $this->amount;
     }
 }

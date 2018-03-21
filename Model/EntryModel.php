@@ -6,7 +6,6 @@ use DateTime;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
 use Mautic\LeadBundle\Entity\Lead;
-use Mautic\LeadBundle\Event\LeadEvent;
 use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry;
 
 /**
@@ -22,73 +21,24 @@ class EntryModel extends AbstractCommonModel
         return $this->em->getRepository('MauticPlugin\\MauticContactLedgerBundle\\Entity\\Entry');
     }
 
-    /**
-     * @param LeadEvent $event
-     * @param array     $routingInfo
-     *
-     * @return bool
-     */
-    public function processAttributionChange(LeadEvent &$event, array $routingInfo = [])
-    {
-        $this->logger->debug('PROCESSING '.strtoupper($event->getName()));
-
-        $changes = $event->getChanges();
-        if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
-            $oldPrice = $changes['fields']['attribution'][0];
-            $newPrice = $changes['fields']['attribution'][1];
-
-            $price   = $newPrice - $oldPrice;
-            $contact = $event->getLead();
-
-            if (!$contact->getId()) { //new leads handled this way
-                $actor    = [null, null, null];
-                $campaign = null;
-                $action   = 'contactBuy';
-
-                if (isset($routingInfo['campaignId'])) {
-                    /** @var Campaign $campaign */
-                    $campaign = $this->em->getRepository('Mautic\\CampaignBundle\\Entity\\Campaign')->find(
-                        $routingInfo['campaignId']
-                    );
-                } else {
-                    $this->logger->alert('Unable to properly log cost of new Lead, Campaign not found');
-
-                    return false;
-                }
-
-                if (isset($routingInfo['sourceId'])) {
-                    $actor = ['MauticContactSourceBundle', 'ContactSource', $routingInfo['sourceId']];
-                } else {
-                    $this->logger->alert('Unable to properly log cost of new Lead, ContactSource not found.');
-
-                    return false;
-                }
-                //TODO: Verify accurascy
-                if ($price < 0) {
-                    $price *= -1;
-                    $this->addEntry($contact, $campaign, $actor, $action, $price);
-                } elseif ($price > 0) {
-                    $this->addEntry($contact, $campaign, $actor, $action, null, $price);
-                }
-            }
-        }
-    }
 
     /**
-     * @param \Mautic\LeadBundle\Entity\Lead         $lead     target of transaction
-     * @param \Mautic\CampaignBundle\Entity\Campaign $campaign campaign
-     * @param array|object                           $actor    [Class, id] or object that acted
-     * @param string                                 $activity cause for transaction
-     * @param string|float                           $cost     decimal dollar amount of tranaction
-     * @param string|float                           $revenue  decimal dollar amount of tranaction
+     * @param Lead              $lead
+     * @param Campaign|null     $campaign
+     * @param array|object|null $actor
+     * @param string            $activity
+     * @param string|float|null $cost
+     * @param string|float|null $revenue
+     * @param string|null       $memo
      */
     public function addEntry(
         Lead $lead,
-        Campaign $campaign,
-        $actor,
-        $activity = 'unknown',
+        Campaign $campaign = null,
+        $actor = null,
+        $activity = null,
         $cost = null,
-        $revenue = null
+        $revenue = null,
+        $memo = null
     ) {
         $bundleName = $className = $objectId = null;
 
@@ -96,8 +46,6 @@ class EntryModel extends AbstractCommonModel
             list($bundleName, $className, $objectId) = $this->getActorFromArray($actor);
         } elseif (is_object($actor)) {
             list($bundleName, $className, $objectId) = $this->getActorFromObject($actor);
-        } else {
-            list($bundleName, $className, $objectId) = [null, null, -1];
         }
 
         $entry = new LedgerEntry();
@@ -109,6 +57,7 @@ class EntryModel extends AbstractCommonModel
             ->setClassName($className)
             ->setObjectId($objectId)
             ->setActivity($activity)
+            ->setMemo($memo)
             ->setCost($cost)
             ->setRevenue($revenue);
         $this->em->persist($entry);

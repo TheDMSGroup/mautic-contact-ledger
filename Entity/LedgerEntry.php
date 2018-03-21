@@ -89,10 +89,7 @@ class LedgerEntry extends CommonEntity
             ->setCustomRepositoryClass('MauticPlugin\MauticContactLedgerBundle\Entity\EntryRepository');
 
         $builder->addId();
-
-        $builder->createField('dateAdded', 'datetime')
-            ->columnName('date_added')
-            ->build();
+        $builder->addDateAdded();
 
         $builder->createField('contactId', 'integer')
             ->columnName('contact_id')
@@ -125,7 +122,7 @@ class LedgerEntry extends CommonEntity
             ->nullable()
             ->build();
 
-        $builder->createField('memo', 'string')
+        $builder->createField('memo', 'text')
             ->length(255)
             ->nullable()
             ->build();
@@ -318,9 +315,6 @@ class LedgerEntry extends CommonEntity
      */
     public function setClassName($className)
     {
-        if (null === $className) {
-            throw new \InvalidArgumentException('$className cannot be null');
-        }
         $this->className = $className;
 
         return $this;
@@ -361,9 +355,6 @@ class LedgerEntry extends CommonEntity
      */
     public function setActivity($activity)
     {
-        if (null === $activity) {
-            $activity = 'unknown';
-        }
         $this->activity = $activity;
 
         return $this;

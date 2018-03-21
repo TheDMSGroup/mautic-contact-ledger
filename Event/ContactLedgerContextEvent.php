@@ -5,45 +5,62 @@ namespace MauticPlugin\MauticContactLedgerBundle\Event;
 use Symfony\Component\EventDispatcher\Event;
 use Mautic\CampaignBundle\Entity\Campaign;
 
-class ContactLedgerContextEvent extends Event
+class ContactLedgerContextEvent extends Event implements ContactLedgerContextEventInterface
 {
-    const COST    = 'cost';
-
-    const REVENUE = 'revenue';
-
-    const MEMO    = 'memo';
+    /**
+     * This type will use the cost collumn to record entryAmount
+     */
+    const ENTRY_TYPE_COST    = 'cost';
 
     /**
-     * @var Campaign
+     * This type wil use the revenue colloumn to record entryAmount
+     */
+    const ENTRY_TYPE_REVENUE = 'revenue';
+
+    /**
+     * This type will use the memo collumn to record entryAmount.
+     * Non-decimal strings for entryAmount are valid for this type.
+     */
+    const ENTRY_TYPE_MEMO    = 'memo';
+
+    /**
+     * @var Campaign|null
      */
     protected $campaign;
 
     /**
-     * @var object
+     * @var object|null
      */
     protected $actor;
 
     /**
      * @var string
      */
-    protected $entryType;
+    private $type;
+
+    /**
+     * @var string|float/null
+     */
+    private $amount;
 
     /**
      * ContactLedgerContextEvent constructor.
      *
      * @param Campaign $campaign
      * @param object $actor
-     * @param string $entryType
+     * @param string $type
+     * @param string|float|null $amount
      */
-    public function __construct(Campaign $campaign, $actor, $entryType)
+    public function __construct(Campaign $campaign=null, $actor=null, $type='memo', $amount=null)
     {
-        $this->campaign  = $campaign;
-        $this->actor     = $actor;
-        $this->entryType = $entryType;
+        $this->campaign = $campaign;
+        $this->actor    = $actor;
+        $this->type     = $type;
+        $this->amount   = $amount;
     }
 
     /**
-     * @return Campaign
+     * @return Campaign|null
      */
     public function getCampaign()
     {
@@ -51,7 +68,7 @@ class ContactLedgerContextEvent extends Event
     }
 
     /**
-     * @return object
+     * @return object|null
      */
     public function getActor()
     {
@@ -61,8 +78,16 @@ class ContactLedgerContextEvent extends Event
     /**
      * @return string
      */
-    public function getEventType()
+    public function getType()
     {
-        return $this->eventType;
+        return $this->type;
+    }
+
+    /**
+     * @return float|string|null
+     */
+    public function getAmount()
+    {
+        return $this->amount;
     }
 }

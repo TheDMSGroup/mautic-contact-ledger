@@ -9,7 +9,27 @@
 namespace MauticPlugin\MauticContactLedgerBundle\Event;
 
 
-class ContactLedgerContextEventInterface
+interface ContactLedgerContextEventInterface
 {
+    /**
+     * @return Campaign|null
+     */
+    public function getCampaign();
+
+    /**
+     * @return object|null
+     */
+    public function getActor();
+
+    /**
+     * @return string
+     */
+    public function getType();
+
+    /**
+     * @return float|string|null
+     */
+    public function getAmount();
+
 
 }
