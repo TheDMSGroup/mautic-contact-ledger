@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Mautic Community
+ *
+ * @link        http://mautic.org
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
+ */
+
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
 use Doctrine\ORM\Mapping\ClassMetadata as CLClassMetadata;
@@ -177,18 +186,6 @@ class LedgerEntry extends CommonEntity
     }
 
     /**
-     * @return int|Lead
-     */
-    public function getContact()
-    {
-        if (null !== $this->contact) {
-            return $this->contact;
-        }
-
-        return $this->contactId;
-    }
-
-    /**
      * @param \Mautic\LeadBundle\Entity\Lead|int $contactId
      *
      * @return $this
@@ -208,6 +205,18 @@ class LedgerEntry extends CommonEntity
         }
 
         return $this;
+    }
+
+    /**
+     * @return int|Lead
+     */
+    public function getContact()
+    {
+        if (null !== $this->contact) {
+            return $this->contact;
+        }
+
+        return $this->contactId;
     }
 
     /**
@@ -232,18 +241,6 @@ class LedgerEntry extends CommonEntity
     }
 
     /**
-     * @return int|Campaign
-     */
-    public function getCampaign()
-    {
-        if (null !== $this->campaign) {
-            return $this->campaign;
-        }
-
-        return $this->campaignId;
-    }
-
-    /**
      * @param \Mautic\CampaignBundle\Entity\Campaign|int $campaignId
      *
      * @return $this
@@ -263,6 +260,18 @@ class LedgerEntry extends CommonEntity
         }
 
         return $this;
+    }
+
+    /**
+     * @return int|Campaign
+     */
+    public function getCampaign()
+    {
+        if (null !== $this->campaign) {
+            return $this->campaign;
+        }
+
+        return $this->campaignId;
     }
 
     /**

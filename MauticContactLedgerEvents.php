@@ -1,11 +1,18 @@
 <?php
 
+/*
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Mautic Community
+ *
+ * @link        http://mautic.org
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
+ */
+
 namespace MauticPlugin\MauticContactLedgerBundle;
+
 /**
- * Created by PhpStorm.
- * User: nbush
- * Date: 3/20/18
- * Time: 4:01 PM
+ * Class MauticContactLedgerEvents.
  */
 final class MauticContactLedgerEvents
 {

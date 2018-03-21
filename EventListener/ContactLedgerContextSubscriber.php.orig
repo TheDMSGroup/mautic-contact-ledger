@@ -17,14 +17,25 @@ use MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEventInterf
 
 class ContactLedgerContextSubscriber
 {
-    /** @var Campaign */
-    protected $campaign;
+<<<<<<< HEAD
+    /**
+     * @var
+     */
+    protected $campaignId;
 
     protected $actor;
 
     protected $type;
 
     protected $amount;
+=======
+    /** @var Campaign */
+    protected $campaign;
+
+    protected $actor;
+
+    protected $eventType;
+>>>>>>> fc29c49b942b8120a7256ff911cbf4329842d359
 
     /**
      * @return array
@@ -32,7 +43,7 @@ class ContactLedgerContextSubscriber
     public static function getSubscribedEvents()
     {
         return [
-            'mauticplugin.contact_ledger.create_context' => ['setContext', 0],
+            'mautic.contact_ledger.create_context' => ['setContext', 0],
         ];
     }
 
@@ -41,14 +52,32 @@ class ContactLedgerContextSubscriber
      */
     public function setContext(ContactLedgerContextEventInterface $event)
     {
+<<<<<<< HEAD
         $this->campaign = $event->getCampaign();
         $this->actor    = $event->getActor();
         $this->type     = $event->getType();
         $this->amount   = $event->getAmount();
+=======
+        $this->campaign  = $event->getCampaign();
+        $this->actor     = $event->getActor();
+        $this->eventType = $event->getEventType();
+>>>>>>> fc29c49b942b8120a7256ff911cbf4329842d359
     }
 
     /**
-     * @return Campaign
+     * @return CampaignId|null
+     */
+    public function getCampaignId()
+    {
+        if (isset($this->campaign)) {
+            return $this->campaign->getId();
+        }
+
+        return null;
+    }
+
+    /**
+     * @return Campaign|null
      */
     public function getCampaign()
     {

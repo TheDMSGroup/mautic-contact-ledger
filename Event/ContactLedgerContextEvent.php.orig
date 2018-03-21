@@ -21,6 +21,7 @@ class ContactLedgerContextEvent extends Event implements ContactLedgerContextEve
      */
     const ENTRY_TYPE_COST    = 'cost';
 
+<<<<<<< HEAD
     /**
      * This type wil use the revenue colloumn to record entryAmount
      */
@@ -31,6 +32,11 @@ class ContactLedgerContextEvent extends Event implements ContactLedgerContextEve
      * Non-decimal strings for entryAmount are valid for this type.
      */
     const ENTRY_TYPE_MEMO    = 'memo';
+=======
+    const MEMO    = 'memo';
+>>>>>>> fc29c49b942b8120a7256ff911cbf4329842d359
+
+    const REVENUE = 'revenue';
 
     /**
      * @var Campaign|null
@@ -45,17 +51,22 @@ class ContactLedgerContextEvent extends Event implements ContactLedgerContextEve
     /**
      * @var string
      */
+<<<<<<< HEAD
     private $type;
 
     /**
      * @var string|float/null
      */
     private $amount;
+=======
+    protected $eventType;
+>>>>>>> fc29c49b942b8120a7256ff911cbf4329842d359
 
     /**
      * ContactLedgerContextEvent constructor.
      *
      * @param Campaign $campaign
+<<<<<<< HEAD
      * @param object $actor
      * @param string $type
      * @param string|float|null $amount
@@ -66,6 +77,16 @@ class ContactLedgerContextEvent extends Event implements ContactLedgerContextEve
         $this->actor    = $actor;
         $this->type     = $type;
         $this->amount   = $amount;
+=======
+     * @param          $actor
+     * @param          $eventType
+     */
+    public function __construct(Campaign $campaign, $actor, $eventType)
+    {
+        $this->campaign  = $campaign;
+        $this->actor     = $actor;
+        $this->eventType = $eventType;
+>>>>>>> fc29c49b942b8120a7256ff911cbf4329842d359
     }
 
     /**
