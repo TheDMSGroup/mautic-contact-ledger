@@ -13,7 +13,7 @@
 <script src="/plugins/MauticContactLedgerBundle/Assets/js/global-revenue.js"></script>
 
 <link href="/plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css" rel="stylesheet">
-<link href="//cdn.datatables.net/plug-ins/1.10.16/integration/font-awesome/dataTables.fontAwesome.css" rel="stylesheet">
+<link href="/plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css" rel="stylesheet">
 
 <?php
     $params = $data['params'];
