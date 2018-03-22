@@ -23,7 +23,6 @@ class AjaxController extends CommonAjaxController
 {
     use AjaxLookupControllerTrait;
 
-
     /**
      * @param Request $request
      *

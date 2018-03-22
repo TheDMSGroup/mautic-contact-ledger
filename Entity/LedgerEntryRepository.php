@@ -174,7 +174,6 @@ class LedgerEntryRepository extends CommonRepository
             }
         }
 
-
         return $results;
     }
 }

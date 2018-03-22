@@ -58,7 +58,7 @@ class DashboardSubscriber extends MainDashboardSubscriber
      */
     public function onWidgetDetailGenerate(WidgetDetailEvent $event)
     {
-        if ($event->getType() == 'campaign.revenue') {
+        if ('campaign.revenue' == $event->getType()) {
             //       if (!$event->isCached()) {
             $widget = $event->getWidget();
             if ($widget->getHeight() < 330) {
