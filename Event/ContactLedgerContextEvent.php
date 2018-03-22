@@ -12,47 +12,54 @@
 namespace MauticPlugin\MauticContactLedgerBundle\Event;
 
 use Mautic\CampaignBundle\Entity\Campaign;
+use Mautic\LeadBundle\Entity\Lead;
 use Symfony\Component\EventDispatcher\Event;
 
+/**
+ * Class ContactLedgerContextEvent.
+ */
 class ContactLedgerContextEvent extends Event
 {
-    const COST    = 'cost';
-
-    const MEMO    = 'memo';
-
-    const REVENUE = 'revenue';
-
-    /**
-     * @var Campaign
-     */
+    /** @var Campaign|null */
     protected $campaign;
 
-    /**
-     * @var object
-     */
+    /** @var object|null */
     protected $actor;
 
-    /**
-     * @var string
-     */
-    protected $eventType;
+    /** @var object|null */
+    protected $activity;
+
+    /** @var string */
+    protected $memo;
+
+    /** @var Lead */
+    protected $lead;
 
     /**
      * ContactLedgerContextEvent constructor.
      *
-     * @param Campaign $campaign
-     * @param          $actor
-     * @param          $eventType
+     * @param Campaign|null $campaign
+     * @param string        $actor
+     * @param string        $activity
+     * @param string        $memo
+     * @param Lead|null     $lead
      */
-    public function __construct(Campaign $campaign, $actor, $eventType)
-    {
-        $this->campaign  = $campaign;
-        $this->actor     = $actor;
-        $this->eventType = $eventType;
+    public function __construct(
+        Campaign $campaign = null,
+        $actor = null,
+        $activity = null,
+        $memo = null,
+        Lead $lead = null
+    ) {
+        $this->campaign = $campaign;
+        $this->actor    = $actor;
+        $this->activity = $activity;
+        $this->memo     = $memo;
+        $this->lead     = $lead;
     }
 
     /**
-     * @return Campaign
+     * @return Campaign|null
      */
     public function getCampaign()
     {
@@ -60,7 +67,7 @@ class ContactLedgerContextEvent extends Event
     }
 
     /**
-     * @return object
+     * @return object|null
      */
     public function getActor()
     {
@@ -68,10 +75,26 @@ class ContactLedgerContextEvent extends Event
     }
 
     /**
+     * @return object|null
+     */
+    public function getActivity()
+    {
+        return $this->activity;
+    }
+
+    /**
      * @return string
      */
-    public function getEventType()
+    public function getMemo()
     {
-        return $this->eventType;
+        return $this->memo;
+    }
+
+    /**
+     * @return Lead
+     */
+    public function getLead()
+    {
+        return $this->lead;
     }
 }

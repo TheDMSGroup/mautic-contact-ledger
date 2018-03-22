@@ -11,7 +11,7 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
-use Doctrine\ORM\Mapping\ClassMetadata as CLClassMetadata;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
 use Mautic\CoreBundle\Entity\CommonEntity;
@@ -90,7 +90,7 @@ class LedgerEntry extends CommonEntity
     /**
      * @param \Doctrine\ORM\Mapping\ClassMetadata $metadata
      */
-    public static function loadMetadata(CLClassMetadata $metadata)
+    public static function loadMetadata(ClassMetadata $metadata)
     {
         $builder = new ClassMetadataBuilder($metadata);
 
@@ -98,13 +98,12 @@ class LedgerEntry extends CommonEntity
             ->setCustomRepositoryClass('MauticPlugin\MauticContactLedgerBundle\Entity\EntryRepository');
 
         $builder->addId();
-
-        $builder->createField('dateAdded', 'datetime')
-            ->columnName('date_added')
-            ->build();
+        $builder->addDateAdded();
 
         $builder->createField('contactId', 'integer')
             ->columnName('contact_id')
+            // Nullable because a new contact will not have an ID on pre-save.
+            ->nullable()
             ->build();
 
         $builder->createField('campaignId', 'integer')
@@ -134,7 +133,7 @@ class LedgerEntry extends CommonEntity
             ->nullable()
             ->build();
 
-        $builder->createField('memo', 'string')
+        $builder->createField('memo', 'text')
             ->length(255)
             ->nullable()
             ->build();
@@ -282,10 +281,12 @@ class LedgerEntry extends CommonEntity
      *
      * @return $this
      */
-    public function setCampaign(Campaign $campaign)
+    public function setCampaign(Campaign $campaign = null)
     {
-        $this->campaign   = $campaign;
-        $this->campaignId = $campaign->getId();
+        if ($campaign) {
+            $this->campaign   = $campaign;
+            $this->campaignId = $campaign->getId();
+        }
 
         return $this;
     }
@@ -327,9 +328,6 @@ class LedgerEntry extends CommonEntity
      */
     public function setClassName($className)
     {
-        if (null === $className) {
-            throw new \InvalidArgumentException('$className cannot be null');
-        }
         $this->className = $className;
 
         return $this;
@@ -370,9 +368,6 @@ class LedgerEntry extends CommonEntity
      */
     public function setActivity($activity)
     {
-        if (null === $activity) {
-            $activity = 'unknown';
-        }
         $this->activity = $activity;
 
         return $this;
