@@ -27,10 +27,10 @@ return [
                     '@logger',
                 ],
             ],
-            'mautic.contactledger.dashboard.subscriber' => [
+            'mauticplugin.contactledger.dashboard.subscriber' => [
                 'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\DashboardSubscriber::class,
                 'arguments' => [
-                    'mautic.contactledger.model.entry',
+                    'mauticplugin.contactledger.model.entry',
                 ],
             ],
         ],

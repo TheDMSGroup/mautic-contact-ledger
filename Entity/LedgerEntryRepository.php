@@ -14,12 +14,13 @@ namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 use Mautic\CoreBundle\Entity\CommonRepository;
 use Mautic\LeadBundle\Entity\Lead;
 
-const MAUTIC_CONVERSION_STATUS = 'sell';
 /**
  * Class EntryRepository extends {@see \Mautic\CoreBundle\Entity\CommonRepository}.
  */
 class LedgerEntryRepository extends CommonRepository
 {
+    const MAUTIC_CONVERSION_STATUS = 'converted';
+
     /**
      * Defines default table alias for contact_ledger table.
      *
@@ -137,7 +138,7 @@ class LedgerEntryRepository extends CommonRepository
                 $c->expr()->eq('cl.activity', ':MAUTIC_CONVERSION_LABEL')
             );
             $c->setParameter('ContactClientModel', 'ContactClientModel');
-            $c->setParameter('MAUTIC_CONVERSION_LABEL', MAUTIC_CONVERSION_STATUS);
+            $c->setParameter('MAUTIC_CONVERSION_LABEL', LedgerEntryRepository::MAUTIC_CONVERSION_STATUS);
 
             $conversions = $c->execute()->fetchAll();
             $conversions = array_column($conversions, 'converted', 'campaign_id');

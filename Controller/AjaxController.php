@@ -37,7 +37,7 @@ class AjaxController extends CommonAjaxController
         $params['dateTo']   = $_SESSION['_sf2_attributes']['mautic.dashboard.date.to'];
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
-        $entryModel = $this->get('mautic.contactledger.model.entry');
+        $entryModel = $this->get('mauticplugin.contactledger.model.entry');
         $ledgerRepo = $entryModel->getEntryRepository();
         $data       = $ledgerRepo->getDashboardRevenueWidgetData($params);
         $headers    = [
