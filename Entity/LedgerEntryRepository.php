@@ -151,7 +151,7 @@ class LedgerEntryRepository extends CommonRepository
                 $financial['margin']    = $financial['revenue'] ? number_format(($financial['gm'] / $financial['revenue']) * 100, 2, '.', ',') : 0;
                 $financial['ecpm']      = number_format($financial['gm'] / 1000, 4, '.', ',');
                 $financial['received']  = intval($financial['received']);
-                $financial['converted'] = $conversions[$financial['campaign_id']];
+                $financial['converted'] = isset($conversions[$financial['campaign_id']]) ? $conversions[$financial['campaign_id']]: 0;
                 $results['rows'][]      = [
                     $financial['is_published'],
                     $financial['campaign_id'],
