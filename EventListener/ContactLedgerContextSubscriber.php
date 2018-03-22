@@ -12,6 +12,7 @@
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use Mautic\CampaignBundle\Entity\Campaign;
+use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticContactLedgerBundle\MauticContactLedgerEvents;
 use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -24,11 +25,14 @@ class ContactLedgerContextSubscriber implements EventSubscriberInterface
     /** @var object|null */
     protected $actor;
 
-    /** @var string */
-    protected $type;
+    /** @var object|null */
+    protected $activity;
 
-    /** @var string|float|null */
-    protected $amount;
+    /** @var string */
+    protected $memo;
+
+    /** @var \Mautic\LeadBundle\Entity\Lead */
+    protected $lead;
 
     /**
      * @return array
@@ -36,29 +40,34 @@ class ContactLedgerContextSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            MauticContactLedgerEvents::CREATE_CONTEXT => ['setContext', 0],
+            MauticContactLedgerEvents::CONTEXT_CREATE => ['contextCreate', 0],
         ];
     }
 
     /**
-     * This method expects an event compatable with the definition in
+     * This method expects an event comparable with the definition in
      * \MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEventInterface
-     * However, to minimize inter-plugin dependecies, any \Symfony\Component\EventDispatcher\Event
+     * However, to minimize inter-plugin dependencies, any \Symfony\Component\EventDispatcher\Event
      * is allowed.
+     *
+     * @param Event $event
      */
-    public function setContext(Event $event)
+    public function contextCreate(Event $event)
     {
         if (method_exists($event, 'getCampaign')) {
             $this->campaign = $event->getCampaign();
         }
         if (method_exists($event, 'getActor')) {
-            $this->actor    = $event->getActor();
+            $this->actor = $event->getActor();
         }
-        if (method_exists($event, 'getType')) {
-            $this->type     = $event->getType();
+        if (method_exists($event, 'getActivity')) {
+            $this->activity = $event->getActivity();
         }
-        if (method_exists($event, 'getAmount')) {
-            $this->amount = $event->getAmount();
+        if (method_exists($event, 'getMemo')) {
+            $this->memo = $event->getMemo();
+        }
+        if (method_exists($event, 'getLead')) {
+            $this->lead = $event->getLead();
         }
     }
 
@@ -79,18 +88,26 @@ class ContactLedgerContextSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @return string
+     * @return object|null
      */
-    public function getType()
+    public function getActivity()
     {
-        return $this->type;
+        return $this->activity;
     }
 
     /**
-     * @return string|float|null
+     * @return string
      */
-    public function getAmount()
+    public function getMemo()
     {
-        return $this->amount;
+        return $this->memo;
+    }
+
+    /**
+     * @return Lead
+     */
+    public function getLead()
+    {
+        return $this->lead;
     }
 }

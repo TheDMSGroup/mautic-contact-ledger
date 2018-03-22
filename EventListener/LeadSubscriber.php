@@ -22,14 +22,10 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class LeadSubscriber extends CommonSubscriber
 {
-    /**
-     * @var \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel
-     */
+    /** @var \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel */
     protected $model;
 
-    /**
-     * @var mixed
-     */
+    /** @var mixed */
     protected $context;
 
     /** @var Logger */
@@ -55,39 +51,37 @@ class LeadSubscriber extends CommonSubscriber
     public static function getSubscribedEvents()
     {
         return [
-            LeadEvents::LEAD_PRE_SAVE => ['preSaveLeadAttributionCheck', -1],
+            LeadEvents::LEAD_POST_SAVE => ['postSaveAttributionCheck', -1],
         ];
     }
 
     /**
      * @param \Mautic\LeadBundle\Event\LeadEvent $event
      */
-    public function preSaveLeadAttributionCheck(LeadEvent $event)
+    public function postSaveAttributionCheck(LeadEvent $event)
     {
         $lead    = $event->getLead();
         $changes = $lead->getChanges(false);
 
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
-            $this->logger->debug('Found an attribution change! Prepare for processing');
+            $oldValue   = $changes['fields']['attribution'][0];
+            $newValue   = $changes['fields']['attribution'][1];
+            $difference = $newValue - $oldValue;
 
-            $oldPrice = $changes['fields']['attribution'][0];
-            $newPrice = $changes['fields']['attribution'][1];
-            $price    = $newPrice - $oldPrice;
+            $this->logger->debug('Found an attribution change of: '.$difference);
 
             $campaign = $this->context->getCampaign();
             $actor    = $this->context->getActor();
-            $type     = $this->context->getType();
+            $activity = $this->context->getActivity();
 
-            if ('cost' === $type) {
-                $activity = $price < 0.0 ? 'received' : 'scrubbed';
-                $this->model->addEntry($lead, $campaign, $actor, $activity, $price);
-            } elseif ('revenue' === $type) {
-                $this->model->addEntry($lead, $campaign, $actor, 'converted', null, $price);
+            if ($difference > 0) {
+                $this->model->addEntry($lead, $campaign, $actor, $activity, null, $difference);
             } else {
-                $this->model->addEntry($lead, $campaign, $actor, 'memo', null, null, $price);
+                if ($difference < 0) {
+                    $this->model->addEntry($lead, $campaign, $actor, $activity, abs($difference));
+                }
             }
 
-            //TODO: Lead has not been saved yet?
             unset($changes['fields']['attribution']);
             $lead->setChanges($changes);
         }

@@ -64,7 +64,7 @@ class LeadSubscriberTest extends CommonMocks
         //     ->method('getChanges')
         //     ->will($this->returnValue($changes));
 
-        $subscriber->preSaveLeadAttributionCheck($leadEvent);
-        $subscriber->preSaveLeadAttributionCheck($leadEvent);
+        $subscriber->postSaveAttributionCheck($leadEvent);
+        $subscriber->postSaveAttributionCheck($leadEvent);
     }
 }

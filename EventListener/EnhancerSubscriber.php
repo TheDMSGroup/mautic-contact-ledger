@@ -55,7 +55,7 @@ class EnhancerSubscriber implements EventSubscriberInterface
      */
     public function enhancerAttributionCheck($enhancerEvent)
     {
-        $this->logger->debug('EnhancerSubscriber Responding to enhancer complete');
+        // @todo - To prevent duplication we should deprecate this in favor of context creation in Enhancers.
         $enhancer = $enhancerEvent->getEnhancer();
         if (method_exists($enhancer, 'getCostPerEnhancement')) {
             $lead     = $enhancerEvent->getLead();

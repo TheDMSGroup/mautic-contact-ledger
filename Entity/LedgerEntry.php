@@ -102,6 +102,8 @@ class LedgerEntry extends CommonEntity
 
         $builder->createField('contactId', 'integer')
             ->columnName('contact_id')
+            // Nullable because a new contact will not have an ID on pre-save.
+            ->nullable()
             ->build();
 
         $builder->createField('campaignId', 'integer')
@@ -279,10 +281,12 @@ class LedgerEntry extends CommonEntity
      *
      * @return $this
      */
-    public function setCampaign(Campaign $campaign)
+    public function setCampaign(Campaign $campaign = null)
     {
-        $this->campaign   = $campaign;
-        $this->campaignId = $campaign->getId();
+        if ($campaign) {
+            $this->campaign   = $campaign;
+            $this->campaignId = $campaign->getId();
+        }
 
         return $this;
     }

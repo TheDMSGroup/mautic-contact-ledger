@@ -12,60 +12,50 @@
 namespace MauticPlugin\MauticContactLedgerBundle\Event;
 
 use Mautic\CampaignBundle\Entity\Campaign;
+use Mautic\LeadBundle\Entity\Lead;
 use Symfony\Component\EventDispatcher\Event;
 
-class ContactLedgerContextEvent extends Event implements ContactLedgerContextEventInterface
+/**
+ * Class ContactLedgerContextEvent.
+ */
+class ContactLedgerContextEvent extends Event
 {
-    /**
-     * This type will use the cost collumn to record entryAmount.
-     */
-    const ENTRY_TYPE_COST    = 'cost';
-
-    /**
-     * This type wil use the revenue colloumn to record entryAmount.
-     */
-    const ENTRY_TYPE_REVENUE = 'revenue';
-
-    /**
-     * This type will use the memo collumn to record entryAmount.
-     * Non-decimal strings for entryAmount are valid for this type.
-     */
-    const ENTRY_TYPE_MEMO    = 'memo';
-
-    /**
-     * @var Campaign|null
-     */
+    /** @var Campaign|null */
     protected $campaign;
 
-    /**
-     * @var object|null
-     */
+    /** @var object|null */
     protected $actor;
 
-    /**
-     * @var string
-     */
-    private $type;
+    /** @var object|null */
+    protected $activity;
 
-    /**
-     * @var string|float/null
-     */
-    private $amount;
+    /** @var string */
+    protected $memo;
+
+    /** @var Lead */
+    protected $lead;
 
     /**
      * ContactLedgerContextEvent constructor.
      *
-     * @param Campaign          $campaign
-     * @param object            $actor
-     * @param string            $type
-     * @param string|float|null $amount
+     * @param Campaign|null $campaign
+     * @param string        $actor
+     * @param string        $activity
+     * @param string        $memo
+     * @param Lead|null     $lead
      */
-    public function __construct(Campaign $campaign=null, $actor=null, $type='memo', $amount=null)
-    {
+    public function __construct(
+        Campaign $campaign = null,
+        $actor = null,
+        $activity = null,
+        $memo = null,
+        Lead $lead = null
+    ) {
         $this->campaign = $campaign;
         $this->actor    = $actor;
-        $this->type     = $type;
-        $this->amount   = $amount;
+        $this->activity = $activity;
+        $this->memo     = $memo;
+        $this->lead     = $lead;
     }
 
     /**
@@ -85,18 +75,26 @@ class ContactLedgerContextEvent extends Event implements ContactLedgerContextEve
     }
 
     /**
-     * @return string
+     * @return object|null
      */
-    public function getType()
+    public function getActivity()
     {
-        return $this->type;
+        return $this->activity;
     }
 
     /**
-     * @return float|string|null
+     * @return string
      */
-    public function getAmount()
+    public function getMemo()
     {
-        return $this->amount;
+        return $this->memo;
+    }
+
+    /**
+     * @return Lead
+     */
+    public function getLead()
+    {
+        return $this->lead;
     }
 }

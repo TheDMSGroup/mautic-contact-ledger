@@ -17,10 +17,13 @@ namespace MauticPlugin\MauticContactLedgerBundle;
 final class MauticContactLedgerEvents
 {
     /**
-     * To use this plugin properly, dispatch a.
-     *
-     * MauticPlugin\MaucticContactLedgerBundle\Event\ContactLedgerContextEvent
-     * or a compatible event
+     * Capture the current context, for situations where there was no pre-save event.
      */
-    const CREATE_CONTEXT = 'mauticplugin.contactledger.create_context';
+    const CONTEXT_CAPTURE = 'mauticplugin.contactledger.context_capture';
+
+    /**
+     * To use this plugin properly, dispatch a MauticPlugin\MaucticContactLedgerBundle\Event\ContactLedgerContextEvent
+     * or a compatible event.
+     */
+    const CONTEXT_CREATE = 'mauticplugin.contactledger.context_create';
 }
