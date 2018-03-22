@@ -45,7 +45,7 @@ class LeadSubscriberTest extends CommonMocks
         // This method will be called exactly once
         // even though the onLeadPreSave was called twice for the same lead
         $entryModel->expects($this->once())
-            ->method('processAttributionChange');
+            ->method('addEntry');
 
         $logger = new Logger('test');
         // @todo - create context.
