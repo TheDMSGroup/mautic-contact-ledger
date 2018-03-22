@@ -8,23 +8,28 @@ return [
 
     'services' => [
         'events' => [
-            'mautic.contactledger.subcriber.lead'     => [
+            'mauticplugin.contactledger.subscriber.lead'            => [
                 'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\LeadSubscriber::class,
                 'arguments' => [
-                    '@mautic.contactledger.model.entry',
+                    '@mauticplugin.contactledger.model.entry',
+                    '@mauticplugin.contactledger.subscriber.context_create',
                     '@logger',
                 ],
             ],
-            'mautic.contactledger.subcriber.enhancer' => [
-                'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\EnhancerSubscriber::class,
+            'mauticplugin.contactledger.subscriber.context_create'  => [
+                'class' => \MauticPlugin\MauticContactLedgerBundle\EventListener\ContactLedgerContextSubscriber::class,
+            ],
+            'mauticplugin.contactledger.subscriber.context_capture' => [
+                'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\ContactLedgerContextCaptureSubscriber::class,
                 'arguments' => [
-                    '@mautic.contactledger.model.entry',
+                    '@mauticplugin.contactledger.model.entry',
+                    '@mauticplugin.contactledger.subscriber.context_create',
                     '@logger',
                 ],
             ],
         ],
         'models' => [
-            'mautic.contactledger.model.entry' => [
+            'mauticplugin.contactledger.model.entry' => [
                 'class' => \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel::class,
             ],
         ],

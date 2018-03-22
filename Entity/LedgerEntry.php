@@ -1,8 +1,17 @@
 <?php
 
+/*
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Mautic Community
+ *
+ * @link        http://mautic.org
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
+ */
+
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
-use Doctrine\ORM\Mapping\ClassMetadata as CLClassMetadata;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
 use Mautic\CoreBundle\Entity\CommonEntity;
@@ -81,7 +90,7 @@ class LedgerEntry extends CommonEntity
     /**
      * @param \Doctrine\ORM\Mapping\ClassMetadata $metadata
      */
-    public static function loadMetadata(CLClassMetadata $metadata)
+    public static function loadMetadata(ClassMetadata $metadata)
     {
         $builder = new ClassMetadataBuilder($metadata);
 
@@ -89,17 +98,17 @@ class LedgerEntry extends CommonEntity
             ->setCustomRepositoryClass('MauticPlugin\MauticContactLedgerBundle\Entity\EntryRepository');
 
         $builder->addId();
-
-        $builder->createField('dateAdded', 'datetime')
-            ->columnName('date_added')
-            ->build();
+        $builder->addDateAdded();
 
         $builder->createField('contactId', 'integer')
             ->columnName('contact_id')
+            // Nullable because a new contact will not have an ID on pre-save.
+            ->nullable()
             ->build();
 
         $builder->createField('campaignId', 'integer')
             ->columnName('campaign_id')
+            ->nullable()
             ->build();
 
         $builder->createField('bundleName', 'string')
@@ -111,17 +120,20 @@ class LedgerEntry extends CommonEntity
         $builder->createField('className', 'string')
             ->columnName('class_name')
             ->length(50)
+            ->nullable()
             ->build();
 
         $builder->createField('objectId', 'integer')
             ->columnName('object_id')
+            ->nullable()
             ->build();
 
         $builder->createField('activity', 'string')
             ->length(50)
+            ->nullable()
             ->build();
 
-        $builder->createField('memo', 'string')
+        $builder->createField('memo', 'text')
             ->length(255)
             ->nullable()
             ->build();
@@ -176,18 +188,6 @@ class LedgerEntry extends CommonEntity
     }
 
     /**
-     * @return int|Lead
-     */
-    public function getContact()
-    {
-        if (null !== $this->contact) {
-            return $this->contact;
-        }
-
-        return $this->contactId;
-    }
-
-    /**
      * @param \Mautic\LeadBundle\Entity\Lead|int $contactId
      *
      * @return $this
@@ -210,6 +210,18 @@ class LedgerEntry extends CommonEntity
     }
 
     /**
+     * @return int|Lead
+     */
+    public function getContact()
+    {
+        if (null !== $this->contact) {
+            return $this->contact;
+        }
+
+        return $this->contactId;
+    }
+
+    /**
      * @param Lead $contact
      *
      * @return $this
@@ -227,18 +239,6 @@ class LedgerEntry extends CommonEntity
      */
     public function getCampaignId()
     {
-        return $this->campaignId;
-    }
-
-    /**
-     * @return int|Campaign
-     */
-    public function getCampaign()
-    {
-        if (null !== $this->campaign) {
-            return $this->campaign;
-        }
-
         return $this->campaignId;
     }
 
@@ -265,14 +265,28 @@ class LedgerEntry extends CommonEntity
     }
 
     /**
+     * @return int|Campaign
+     */
+    public function getCampaign()
+    {
+        if (null !== $this->campaign) {
+            return $this->campaign;
+        }
+
+        return $this->campaignId;
+    }
+
+    /**
      * @param Campaign $campaign
      *
      * @return $this
      */
-    public function setCampaign(Campaign $campaign)
+    public function setCampaign(Campaign $campaign = null)
     {
-        $this->campaign   = $campaign;
-        $this->campaignId = $campaign->getId();
+        if ($campaign) {
+            $this->campaign   = $campaign;
+            $this->campaignId = $campaign->getId();
+        }
 
         return $this;
     }
@@ -314,9 +328,6 @@ class LedgerEntry extends CommonEntity
      */
     public function setClassName($className)
     {
-        if (null === $className) {
-            throw new \InvalidArgumentException('$className cannot be null');
-        }
         $this->className = $className;
 
         return $this;
@@ -357,9 +368,6 @@ class LedgerEntry extends CommonEntity
      */
     public function setActivity($activity)
     {
-        if (null === $activity) {
-            $activity = 'unknown';
-        }
         $this->activity = $activity;
 
         return $this;

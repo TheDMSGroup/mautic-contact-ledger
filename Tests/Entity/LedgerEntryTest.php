@@ -71,9 +71,6 @@ class LedgerEntryTest extends \PHPUnit_Framework_TestCase
     public function testActivity($activity) //, $expectPass = true, $expectException = false)
     {
         $setGetActivity = $this->entry->setActivity($activity)->getActivity();
-        if (null === $activity) {
-            $activity = 'unknown';
-        }
 
         $this->assertEquals($activity, $setGetActivity, 'Entry()->activity is behaving abnormally');
     }
@@ -123,13 +120,8 @@ class LedgerEntryTest extends \PHPUnit_Framework_TestCase
      */
     public function testClassName($className)
     {
-        if (null === $className) {
-            $this->expectException(\InvalidArgumentException::class);
-            $this->entry->setClassName($className);
-        } else {
-            $setGetClassName = $this->entry->setClassName($className)->getClassName();
-            $this->assertEquals($className, $setGetClassName, 'Entry()->className is behaving abnormally');
-        }
+        $setGetClassName = $this->entry->setClassName($className)->getClassName();
+        $this->assertEquals($className, $setGetClassName, 'Entry()->className is behaving abnormally');
     }
 
     public function testContact()
