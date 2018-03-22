@@ -10,58 +10,27 @@
  */
 ?>
 <script src="/plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js"></script>
+<script src="/plugins/MauticContactLedgerBundle/Assets/js/global-revenue.js"></script>
 
-<?php
-echo $view['assets']->includeStylesheet('plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css');
-?>
+<link href="/plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css" rel="stylesheet">
+<link href="//cdn.datatables.net/plug-ins/1.10.16/integration/font-awesome/dataTables.fontAwesome.css" rel="stylesheet">
 
 <?php
     $params = $data['params'];
 ?>
-
+<script>
+    var widgetHeight = <?php echo $data['height']; ?> ;
+</script>
 
     <div class="chart-wrapper">
         <div class="pt-sd pr-md pb-md pl-md">
             <div id="campaign-revenue-table" style="height:<?php echo $data['height']; ?>px">
                 <!-- Revenue By Campaign -->
                 <div class="responsive-table">
-                    <table id="global-revenue" class="display cell-border stripe hover order-column" width="100%">
+                    <table id="global-revenue" class="table table-striped table-bordered" width="100%">
                     </table>
                 </div>
                 <!--/ Revenue By Campaign -->
             </div>
         </div>
     </div>
-
-<script>
-    mQuery(document).ready(function() {
-        mQuery.ajax({
-            url: mauticAjaxUrl,
-            type: 'POST',
-            data: {
-                action: 'plugin:mauticContactLedger:globalRevenue',
-            },
-            cache: true,
-            dataType: 'json',
-            success: function (response) {
-                mQuery('#global-revenue').DataTable( {
-                    data: response.rows,
-                    columns: response.columns
-                    columnDefs : [
-                        {
-                            render: function ( data, type, row ) {
-                                if (data==0){
-                                    return "No"
-                                } else {
-                                    return "Yes"
-                                }
-                            },
-                            targets: 0
-                        },
-                        { visible: false,  targets: [ 1 ] }
-                    ]
-                } );
-            }
-        });
-    } );
-</script>
