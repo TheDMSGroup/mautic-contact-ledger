@@ -55,7 +55,7 @@ class AjaxController extends CommonAjaxController
         ];
         foreach ($headers as $header) {
             $data['columns'][] = [
-                'title' => $this->translator->trans($header)
+                'title' => $this->translator->trans($header),
             ];
         }
         $data            = UTF8Helper::fixUTF8($data);
