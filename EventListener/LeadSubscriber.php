@@ -70,9 +70,9 @@ class LeadSubscriber extends CommonSubscriber
 
             $this->logger->debug('Found an attribution change of: '.$difference);
 
-            $campaign = $this->context->getCampaign();
-            $actor    = $this->context->getActor();
-            $activity = $this->context->getActivity();
+            $campaign = $this->context ? $this->context->getCampaign() : null;
+            $actor    = $this->context ? $this->context->getActor() : null;
+            $activity = $this->context ? $this->context->getActivity() : null;
 
             if ($difference > 0) {
                 $this->model->addEntry($lead, $campaign, $actor, $activity, null, $difference);
