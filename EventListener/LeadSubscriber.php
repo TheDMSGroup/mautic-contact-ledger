@@ -22,10 +22,11 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class LeadSubscriber extends CommonSubscriber
 {
-    /**
-     * @var \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel
-     */
-    protected $entryModel;
+    /** @var \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel */
+    protected $model;
+
+    /** @var mixed */
+    protected $context;
 
     /** @var Logger */
     protected $logger;
@@ -33,13 +34,15 @@ class LeadSubscriber extends CommonSubscriber
     /**
      * LeadSubscriber constructor.
      *
-     * @param EntryModel $entryModel
+     * @param EntryModel $model
+     * @param mixed      $context
      * @param Logger     $logger
      */
-    public function __construct(EntryModel $entryModel, Logger $logger)
+    public function __construct(EntryModel $model, $context = null, Logger $logger)
     {
-        $this->entryModel = $entryModel;
-        $this->logger     = $logger;
+        $this->model   = $model;
+        $this->context = $context;
+        $this->logger  = $logger;
     }
 
     /**
@@ -47,29 +50,38 @@ class LeadSubscriber extends CommonSubscriber
      */
     public static function getSubscribedEvents()
     {
-        // @todo - Try FIELD_PRE_SAVE for a tighter focus?
         return [
-            LeadEvents::LEAD_PRE_SAVE => ['preSaveLeadAttributionCheck', -1],
+            LeadEvents::LEAD_POST_SAVE => ['postSaveAttributionCheck', -1],
         ];
     }
 
     /**
      * @param \Mautic\LeadBundle\Event\LeadEvent $event
      */
-    public function preSaveLeadAttributionCheck(LeadEvent $event)
+    public function postSaveAttributionCheck(LeadEvent $event)
     {
         $lead    = $event->getLead();
         $changes = $lead->getChanges(false);
 
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
-            $this->logger->debug('Found an attribution change! Send for processing');
-            $routingInfo = [];
-            // @todo - Make $this->router work here?
-            if (isset($this->router)) {
-                $routingInfo = $this->router->match($this->request->getPathInfo());
-                $this->logger->debug('sending '.print_r($routingInfo, true).' with event for processing');
+            $oldValue   = $changes['fields']['attribution'][0];
+            $newValue   = $changes['fields']['attribution'][1];
+            $difference = $newValue - $oldValue;
+
+            $this->logger->debug('Found an attribution change of: '.$difference);
+
+            $campaign = $this->context ? $this->context->getCampaign() : null;
+            $actor    = $this->context ? $this->context->getActor() : null;
+            $activity = $this->context ? $this->context->getActivity() : null;
+
+            if ($difference > 0) {
+                $this->model->addEntry($lead, $campaign, $actor, $activity, null, $difference);
+            } else {
+                if ($difference < 0) {
+                    $this->model->addEntry($lead, $campaign, $actor, $activity, abs($difference));
+                }
             }
-            $this->entryModel->processAttributionChange($event, $routingInfo);
+
             unset($changes['fields']['attribution']);
             $lead->setChanges($changes);
         }

@@ -1,14 +1,5 @@
 <?php
 
-/*
- * @copyright   2018 Mautic Contributors. All rights reserved
- * @author      Mautic Community
- *
- * @link        http://mautic.org
- *
- * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- */
-
 return [
     'name'        => 'Mautic Contact Ledger',
     'description' => 'Adds cost and revenue tracking on a per ler lead basis.',
@@ -17,17 +8,22 @@ return [
 
     'services' => [
         'events' => [
-            'mautic.contactledger.subcriber.lead'     => [
+            'mauticplugin.contactledger.subscriber.lead'            => [
                 'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\LeadSubscriber::class,
                 'arguments' => [
-                    '@mautic.contactledger.model.entry',
+                    '@mauticplugin.contactledger.model.entry',
+                    '@mauticplugin.contactledger.subscriber.context_create',
                     '@logger',
                 ],
             ],
-            'mautic.contactledger.subcriber.enhancer' => [
-                'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\EnhancerSubscriber::class,
+            'mauticplugin.contactledger.subscriber.context_create'  => [
+                'class' => \MauticPlugin\MauticContactLedgerBundle\EventListener\ContactLedgerContextSubscriber::class,
+            ],
+            'mauticplugin.contactledger.subscriber.context_capture' => [
+                'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\ContactLedgerContextCaptureSubscriber::class,
                 'arguments' => [
-                    '@mautic.contactledger.model.entry',
+                    '@mauticplugin.contactledger.model.entry',
+                    '@mauticplugin.contactledger.subscriber.context_create',
                     '@logger',
                 ],
             ],
@@ -39,7 +35,7 @@ return [
             ],
         ],
         'models' => [
-            'mautic.contactledger.model.entry' => [
+            'mauticplugin.contactledger.model.entry' => [
                 'class' => \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel::class,
             ],
         ],

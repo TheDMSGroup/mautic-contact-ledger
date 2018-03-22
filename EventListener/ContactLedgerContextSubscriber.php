@@ -12,16 +12,27 @@
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use Mautic\CampaignBundle\Entity\Campaign;
-use MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEvent;
+use Mautic\LeadBundle\Entity\Lead;
+use MauticPlugin\MauticContactLedgerBundle\MauticContactLedgerEvents;
+use Symfony\Component\EventDispatcher\Event;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class ContactLedgerContextSubscriber
+class ContactLedgerContextSubscriber implements EventSubscriberInterface
 {
-    /** @var Campaign */
+    /** @var Campaign|null */
     protected $campaign;
 
+    /** @var object|null */
     protected $actor;
 
-    protected $eventType;
+    /** @var object|null */
+    protected $activity;
+
+    /** @var string */
+    protected $memo;
+
+    /** @var \Mautic\LeadBundle\Entity\Lead */
+    protected $lead;
 
     /**
      * @return array
@@ -29,18 +40,35 @@ class ContactLedgerContextSubscriber
     public static function getSubscribedEvents()
     {
         return [
-            'mauticplugin.contact_ledger.create_context' => ['setContext', 0],
+            MauticContactLedgerEvents::CONTEXT_CREATE => ['contextCreate', 0],
         ];
     }
 
     /**
-     * @param ContactLedgerContextEvent $event
+     * This method expects an event comparable with the definition in
+     * \MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEventInterface
+     * However, to minimize inter-plugin dependencies, any \Symfony\Component\EventDispatcher\Event
+     * is allowed.
+     *
+     * @param Event $event
      */
-    public function setContext(ContactLedgerContextEvent $event)
+    public function contextCreate(Event $event)
     {
-        $this->campaign  = $event->getCampaign();
-        $this->actor     = $event->getActor();
-        $this->eventType = $event->getEventType();
+        if (method_exists($event, 'getCampaign')) {
+            $this->campaign = $event->getCampaign();
+        }
+        if (method_exists($event, 'getActor')) {
+            $this->actor = $event->getActor();
+        }
+        if (method_exists($event, 'getActivity')) {
+            $this->activity = $event->getActivity();
+        }
+        if (method_exists($event, 'getMemo')) {
+            $this->memo = $event->getMemo();
+        }
+        if (method_exists($event, 'getLead')) {
+            $this->lead = $event->getLead();
+        }
     }
 
     /**
@@ -52,7 +80,7 @@ class ContactLedgerContextSubscriber
     }
 
     /**
-     * @return object
+     * @return object|null
      */
     public function getActor()
     {
@@ -60,10 +88,26 @@ class ContactLedgerContextSubscriber
     }
 
     /**
+     * @return object|null
+     */
+    public function getActivity()
+    {
+        return $this->activity;
+    }
+
+    /**
      * @return string
      */
-    public function getEventType()
+    public function getMemo()
     {
-        return $this->eventType;
+        return $this->memo;
+    }
+
+    /**
+     * @return Lead
+     */
+    public function getLead()
+    {
+        return $this->lead;
     }
 }
