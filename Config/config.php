@@ -27,6 +27,12 @@ return [
                     '@logger',
                 ],
             ],
+            'mautic.contactledger.dashboard.subscriber' => [
+                'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\DashboardSubscriber::class,
+                'arguments' => [
+                    'mautic.contactledger.model.entry',
+                ],
+            ],
         ],
         'models' => [
             'mauticplugin.contactledger.model.entry' => [

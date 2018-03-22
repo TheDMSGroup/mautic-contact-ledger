@@ -27,7 +27,7 @@ class EntryModel extends AbstractCommonModel
      */
     public function getEntryRepository()
     {
-        return $this->em->getRepository('MauticPlugin\\MauticContactLedgerBundle\\Entity\\Entry');
+        return $this->em->getRepository('MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry');
     }
 
     /**
