@@ -27,13 +27,6 @@ return [
                     '@logger',
                 ],
             ],
-            'mauticplugin.contactledger.subscriber.enhancer'        => [
-                'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\EnhancerSubscriber::class,
-                'arguments' => [
-                    '@mauticplugin.contactledger.model.entry',
-                    '@logger',
-                ],
-            ],
         ],
         'models' => [
             'mauticplugin.contactledger.model.entry' => [
