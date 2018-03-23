@@ -63,8 +63,7 @@ class LedgerEntryRepository extends CommonRepository
 
         foreach ($results as $result) {
             $labels[] = $result['label'];
-            // @todo - If using the word "cost", then we shouldn't make it negative since that would be converting it to revenue.
-            $costs[]    = -$result['cost'];
+            $costs[]    = $result['cost'];
             $revenues[] = $result['revenue'];
             $profits[]  = $result['profit'];
         }
