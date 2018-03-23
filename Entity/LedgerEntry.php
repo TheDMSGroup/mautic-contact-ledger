@@ -18,7 +18,7 @@ use Mautic\CoreBundle\Entity\CommonEntity;
 use Mautic\LeadBundle\Entity\Lead;
 
 /**
- * Class LedgerEntry
+ * Class LedgerEntry.
  */
 class LedgerEntry extends CommonEntity
 {

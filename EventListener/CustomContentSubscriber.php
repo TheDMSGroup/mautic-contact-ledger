@@ -1,24 +1,41 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: nbush
- * Date: 3/22/18
- * Time: 2:25 PM
+
+/*
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Mautic Community
+ *
+ * @link        http://mautic.org
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
+use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
-use Mautic\CoreBundle\CoreEvents;
 use MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel;
 
 /**
- * Class CustomContentSubscriber
- * @package MauticPlugin\MauticContactLedgerBundle\EventListener
+ * Class CustomContentSubscriber.
  */
 class CustomContentSubscriber extends CommonSubscriber
 {
+    /**
+     * @var LedgerEntryModel
+     */
+    protected $model;
+
+    /**
+     * CustomContentSubscriber constructor.
+     *
+     * @param LedgerEntryModel $ledgerEntryModel
+     */
+    public function __construct(LedgerEntryModel $ledgerEntryModel)
+    {
+        $this->model = $ledgerEntryModel;
+    }
+
     /**
      * @return array
      */
@@ -30,21 +47,8 @@ class CustomContentSubscriber extends CommonSubscriber
     }
 
     /**
-     * @var LedgerEntryModel
-     */
-    protected $model;
-
-    /**
-     * CustomContentSubscriber constructor.
-     * @param LedgerEntryModel $ledgerEntryModel
-     */
-    public function __construct(LedgerEntryModel $ledgerEntryModel)
-    {
-        $this->model = $ledgerEntryModel;
-    }
-
-    /**
      * @param CustomContentEvent $customContentEvent
+     *
      * @return CustomContentEvent
      */
     public function getContentInjection(CustomContentEvent $customContentEvent)
@@ -53,11 +57,8 @@ class CustomContentSubscriber extends CommonSubscriber
         $at   = 'left.section.top';
         $vars = $customContentEvent->getVars();
 
-
-
         if ($customContentEvent->checkContext($into, $at)) {
-
-            $dateTo = new \DateTime('now');
+            $dateTo   = new \DateTime('now');
             $dateFrom = new \DateTime('now');
             $dateFrom->sub(new \DateInterval('P1M'));
 
