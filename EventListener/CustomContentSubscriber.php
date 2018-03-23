@@ -54,8 +54,14 @@ class CustomContentSubscriber extends CommonSubscriber
         $vars = $customContentEvent->getVars();
 
 
-        if ($customContentEvent->checkContext($into, $at) && isset($vars['campaign'])) {
-            $chartData = $this->model->getCampaignChartData($vars['campaign']);
+
+        if ($customContentEvent->checkContext($into, $at)) {
+
+            $dateTo = new \DateTime('now');
+            $dateFrom = new \DateTime('now');
+            $dateFrom->sub(new \DateInterval('P1M'));
+
+            $chartData = $this->model->getCampaignChartData($vars['campaign'], $dateFrom, $dateTo);
 
             $customContentEvent->addTemplate(
                 'MauticContactLedgerBundle:Charts:campaign_revenue_chart.html.php',

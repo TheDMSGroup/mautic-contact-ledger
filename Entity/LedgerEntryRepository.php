@@ -11,9 +11,9 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
+use DateTime;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
-use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * Class LedgerEntryRepository
@@ -30,42 +30,36 @@ class LedgerEntryRepository extends CommonRepository
      *
      * @return array
      */
-    public function getCampaignChartData(Campaign $campaign, DateTime $dateFrom = null, DateTime $dateTo = null)
+    public function getCampaignChartData(Campaign $campaign, DateTime $dateFrom, DateTime $dateTo)
     {
         $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
 
         $builder
             ->select(
+                'DATE_FORMAT(date_added, "%b %e, %y") as label',
                 'SUM(cost) as cost',
                 'SUM(revenue) as revenue',
-                'SUM(cost)-SUM(revenue) as profit',
-                'DATE_FORMAT(date_added, "%b %e, %y") as label'
+                'SUM(revenue)-SUM(cost) as profit'
             )
             ->from('contact_ledger')
             ->where(
-                'id = :id',
-                'date_added BETWEEN :from AND :to'
+                'campaign_id = '.$campaign->getId(),
+                'date_added BETWEEN "'.$dateFrom->format('Y-m-d').'" AND "'.$dateTo->format('Y-m-d').'"'
             )
-            ->groupBy('DATE_FORMAT(date_added, "%Y%m%d")')
-            ->orderBy('date_added', 'ASC');
+            ->groupBy('label')
+            ->orderBy('label', 'ASC');
 
         $query = $builder->getSQL();
-        $params = [
-            'id' => $campaign->getId(),
-            'from' => $dateFrom,
-            'to' => $dateTo
-        ];
 
-        try {
-            $results = $this->getEntityManager()->getConnection()->fetchAll($query, $params);
-        } catch (\Exception $e) {
-            die($e->getFile() . $e->getLine() . $e->getMessage());
-        }
+        $results = $this->getEntityManager()->getConnection()->fetchAll($query);
 
         $labels = $costs = $revenues = $profits = [];
 
         foreach ($results as $result) {
-            list($costs[], $revenues[], $profites[], $labels[]) = $result;
+            $labels[] = $result['label'];
+            $costs[] = -$result['cost'];
+            $revenues[] = $result['revenue'];
+            $profits[] = $result['profit'];
         }
 
         return [
