@@ -13,21 +13,23 @@ namespace MauticPlugin\MauticContactLedgerBundle\Model;
 
 use DateTime;
 use Mautic\CampaignBundle\Entity\Campaign;
+#use Mautic\CoreBundle\Helper\Chart\BarChart;
+use Mautic\CoreBundle\Helper\Chart\LineChart;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry;
 
 /**
- * class EntryModel.
+ * class LedgerEntryModel.
  */
-class EntryModel extends AbstractCommonModel
+class LedgerEntryModel extends AbstractCommonModel
 {
     /**
      * @return \Doctrine\ORM\EntityRepository
      */
-    public function getEntryRepository()
+    public function getRepository()
     {
-        return $this->em->getRepository('MauticPlugin\\MauticContactLedgerBundle\\Entity\\Entry');
+        return $this->em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry::class);
     }
 
     /**
@@ -124,5 +126,10 @@ class EntryModel extends AbstractCommonModel
         }
 
         return $entryObject;
+    }
+
+    public function getCampaignChartData(Campaign $campaign, DateTime $dateFrom = null, DateTime $dateTo = null)
+    {
+        return $this->getRepository()->getCampaignChartData($campaign, $dateFrom, $dateTo);
     }
 }

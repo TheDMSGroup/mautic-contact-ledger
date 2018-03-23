@@ -11,51 +11,76 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
+use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
-use Mautic\LeadBundle\Entity\Lead;
+use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
- * Class EntryRepository extends {@see \Mautic\CoreBundle\Entity\CommonRepository}.
+ * class LedgerEntryRepository
  */
 class LedgerEntryRepository extends CommonRepository
 {
     /**
-     * Defines default table alias for contact_ledger table.
+     * @param Campaign $campaign
      *
-     * @return string
+     * @return array
      */
-    public function getTableAlias()
+    public function getCampaignChartData(Campaign $campaign, DateTime $dateFrom = null, DateTime $dateTo = null)
     {
-        return 'cl';
+        $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+
+        $builder
+            ->select(
+                'SUM(cost) as cost',
+                'SUM(revenue) as revenue',
+                'SUM(cost)-SUM(revenue) as profit',
+                'DATE_FORMAT(date_added, "%b %e, %y") as label'
+            )
+            ->from('contact_ledger')
+            ->where(
+                'id = :id',
+                'date_added BETWEEN :from AND :to'
+                )
+            ->groupBy('DATE_FORMAT(date_added, "%Y%m%d")')
+            ->orderBy('date_added', 'ASC');
+
+        $query = $builder->getSQL();
+        $params = [
+            'id' => $campaign->getId(),
+            'from' => $dateFrom,
+            'to' =>$dateTo
+        ];
+
+        try {
+            $results = $this->getEntityManager()->getConnection()->fetchAll($query, $params);
+        } catch (\Exception $e) {
+            die($e->getFile().$e->getLine().$e->getMessage());
+        }
+
+        $labels = $costs = $revenues = $profits = [];
+
+        foreach ($results as $result) {
+            list($costs[], $revenues[], $profites[], $labels[]) = $result;
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => [
+                [
+                    'label' => 'Cost',
+                    'data'  => $costs,
+                ],
+                [
+                    'label' => 'Reveue',
+                    'data'  => $revenues,
+                ],
+                [
+                    'label' => 'Profit',
+                    'data'  => $profits,
+                ],
+            ]
+        ];
     }
 
-    /**
-     * @param \Mautic\LeadBundle\Entity\Lead $contact
-     *
-     * @return LedgerEntry[]
-     */
-    public function getContactLedger(Lead $contact)
-    {
-        return [];
-    }
 
-    /**
-     * @param \Mautic\LeadBundle\Entity\Lead $contact
-     *
-     * @return string|float
-     */
-    public function getContactCost(Lead $contact)
-    {
-        return '';
-    }
-
-    /**
-     * @param \Mautic\LeadBundle\Entity\Lead $contact
-     *
-     * @return string|float
-     */
-    public function getContactRevenue(Lead $contact)
-    {
-        return '';
-    }
 }
