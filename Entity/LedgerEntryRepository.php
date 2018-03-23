@@ -62,7 +62,7 @@ class LedgerEntryRepository extends CommonRepository
         $labels = $costs = $revenues = $profits = [];
 
         foreach ($results as $result) {
-            $labels[] = $result['label'];
+            $labels[]   = $result['label'];
             $costs[]    = $result['cost'];
             $revenues[] = $result['revenue'];
             $profits[]  = $result['profit'];
