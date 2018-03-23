@@ -22,10 +22,14 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class LeadSubscriber extends CommonSubscriber
 {
-    /** @var \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel */
+    /**
+     * @var \MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel
+     */
     protected $model;
 
-    /** @var mixed */
+    /**
+     * @var ContactLedgerContextSubscriber
+     */
     protected $context;
 
     /** @var Logger */
@@ -35,10 +39,10 @@ class LeadSubscriber extends CommonSubscriber
      * LeadSubscriber constructor.
      *
      * @param EntryModel $model
-     * @param mixed      $context
+     * @param ContactLedgerContextSubscriber $context
      * @param Logger     $logger
      */
-    public function __construct(EntryModel $model, $context = null, Logger $logger)
+    public function __construct(EntryModel $model, ContactLedgerContextSubscriber $context, Logger $logger)
     {
         $this->model   = $model;
         $this->context = $context;

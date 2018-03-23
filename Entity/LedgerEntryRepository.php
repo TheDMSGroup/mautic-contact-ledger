@@ -82,5 +82,3 @@ class LedgerEntryRepository extends CommonRepository
         ];
     }
 
-
-}
