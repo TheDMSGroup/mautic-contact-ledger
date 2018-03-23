@@ -96,9 +96,8 @@ class LedgerEntry extends CommonEntity
 
         $builder->setTable('contact_ledger')
             ->setCustomRepositoryClass(
-                \MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository::class
+                'MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository'
             );
-
 
         $builder->addId();
         $builder->addDateAdded();

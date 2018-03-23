@@ -16,10 +16,15 @@ use Mautic\CoreBundle\Entity\CommonRepository;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
- * class LedgerEntryRepository
+ * Class LedgerEntryRepository
  */
 class LedgerEntryRepository extends CommonRepository
 {
+    public function getTableAlias()
+    {
+        return 'cle';
+    }
+
     /**
      * @param Campaign $campaign
      *
@@ -40,7 +45,7 @@ class LedgerEntryRepository extends CommonRepository
             ->where(
                 'id = :id',
                 'date_added BETWEEN :from AND :to'
-                )
+            )
             ->groupBy('DATE_FORMAT(date_added, "%Y%m%d")')
             ->orderBy('date_added', 'ASC');
 
@@ -48,13 +53,13 @@ class LedgerEntryRepository extends CommonRepository
         $params = [
             'id' => $campaign->getId(),
             'from' => $dateFrom,
-            'to' =>$dateTo
+            'to' => $dateTo
         ];
 
         try {
             $results = $this->getEntityManager()->getConnection()->fetchAll($query, $params);
         } catch (\Exception $e) {
-            die($e->getFile().$e->getLine().$e->getMessage());
+            die($e->getFile() . $e->getLine() . $e->getMessage());
         }
 
         $labels = $costs = $revenues = $profits = [];
@@ -68,17 +73,17 @@ class LedgerEntryRepository extends CommonRepository
             'datasets' => [
                 [
                     'label' => 'Cost',
-                    'data'  => $costs,
+                    'data' => $costs,
                 ],
                 [
                     'label' => 'Reveue',
-                    'data'  => $revenues,
+                    'data' => $revenues,
                 ],
                 [
                     'label' => 'Profit',
-                    'data'  => $profits,
+                    'data' => $profits,
                 ],
             ]
         ];
     }
-
+}
