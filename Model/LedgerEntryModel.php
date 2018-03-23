@@ -18,18 +18,10 @@ use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry;
 
 /**
- * class EntryModel.
+ * class LedgerEntryModel.
  */
-class EntryModel extends AbstractCommonModel
+class LedgerEntryModel extends AbstractCommonModel
 {
-    /**
-     * @return \Doctrine\ORM\EntityRepository
-     */
-    public function getEntryRepository()
-    {
-        return $this->em->getRepository('MauticPlugin\\MauticContactLedgerBundle\\Entity\\Entry');
-    }
-
     /**
      * @param Lead              $lead
      * @param Campaign|null     $campaign
@@ -124,5 +116,18 @@ class EntryModel extends AbstractCommonModel
         }
 
         return $entryObject;
+    }
+
+    public function getCampaignChartData(Campaign $campaign, DateTime $dateFrom = null, DateTime $dateTo = null)
+    {
+        return $this->getRepository()->getCampaignChartData($campaign, $dateFrom, $dateTo);
+    }
+
+    /**
+     * @return \Doctrine\ORM\EntityRepository
+     */
+    public function getRepository()
+    {
+        return $this->em->getRepository('MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry');
     }
 }
