@@ -1,9 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: nbush
- * Date: 3/21/18
- * Time: 12:19 AM.
+
+/*
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Mautic Community
+ *
+ * @link        http://mautic.org
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 
 namespace MauticPlugin\MauticContactLedgerBundle\Event;
