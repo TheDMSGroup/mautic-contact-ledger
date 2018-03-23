@@ -18,7 +18,7 @@ use Mautic\CoreBundle\Entity\CommonEntity;
 use Mautic\LeadBundle\Entity\Lead;
 
 /**
- * Class Entry.
+ * Class LedgerEntry.
  */
 class LedgerEntry extends CommonEntity
 {
@@ -95,7 +95,9 @@ class LedgerEntry extends CommonEntity
         $builder = new ClassMetadataBuilder($metadata);
 
         $builder->setTable('contact_ledger')
-            ->setCustomRepositoryClass('MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository');
+            ->setCustomRepositoryClass(
+                'MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository'
+            );
 
         $builder->addId();
         $builder->addDateAdded();

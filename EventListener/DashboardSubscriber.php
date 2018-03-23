@@ -13,7 +13,7 @@ namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use Mautic\DashboardBundle\Event\WidgetDetailEvent;
 use Mautic\DashboardBundle\EventListener\DashboardSubscriber as MainDashboardSubscriber;
-use MauticPlugin\MauticContactLedgerBundle\Model\EntryModel;
+use MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel;
 
 /**
  * Class DashboardSubscriber.
@@ -37,16 +37,16 @@ class DashboardSubscriber extends MainDashboardSubscriber
     ];
 
     /**
-     * @var EntryModel
+     * @var LedgerEntryModel
      */
     protected $entryModel;
 
     /**
      * DashboardSubscriber constructor.
      *
-     * @param EventModel $campaignEventModel
+     * @param LedgerEntryModel $entryModel
      */
-    public function __construct(EntryModel $entryModel)
+    public function __construct(LedgerEntryModel $entryModel)
     {
         $this->entryModel = $entryModel;
     }
@@ -64,7 +64,7 @@ class DashboardSubscriber extends MainDashboardSubscriber
             if ($widget->getHeight() < 330) {
                 $widget->setHeight(330);
             }
-            $params         = $widget->getParams();
+            $params = $widget->getParams();
             // check date params and set defaults if not exist
             if (!isset($params['dateTo']) || !$params['dateTo'] instanceof \DateTime) {
                 $params['toDate'] = new \DateTime();

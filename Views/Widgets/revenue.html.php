@@ -16,21 +16,21 @@
 <link href="/plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css" rel="stylesheet">
 
 <?php
-    $params = $data['params'];
+$params = $data['params'];
 ?>
 <script>
     var widgetHeight = <?php echo $data['height']; ?> ;
 </script>
 
-    <div class="chart-wrapper">
-        <div class="pt-sd pr-md pb-md pl-md">
-            <div id="campaign-revenue-table" style="height:<?php echo $data['height']; ?>px">
-                <!-- Revenue By Campaign -->
-                <div class="responsive-table">
-                    <table id="global-revenue" class="table table-striped table-bordered" width="100%">
-                    </table>
-                </div>
-                <!--/ Revenue By Campaign -->
+<div class="chart-wrapper">
+    <div class="pt-sd pr-md pb-md pl-md">
+        <div id="campaign-revenue-table" style="height:<?php echo $data['height']; ?>px">
+            <!-- Revenue By Campaign -->
+            <div class="responsive-table">
+                <table id="global-revenue" class="table table-striped table-bordered" width="100%">
+                </table>
             </div>
+            <!--/ Revenue By Campaign -->
         </div>
     </div>
+</div>

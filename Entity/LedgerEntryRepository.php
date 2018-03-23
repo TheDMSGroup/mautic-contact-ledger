@@ -11,52 +11,86 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
+use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
-use Mautic\LeadBundle\Entity\Lead;
+use Mautic\LeadBundle\Entity\Lead as Contact;
+use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
- * Class EntryRepository extends {@see \Mautic\CoreBundle\Entity\CommonRepository}.
+ * class LedgerEntryRepository.
  */
 class LedgerEntryRepository extends CommonRepository
 {
     const MAUTIC_CONVERSION_STATUS = 'converted';
 
     /**
-     * Defines default table alias for contact_ledger table.
+     * @param Campaign $campaign
+     *
+     * @return array
+     */
+    public function getCampaignChartData(Campaign $campaign, DateTime $dateFrom = null, DateTime $dateTo = null)
+    {
+        $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+
+        $builder
+            ->select(
+                'SUM(cost) as cost',
+                'SUM(revenue) as revenue',
+                'SUM(cost)-SUM(revenue) as profit',
+                'DATE_FORMAT(date_added, "%b %e, %y") as label'
+            )
+            ->from('contact_ledger')
+            ->where(
+                'id = :id',
+                'date_added BETWEEN :from AND :to'
+            )
+            ->groupBy('DATE_FORMAT(date_added, "%Y%m%d")')
+            ->orderBy('date_added', 'ASC');
+
+        $query  = $builder->getSQL();
+        $params = [
+            'id'   => $campaign->getId(),
+            'from' => $dateFrom,
+            'to'   => $dateTo,
+        ];
+
+        try {
+            $results = $this->getEntityManager()->getConnection()->fetchAll($query, $params);
+        } catch (\Exception $e) {
+            die($e->getFile().$e->getLine().$e->getMessage());
+        }
+
+        $labels = $costs = $revenues = $profits = [];
+
+        foreach ($results as $result) {
+            list($costs[], $revenues[], $profites[], $labels[]) = $result;
+        }
+
+        return [
+            'labels'   => $labels,
+            'datasets' => [
+                [
+                    'label' => 'Cost',
+                    'data'  => $costs,
+                ],
+                [
+                    'label' => 'Reveue',
+                    'data'  => $revenues,
+                ],
+                [
+                    'label' => 'Profit',
+                    'data'  => $profits,
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @param Contact $contact
      *
      * @return string
      */
-    public function getTableAlias()
-    {
-        return 'cl';
-    }
-
-    /**
-     * @param \Mautic\LeadBundle\Entity\Lead $contact
-     *
-     * @return LedgerEntry[]
-     */
-    public function getContactLedger(Lead $contact)
-    {
-        return [];
-    }
-
-    /**
-     * @param \Mautic\LeadBundle\Entity\Lead $contact
-     *
-     * @return string|float
-     */
-    public function getContactCost(Lead $contact)
-    {
-        return '';
-    }
-
-    /**
-     * @param \Mautic\LeadBundle\Entity\Lead $contact
-     *
-     * @return string|float
-     */
-    public function getContactRevenue(Lead $contact)
+    public function getContactRevenue(Contact $contact)
     {
         return '';
     }
@@ -138,7 +172,7 @@ class LedgerEntryRepository extends CommonRepository
                 $c->expr()->eq('cl.activity', ':MAUTIC_CONVERSION_LABEL')
             );
             $c->setParameter('ContactClientModel', 'ContactClientModel');
-            $c->setParameter('MAUTIC_CONVERSION_LABEL', LedgerEntryRepository::MAUTIC_CONVERSION_STATUS);
+            $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONVERSION_STATUS);
 
             $conversions = $c->execute()->fetchAll();
             $conversions = array_column($conversions, 'converted', 'campaign_id');
@@ -148,10 +182,15 @@ class LedgerEntryRepository extends CommonRepository
                 $financial['revenue']   = floatval($financial['revenue']);
                 $financial['cost']      = floatval($financial['cost']);
                 $financial['gm']        = $financial['revenue'] - $financial['cost'];
-                $financial['margin']    = $financial['revenue'] ? number_format(($financial['gm'] / $financial['revenue']) * 100, 2, '.', ',') : 0;
+                $financial['margin']    = $financial['revenue'] ? number_format(
+                    ($financial['gm'] / $financial['revenue']) * 100,
+                    2,
+                    '.',
+                    ','
+                ) : 0;
                 $financial['ecpm']      = number_format($financial['gm'] / 1000, 4, '.', ',');
                 $financial['received']  = intval($financial['received']);
-                $financial['converted'] = isset($conversions[$financial['campaign_id']]) ? $conversions[$financial['campaign_id']]: 0;
+                $financial['converted'] = isset($conversions[$financial['campaign_id']]) ? $conversions[$financial['campaign_id']] : 0;
                 $results['rows'][]      = [
                     $financial['is_published'],
                     $financial['campaign_id'],
