@@ -11,10 +11,9 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
+use Doctrine\DBAL\Types\Type;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
-use Mautic\LeadBundle\Entity\Lead as Contact;
-use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * Class LedgerEntryRepository.
@@ -33,37 +32,53 @@ class LedgerEntryRepository extends CommonRepository
 
     /**
      * @param Campaign $campaign
-     *
+     * @param \DateTime $dateFrom
+     * @param \DateTime $dateTo
      * @return array
      */
-    public function getCampaignChartData(Campaign $campaign, DateTime $dateFrom, DateTime $dateTo)
+    public function getForCampaignChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
     {
+        //Start at 00:00:00
+        $dateFrom->modify('midnight');
+        //add a day and do non-inclusive less than check,
+        //TODO: make comaptabile with other date time units
+        //Finsh at 23:59:59.9999
+        $dateTo->modify('+1 day');
+
         $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
 
         $builder
             ->select(
                 'DATE_FORMAT(date_added, "%b %e, %y") as label',
-                'SUM(cost) as cost',
-                'SUM(revenue) as revenue',
-                'SUM(revenue)-SUM(cost) as profit'
+                'SUM(cost)                            as cost',
+                'SUM(revenue)                         as revenue',
+                'SUM(revenue)-SUM(cost)               as profit'
             )
             ->from('contact_ledger')
             ->where(
-                'campaign_id = '.$campaign->getId(),
-                'date_added BETWEEN "'.$dateFrom->format('Y-m-d').'" AND "'.$dateTo->format('Y-m-d').'"'
+                $builder->expr()->eq('?', 'campaign_id'),
+                $builder->expr()->lte('?', 'date_added'),
+                $builder->expr()->gt('?', 'date_added')
             )
             ->groupBy('label')
             ->orderBy('label', 'ASC');
 
-        $query = $builder->getSQL();
+        $stmt = $this->getEntityManager()->getConnection()->prepare(
+            $builder->getSQL()
+        );
 
-        $results = $this->getEntityManager()->getConnection()->fetchAll($query);
+        $stmt->bindValue(1, $campaign->getId(), Type::INTEGER);
+        $stmt->bindValue(2, $dateFrom, Type::DATETIME);
+        $stmt->bindValue(3, $dateTo, Type::DATETIME);
+
+        $stmt->execute();
+
+        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $labels = $costs = $revenues = $profits = [];
-
         foreach ($results as $result) {
             $labels[]   = $result['label'];
-            $costs[]    = $result['cost'];
+            $costs[]    = -$result['cost'];
             $revenues[] = $result['revenue'];
             $profits[]  = $result['profit'];
         }
@@ -72,29 +87,31 @@ class LedgerEntryRepository extends CommonRepository
             'labels'   => $labels,
             'datasets' => [
                 [
-                    'label' => 'Cost',
-                    'data'  => $costs,
+                    'label'                     => 'Cost',
+                    'data'                      => $costs,
+                    'backgroundColor'           => 'rgba(204,51,51,0.1)',
+                    'borderColor'               => 'rgba(204,51,51,0.8)',
+                    'pointHoverBackgroundColor' => 'rgba(204,51,51,0.75)',
+                    'pointHoverBorderColor'     => 'rgba(204,51,51,1)'
                 ],
                 [
-                    'label' => 'Reveue',
-                    'data'  => $revenues,
+                    'label'                     => 'Reveue',
+                    'data'                      => $revenues,
+                    'backgroundColor'           => 'rgba(51,51,51,0.1)',
+                    'borderColor'               => 'rgba(51,51,51,0.8)',
+                    'pointHoverBackgroundColor' => 'rgba(51,51,51,0.75)',
+                    'pointHoverBorderColor'     => 'rgba(51,51,51,1)'
                 ],
                 [
-                    'label' => 'Profit',
-                    'data'  => $profits,
+                    'label'                     => 'Profit',
+                    'data'                      => $profits,
+                    'backgroundColor'           => 'rgba(51,204,51,0.1)',
+                    'borderColor'               => 'rgba(51,204,51,0.8)',
+                    'pointHoverBackgroundColor' => 'rgba(51,204,51,0.75)',
+                    'pointHoverBorderColor'     => 'rgba(51,204,51,1)'
                 ],
             ],
         ];
-    }
-
-    /**
-     * @param Contact $contact
-     *
-     * @return string
-     */
-    public function getContactRevenue(Contact $contact)
-    {
-        return '';
     }
 
     /**

@@ -27,9 +27,6 @@ class ContactLedgerContextCaptureSubscriber extends CommonSubscriber
     /** @var mixed */
     protected $context;
 
-    /** @var Logger */
-    protected $logger;
-
     /**
      * LeadSubscriber constructor.
      *
@@ -37,11 +34,10 @@ class ContactLedgerContextCaptureSubscriber extends CommonSubscriber
      * @param mixed            $context
      * @param Logger           $logger
      */
-    public function __construct(LedgerEntryModel $model, $context = null, Logger $logger)
+    public function __construct(LedgerEntryModel $model, $context = null)
     {
         $this->model   = $model;
         $this->context = $context;
-        $this->logger  = $logger;
     }
 
     /**

@@ -11,7 +11,6 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Model;
 
-use DateTime;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
 use Mautic\LeadBundle\Entity\Lead;
@@ -50,7 +49,7 @@ class LedgerEntryModel extends AbstractCommonModel
 
         $entry = new LedgerEntry();
         $entry
-            ->setDateAdded(new DateTime())
+            ->setDateAdded(new \DateTime())
             ->setContact($lead)
             ->setCampaign($campaign)
             ->setBundleName($bundleName)
@@ -125,9 +124,9 @@ class LedgerEntryModel extends AbstractCommonModel
      *
      * @return array
      */
-    public function getCampaignChartData(Campaign $campaign, DateTime $dateFrom, DateTime $dateTo)
+    public function getForCampaignChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
     {
-        return $this->getRepository()->getCampaignChartData($campaign, $dateFrom, $dateTo);
+        return $this->getRepository()->getForCampaignChartData($campaign, $dateFrom, $dateTo);
     }
 
     /**
