@@ -15,7 +15,6 @@ use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
-use Mautic\CoreBundle\Helper\Chart\LineChart;
 use Mautic\DashboardBundle\Model\DashboardModel;
 use MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel;
 
