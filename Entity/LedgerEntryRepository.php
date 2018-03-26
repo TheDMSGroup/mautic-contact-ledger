@@ -31,9 +31,10 @@ class LedgerEntryRepository extends CommonRepository
     }
 
     /**
-     * @param Campaign $campaign
+     * @param Campaign  $campaign
      * @param \DateTime $dateFrom
      * @param \DateTime $dateTo
+     *
      * @return array
      */
     public function getForCampaignChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
@@ -92,7 +93,7 @@ class LedgerEntryRepository extends CommonRepository
                     'backgroundColor'           => 'rgba(204,51,51,0.1)',
                     'borderColor'               => 'rgba(204,51,51,0.8)',
                     'pointHoverBackgroundColor' => 'rgba(204,51,51,0.75)',
-                    'pointHoverBorderColor'     => 'rgba(204,51,51,1)'
+                    'pointHoverBorderColor'     => 'rgba(204,51,51,1)',
                 ],
                 [
                     'label'                     => 'Reveue',
@@ -100,7 +101,7 @@ class LedgerEntryRepository extends CommonRepository
                     'backgroundColor'           => 'rgba(51,51,51,0.1)',
                     'borderColor'               => 'rgba(51,51,51,0.8)',
                     'pointHoverBackgroundColor' => 'rgba(51,51,51,0.75)',
-                    'pointHoverBorderColor'     => 'rgba(51,51,51,1)'
+                    'pointHoverBorderColor'     => 'rgba(51,51,51,1)',
                 ],
                 [
                     'label'                     => 'Profit',
@@ -108,7 +109,7 @@ class LedgerEntryRepository extends CommonRepository
                     'backgroundColor'           => 'rgba(51,204,51,0.1)',
                     'borderColor'               => 'rgba(51,204,51,0.8)',
                     'pointHoverBackgroundColor' => 'rgba(51,204,51,0.75)',
-                    'pointHoverBorderColor'     => 'rgba(51,204,51,1)'
+                    'pointHoverBorderColor'     => 'rgba(51,204,51,1)',
                 ],
             ],
         ];

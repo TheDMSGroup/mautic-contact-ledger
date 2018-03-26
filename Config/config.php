@@ -38,7 +38,7 @@ return [
                 'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\CustomContentSubscriber',
                 'arguments' => [
                     '@mautic.contactledger.model.ledgerentry',
-                    '@mautic.dashboard.model.dashboard'
+                    '@mautic.dashboard.model.dashboard',
                 ],
             ],
             'mautic.contactledger.dashboard.subscriber'       => [

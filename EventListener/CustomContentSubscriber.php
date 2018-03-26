@@ -16,8 +16,8 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\CoreBundle\Helper\Chart\LineChart;
-use MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel;
 use Mautic\DashboardBundle\Model\DashboardModel;
+use MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel;
 
 /**
  * Class CustomContentSubscriber.
@@ -38,7 +38,7 @@ class CustomContentSubscriber extends CommonSubscriber
      * CustomContentSubscriber constructor.
      *
      * @param LedgerEntryModel $ledgerEntryModel
-     * @param DashboardModel $dashboardModel
+     * @param DashboardModel   $dashboardModel
      */
     public function __construct(LedgerEntryModel $ledgerEntryModel, DashboardModel $dashboardModel)
     {
@@ -67,7 +67,6 @@ class CustomContentSubscriber extends CommonSubscriber
         $at   = 'left.section.top';
 
         if ($customContentEvent->checkContext($into, $at)) {
-
             $vars = $customContentEvent->getVars();
             /** @var Campaign $campaign */
             $campaign = $vars['campaign'];
@@ -75,17 +74,13 @@ class CustomContentSubscriber extends CommonSubscriber
             $dateRange = $this->request->request->get('daterange', []);
 
             if (empty($dateRange)) {
-
                 $dateRange = $this->dashboardModel->getDefaultFilter();
                 $dateFrom  = $dateRange['date_from'] = $dateRange['dateFrom'];
-                $dateTo    = $dateRange['date_to']   = $dateRange['dateTo'];
-
+                $dateTo    = $dateRange['date_to'] = $dateRange['dateTo'];
             } else {
-
                 $dateFrom = $dateRange['dateFrom'] = new \DateTime($dateRange['date_from']);
-                $dateTo   = $dateRange['dateTo']   = new \DateTime($dateRange['date_to']);
+                $dateTo   = $dateRange['dateTo'] = new \DateTime($dateRange['date_to']);
             }
-
 
             $chartData = $this->ledgerEntryModel->getForCampaignChartData(
                 $campaign,

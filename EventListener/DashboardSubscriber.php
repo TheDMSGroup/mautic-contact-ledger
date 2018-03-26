@@ -80,6 +80,5 @@ class DashboardSubscriber extends MainDashboardSubscriber
 
         $event->setTemplate('MauticContactLedgerBundle:Widgets:revenue.html.php');
         $event->stopPropagation();
-        //  }
     }
 }
