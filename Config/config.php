@@ -22,7 +22,6 @@ return [
                 'arguments' => [
                     '@mautic.contactledger.model.ledgerentry',
                     '@mautic.contactledger.subscriber.context_create',
-                    '@logger',
                 ],
             ],
             'mautic.contactledger.subscriber.context_create'  => [
@@ -33,13 +32,13 @@ return [
                 'arguments' => [
                     '@mautic.contactledger.model.ledgerentry',
                     '@mautic.contactledger.subscriber.context_create',
-                    '@logger',
                 ],
             ],
             'mautic.contactledger.subscriber.customcontent'   => [
                 'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\CustomContentSubscriber',
                 'arguments' => [
                     '@mautic.contactledger.model.ledgerentry',
+                    '@mautic.dashboard.model.dashboard',
                 ],
             ],
             'mautic.contactledger.dashboard.subscriber'       => [

@@ -25,7 +25,7 @@ class LeadSubscriber extends CommonSubscriber
     /** @var LedgerEntryModel */
     protected $model;
 
-    /** @var mixed */
+    /** @var ContactLedgerContextSubscriber */
     protected $context;
 
     /** @var Logger */
@@ -34,11 +34,11 @@ class LeadSubscriber extends CommonSubscriber
     /**
      * LeadSubscriber constructor.
      *
-     * @param LedgerEntryModel $model
-     * @param mixed            $context
-     * @param Logger           $logger
+     * @param LedgerEntryModel                    $model
+     * @param ContactLedgerContextSubscriber|null $context
+     * @param Logger|null                         $logger
      */
-    public function __construct(LedgerEntryModel $model, $context = null, Logger $logger)
+    public function __construct(LedgerEntryModel $model, ContactLedgerContextSubscriber $context = null, Logger $logger = null)
     {
         $this->model   = $model;
         $this->context = $context;
@@ -68,7 +68,9 @@ class LeadSubscriber extends CommonSubscriber
             $newValue   = $changes['fields']['attribution'][1];
             $difference = $newValue - $oldValue;
 
-            $this->logger->debug('Found an attribution change of: '.$difference);
+            if ($this->logger) {
+                $this->logger->debug('Found an attribution change of: '.$difference);
+            }
 
             $campaign = $this->context ? $this->context->getCampaign() : null;
             $actor    = $this->context ? $this->context->getActor() : null;

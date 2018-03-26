@@ -11,9 +11,11 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
+use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
+use Mautic\DashboardBundle\Model\DashboardModel;
 use MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel;
 
 /**
@@ -24,16 +26,23 @@ class CustomContentSubscriber extends CommonSubscriber
     /**
      * @var LedgerEntryModel
      */
-    protected $model;
+    protected $ledgerEntryModel;
+
+    /**
+     * @var DashboardModel
+     */
+    protected $dashboardModel;
 
     /**
      * CustomContentSubscriber constructor.
      *
      * @param LedgerEntryModel $ledgerEntryModel
+     * @param DashboardModel   $dashboardModel
      */
-    public function __construct(LedgerEntryModel $ledgerEntryModel)
+    public function __construct(LedgerEntryModel $ledgerEntryModel, DashboardModel $dashboardModel)
     {
-        $this->model = $ledgerEntryModel;
+        $this->ledgerEntryModel = $ledgerEntryModel;
+        $this->dashboardModel   = $dashboardModel;
     }
 
     /**
@@ -55,10 +64,28 @@ class CustomContentSubscriber extends CommonSubscriber
     {
         $into = 'MauticCampaignBundle:Campaign:details.html.php';
         $at   = 'left.section.top';
-        $vars = $customContentEvent->getVars();
 
-        if ($customContentEvent->checkContext($into, $at) && isset($vars['campaign'])) {
-            $chartData = $this->model->getCampaignChartData($vars['campaign']);
+        if ($customContentEvent->checkContext($into, $at)) {
+            $vars = $customContentEvent->getVars();
+            /** @var Campaign $campaign */
+            $campaign = $vars['campaign'];
+
+            $dateRange = $this->request->request->get('daterange', []);
+
+            if (empty($dateRange)) {
+                $dateRange = $this->dashboardModel->getDefaultFilter();
+                $dateFrom  = $dateRange['date_from'] = $dateRange['dateFrom'];
+                $dateTo    = $dateRange['date_to'] = $dateRange['dateTo'];
+            } else {
+                $dateFrom = $dateRange['dateFrom'] = new \DateTime($dateRange['date_from']);
+                $dateTo   = $dateRange['dateTo'] = new \DateTime($dateRange['date_to']);
+            }
+
+            $chartData = $this->ledgerEntryModel->getForCampaignChartData(
+                $campaign,
+                $dateFrom,
+                $dateTo
+            );
 
             $customContentEvent->addTemplate(
                 'MauticContactLedgerBundle:Charts:campaign_revenue_chart.html.php',

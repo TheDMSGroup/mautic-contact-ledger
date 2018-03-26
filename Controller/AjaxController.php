@@ -38,7 +38,7 @@ class AjaxController extends CommonAjaxController
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
         $entryModel = $this->get('mautic.contactledger.model.entry');
-        $ledgerRepo = $entryModel->getEntryRepository();
+        $ledgerRepo = $entryModel->getLedgerEntryRepository();
         $data       = $ledgerRepo->getDashboardRevenueWidgetData($params);
         $headers    = [
             'mautic.contactledger.dashboard.revenue.header.active',
