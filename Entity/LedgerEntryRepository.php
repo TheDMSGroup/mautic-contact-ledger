@@ -21,13 +21,13 @@ use Mautic\CoreBundle\Entity\CommonRepository;
 class LedgerEntryRepository extends CommonRepository
 {
     const MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED = 'converted';
-    const MAUTIC_CONTACT_LEDGER_STATUS_RECEIVED = 'received';
-    const MAUTIC_CONTACT_LEDGER_STATUS_ENHANCED = 'received';
-    const MAUTIC_CONTACT_LEDGER_STATUS_SCRUBBED = 'received';
+    const MAUTIC_CONTACT_LEDGER_STATUS_RECEIVED  = 'received';
+    const MAUTIC_CONTACT_LEDGER_STATUS_ENHANCED  = 'received';
+    const MAUTIC_CONTACT_LEDGER_STATUS_SCRUBBED  = 'received';
 
     public static function formatDollar($dollarValue)
     {
-        return sprintf('%19.4f',  floatval($dollarValue));
+        return sprintf('%19.4f', floatval($dollarValue));
     }
 
     /**
@@ -48,7 +48,7 @@ class LedgerEntryRepository extends CommonRepository
     public function getForRevenueChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
     {
         $resultDateTime = null;
-        $labels = $costs = $revenues = $profits = [];
+        $labels         = $costs         = $revenues         = $profits         = [];
         $defaultDollars = self::formatDollar('0');
 
         $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
@@ -74,13 +74,13 @@ class LedgerEntryRepository extends CommonRepository
 
         // query the database
         $stmt->bindValue(1, $campaign->getId(), Type::INTEGER);
-        $stmt->bindValue(2, $dateFrom,          Type::DATETIME);
-        $stmt->bindValue(3, $dateTo,            Type::DATETIME);
+        $stmt->bindValue(2, $dateFrom, Type::DATETIME);
+        $stmt->bindValue(3, $dateTo, Type::DATETIME);
         $stmt->execute();
 
         if (0 < $stmt->rowCount()) {
-            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            $result = array_shift($results);
+            $results        = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $result         = array_shift($results);
             $resultDateTime = new \DateTime($result['label']);
         }
 
@@ -97,10 +97,9 @@ class LedgerEntryRepository extends CommonRepository
 
                 // prep next entry
                 if (0 < count($results)) {
-                    $result = array_shift($results);
+                    $result         = array_shift($results);
                     $resultDateTime = new \DateTime($result['label']);
                 }
-
             } else {
                 $costs[]    = $defaultDollars;
                 $revenues[] = $defaultDollars;

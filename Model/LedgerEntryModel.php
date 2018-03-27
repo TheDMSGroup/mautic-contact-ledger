@@ -11,7 +11,6 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Model;
 
-use DateTime;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
 use Mautic\LeadBundle\Entity\Lead;
@@ -119,7 +118,7 @@ class LedgerEntryModel extends AbstractCommonModel
     }
 
     /**
-     * @param Campaign $campaign
+     * @param Campaign  $campaign
      * @param \DateTime $dateFrom
      * @param \DateTime $dateTo
      *
