@@ -11,6 +11,7 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Model;
 
+use DateTime;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
 use Mautic\LeadBundle\Entity\Lead;
@@ -130,7 +131,7 @@ class LedgerEntryModel extends AbstractCommonModel
     }
 
     /**
-     * @return \Doctrine\ORM\EntityRepository
+     * @return \MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository
      */
     public function getRepository()
     {

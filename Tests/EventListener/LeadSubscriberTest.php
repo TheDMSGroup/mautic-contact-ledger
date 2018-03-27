@@ -1,12 +1,21 @@
 <?php
 
+/*
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Mautic Community
+ *
+ * @link        http://mautic.org
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
+ */
+
 namespace MauticPlugin\MauticContactLedgerBundle\Tests\EventListener;
 
 use Mautic\CoreBundle\Tests\CommonMocks;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Event\LeadEvent;
 use MauticPlugin\MauticContactLedgerBundle\EventListener\LeadSubscriber;
-use MauticPlugin\MauticContactLedgerBundle\Model\EntryModel;
+use MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel;
 use Symfony\Bridge\Monolog\Logger;
 
 /**
@@ -38,7 +47,7 @@ class LeadSubscriberTest extends CommonMocks
         ];
         $lead->setChanges($changes);
 
-        $entryModel = $this->getMockBuilder(EntryModel::class)
+        $entryModel = $this->getMockBuilder(LedgerEntryModel::class)
             ->disableOriginalConstructor()
             ->getMock();
 

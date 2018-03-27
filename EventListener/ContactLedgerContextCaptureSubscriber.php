@@ -13,35 +13,29 @@ namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use MauticPlugin\MauticContactLedgerBundle\MauticContactLedgerEvents;
-use MauticPlugin\MauticContactLedgerBundle\Model\EntryModel;
-use Symfony\Bridge\Monolog\Logger;
+use MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel;
 
 /**
  * Class LeadSubscriber.
  */
 class ContactLedgerContextCaptureSubscriber extends CommonSubscriber
 {
-    /** @var \MauticPlugin\MauticContactLedgerBundle\Model\EntryModel */
+    /** @var LedgerEntryModel */
     protected $model;
 
     /** @var mixed */
     protected $context;
 
-    /** @var Logger */
-    protected $logger;
-
     /**
      * LeadSubscriber constructor.
      *
-     * @param EntryModel $model
-     * @param mixed      $context
-     * @param Logger     $logger
+     * @param LedgerEntryModel $model
+     * @param mixed            $context
      */
-    public function __construct(EntryModel $model, $context = null, Logger $logger)
+    public function __construct(LedgerEntryModel $model, $context = null)
     {
         $this->model   = $model;
         $this->context = $context;
-        $this->logger  = $logger;
     }
 
     /**
