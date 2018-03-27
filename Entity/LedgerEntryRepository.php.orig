@@ -1,0 +1,174 @@
+<?php
+
+/*
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Mautic Community
+ *
+ * @link        http://mautic.org
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
+ */
+
+namespace MauticPlugin\MauticContactLedgerBundle\Entity;
+
+use Mautic\CoreBundle\Entity\CommonRepository;
+use Mautic\LeadBundle\Entity\Lead;
+
+/**
+ * Class EntryRepository extends {@see \Mautic\CoreBundle\Entity\CommonRepository}.
+ */
+class LedgerEntryRepository extends CommonRepository
+{
+<<<<<<< Updated upstream
+=======
+    const MAUTIC_CONVERSION_STATUS_CONVERTED = 'converted';
+    const MAUTIC_CONVERSION_STATUS_RECEIVED = 'received';
+    const MAUTIC_CONVERSION_STATUS_ENHANCED = 'received';
+    const MAUTIC_CONVERSION_STATUS_SCRUBBED = 'received';
+
+    public static function formatDollar($dollarValue)
+    {
+        return sprintf('%19.4f',  floatval($dollarValue));
+    }
+
+>>>>>>> Stashed changes
+    /**
+     * Defines default table alias for contact_ledger table.
+     *
+     * @return string
+     */
+    public function getTableAlias()
+    {
+        return 'cl';
+    }
+
+    /**
+     * @param \Mautic\LeadBundle\Entity\Lead $contact
+     *
+     * @return LedgerEntry[]
+     */
+<<<<<<< Updated upstream
+    public function getContactLedger(Lead $contact)
+    {
+        return [];
+=======
+    public function getForRevenueChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
+    {
+        $resultDateTime = null;
+        $labels = $costs = $revenues = $profits = [];
+        $defaultDollars = self::formatDollar('0');
+
+        $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $builder
+            ->select(
+                'DATE_FORMAT(date_added, "%Y%m%d")           as label',
+                'SUM(IFNULL(cost, 0.0))                      as cost',
+                'SUM(IFNULL(revenue, 0.0))                   as revenue',
+                'SUM(IFNULL(revenue, 0.0))-SUM(IFNULL(cost, 0.0)) as profit'
+            )
+            ->from('contact_ledger')
+            ->where(
+                $builder->expr()->eq('?', 'campaign_id'),
+                $builder->expr()->lte('?', 'date_added'),
+                $builder->expr()->gte('?', 'date_added')
+            )
+            ->groupBy('label')
+            ->orderBy('label', 'ASC');
+
+        $stmt = $this->getEntityManager()->getConnection()->prepare(
+            $builder->getSQL()
+        );
+
+        // query the database
+        $stmt->bindValue(1, $campaign->getId(), Type::INTEGER);
+        $stmt->bindValue(2, $dateFrom,          Type::DATETIME);
+        $stmt->bindValue(3, $dateTo,            Type::DATETIME);
+        $stmt->execute();
+
+        if (0 < $stmt->rowCount()) {
+            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $result = array_shift($results);
+            $resultDateTime = new \DateTime($result['label']);
+        }
+
+        // iterate over range steps
+        $labelDateTime = new \DateTime($dateFrom->format('Ymd'));
+        while ($dateTo >= $labelDateTime) {
+            $labels[] = $labelDateTime->format('M j, y');
+
+            if ($labelDateTime == $resultDateTime) {
+                // record match
+                $costs[]    = self::formatDollar(-$result['cost']);
+                $revenues[] = self::formatDollar($result['revenue']);
+                $profits[]  = self::formatDollar($result['profit']);
+
+                // prep next entry
+                if (0 < count($results)) {
+                    $result = array_shift($results);
+                    $resultDateTime = new \DateTime($result['label']);
+                }
+
+            } else {
+                $costs[]    = $defaultDollars;
+                $revenues[] = $defaultDollars;
+                $profits[]  = $defaultDollars;
+            }
+
+            $labelDateTime->modify('+1 day');
+        }
+
+        //undo change for inclusive filters
+        $dateTo->modify('-1 second');
+
+        return [
+            'labels'   => $labels,
+            'datasets' => [
+                [
+                    'label'                     => 'Cost',
+                    'data'                      => $costs,
+                    'backgroundColor'           => 'rgba(204,51,51,0.1)',
+                    'borderColor'               => 'rgba(204,51,51,0.8)',
+                    'pointHoverBackgroundColor' => 'rgba(204,51,51,0.75)',
+                    'pointHoverBorderColor'     => 'rgba(204,51,51,1)',
+                ],
+                [
+                    'label'                     => 'Reveue',
+                    'data'                      => $revenues,
+                    'backgroundColor'           => 'rgba(51,51,51,0.1)',
+                    'borderColor'               => 'rgba(51,51,51,0.8)',
+                    'pointHoverBackgroundColor' => 'rgba(51,51,51,0.75)',
+                    'pointHoverBorderColor'     => 'rgba(51,51,51,1)',
+                ],
+                [
+                    'label'                     => 'Profit',
+                    'data'                      => $profits,
+                    'backgroundColor'           => 'rgba(51,204,51,0.1)',
+                    'borderColor'               => 'rgba(51,204,51,0.8)',
+                    'pointHoverBackgroundColor' => 'rgba(51,204,51,0.75)',
+                    'pointHoverBorderColor'     => 'rgba(51,204,51,1)',
+                ],
+            ],
+        ];
+>>>>>>> Stashed changes
+    }
+
+    /**
+     * @param \Mautic\LeadBundle\Entity\Lead $contact
+     *
+     * @return string|float
+     */
+    public function getContactCost(Lead $contact)
+    {
+        return '';
+    }
+
+    /**
+     * @param \Mautic\LeadBundle\Entity\Lead $contact
+     *
+     * @return string|float
+     */
+    public function getContactRevenue(Lead $contact)
+    {
+        return '';
+    }
+}

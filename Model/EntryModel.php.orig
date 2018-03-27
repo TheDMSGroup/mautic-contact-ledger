@@ -11,16 +11,25 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Model;
 
+use DateTime;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry;
 
 /**
- * class LedgerEntryModel.
+ * class EntryModel.
  */
-class LedgerEntryModel extends AbstractCommonModel
+class EntryModel extends AbstractCommonModel
 {
+    /**
+     * @return \Doctrine\ORM\EntityRepository
+     */
+    public function getEntryRepository()
+    {
+        return $this->em->getRepository('MauticPlugin\\MauticContactLedgerBundle\\Entity\\Entry');
+    }
+
     /**
      * @param Lead              $lead
      * @param Campaign|null     $campaign
@@ -49,7 +58,7 @@ class LedgerEntryModel extends AbstractCommonModel
 
         $entry = new LedgerEntry();
         $entry
-            ->setDateAdded(new \DateTime())
+            ->setDateAdded(new DateTime())
             ->setContact($lead)
             ->setCampaign($campaign)
             ->setBundleName($bundleName)
@@ -116,6 +125,8 @@ class LedgerEntryModel extends AbstractCommonModel
 
         return $entryObject;
     }
+<<<<<<< Updated upstream:Model/EntryModel.php
+=======
 
     /**
      * @param Campaign $campaign
@@ -136,4 +147,5 @@ class LedgerEntryModel extends AbstractCommonModel
     {
         return $this->em->getRepository('MauticContactLedgerBundle:LedgerEntry');
     }
+>>>>>>> Stashed changes:Model/LedgerEntryModel.php
 }
