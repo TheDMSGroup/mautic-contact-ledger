@@ -96,14 +96,9 @@ class CustomContentSubscriber extends CommonSubscriber
                     $customContentEvent->addTemplate($chartTemplate, ['CampaignRevenueData' => $chartData]);
                 }
                 break;
-            default:
-
-            $customContentEvent->addTemplate(
-                'MauticContactLedgerBundle:Charts:campaign_revenue_chart.html.php',
-                ['ledgerData' => $chartData]
-            );
+            //default:
         }
 
-        return $customContentEvent;
+        return true;
     }
 }

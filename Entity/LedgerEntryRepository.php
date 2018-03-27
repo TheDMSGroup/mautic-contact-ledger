@@ -20,10 +20,10 @@ use Mautic\CoreBundle\Entity\CommonRepository;
  */
 class LedgerEntryRepository extends CommonRepository
 {
-    const MAUTIC_CONVERSION_STATUS_CONVERTED = 'converted';
-    const MAUTIC_CONVERSION_STATUS_RECEIVED = 'received';
-    const MAUTIC_CONVERSION_STATUS_ENHANCED = 'received';
-    const MAUTIC_CONVERSION_STATUS_SCRUBBED = 'received';
+    const MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED = 'converted';
+    const MAUTIC_CONTACT_LEDGER_STATUS_RECEIVED = 'received';
+    const MAUTIC_CONTACT_LEDGER_STATUS_ENHANCED = 'received';
+    const MAUTIC_CONTACT_LEDGER_STATUS_SCRUBBED = 'received';
 
     public static function formatDollar($dollarValue)
     {
@@ -221,7 +221,7 @@ class LedgerEntryRepository extends CommonRepository
                 $c->expr()->eq('cl.activity', ':MAUTIC_CONVERSION_LABEL')
             );
             $c->setParameter('ContactClientModel', 'ContactClientModel');
-            $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONVERSION_STATUS);
+            $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED);
 
             $conversions = $c->execute()->fetchAll();
             $conversions = array_column($conversions, 'converted', 'campaign_id');
