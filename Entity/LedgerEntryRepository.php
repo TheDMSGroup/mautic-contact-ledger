@@ -20,7 +20,15 @@ use Mautic\CoreBundle\Entity\CommonRepository;
  */
 class LedgerEntryRepository extends CommonRepository
 {
-    const MAUTIC_CONVERSION_STATUS = 'converted';
+    const MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED = 'converted';
+    const MAUTIC_CONTACT_LEDGER_STATUS_RECEIVED  = 'received';
+    const MAUTIC_CONTACT_LEDGER_STATUS_ENHANCED  = 'received';
+    const MAUTIC_CONTACT_LEDGER_STATUS_SCRUBBED  = 'received';
+
+    public static function formatDollar($dollarValue)
+    {
+        return sprintf('%19.4f', floatval($dollarValue));
+    }
 
     /**
      * @return string
@@ -37,29 +45,25 @@ class LedgerEntryRepository extends CommonRepository
      *
      * @return array
      */
-    public function getForCampaignChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
+    public function getForRevenueChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
     {
-        //Start at 00:00:00
-        $dateFrom->modify('midnight');
-        //add a day and do non-inclusive less than check,
-        //TODO: make comaptabile with other date time units
-        //Finsh at 23:59:59.9999
-        $dateTo->modify('+1 day');
+        $resultDateTime = null;
+        $labels         = $costs         = $revenues         = $profits         = [];
+        $defaultDollars = self::formatDollar('0');
 
         $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
-
         $builder
             ->select(
-                'DATE_FORMAT(date_added, "%b %e, %y") as label',
-                'SUM(cost)                            as cost',
-                'SUM(revenue)                         as revenue',
-                'SUM(revenue)-SUM(cost)               as profit'
+                'DATE_FORMAT(date_added, "%Y%m%d")           as label',
+                'SUM(IFNULL(cost, 0.0))                      as cost',
+                'SUM(IFNULL(revenue, 0.0))                   as revenue',
+                'SUM(IFNULL(revenue, 0.0))-SUM(IFNULL(cost, 0.0)) as profit'
             )
             ->from('contact_ledger')
             ->where(
                 $builder->expr()->eq('?', 'campaign_id'),
                 $builder->expr()->lte('?', 'date_added'),
-                $builder->expr()->gt('?', 'date_added')
+                $builder->expr()->gte('?', 'date_added')
             )
             ->groupBy('label')
             ->orderBy('label', 'ASC');
@@ -68,21 +72,45 @@ class LedgerEntryRepository extends CommonRepository
             $builder->getSQL()
         );
 
+        // query the database
         $stmt->bindValue(1, $campaign->getId(), Type::INTEGER);
         $stmt->bindValue(2, $dateFrom, Type::DATETIME);
         $stmt->bindValue(3, $dateTo, Type::DATETIME);
-
         $stmt->execute();
 
-        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        $labels = $costs = $revenues = $profits = [];
-        foreach ($results as $result) {
-            $labels[]   = $result['label'];
-            $costs[]    = -$result['cost'];
-            $revenues[] = $result['revenue'];
-            $profits[]  = $result['profit'];
+        if (0 < $stmt->rowCount()) {
+            $results        = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $result         = array_shift($results);
+            $resultDateTime = new \DateTime($result['label']);
         }
+
+        // iterate over range steps
+        $labelDateTime = new \DateTime($dateFrom->format('Ymd'));
+        while ($dateTo >= $labelDateTime) {
+            $labels[] = $labelDateTime->format('M j, y');
+
+            if ($labelDateTime == $resultDateTime) {
+                // record match
+                $costs[]    = self::formatDollar(-$result['cost']);
+                $revenues[] = self::formatDollar($result['revenue']);
+                $profits[]  = self::formatDollar($result['profit']);
+
+                // prep next entry
+                if (0 < count($results)) {
+                    $result         = array_shift($results);
+                    $resultDateTime = new \DateTime($result['label']);
+                }
+            } else {
+                $costs[]    = $defaultDollars;
+                $revenues[] = $defaultDollars;
+                $profits[]  = $defaultDollars;
+            }
+
+            $labelDateTime->modify('+1 day');
+        }
+
+        //undo change for inclusive filters
+        $dateTo->modify('-1 second');
 
         return [
             'labels'   => $labels,
@@ -192,7 +220,7 @@ class LedgerEntryRepository extends CommonRepository
                 $c->expr()->eq('cl.activity', ':MAUTIC_CONVERSION_LABEL')
             );
             $c->setParameter('ContactClientModel', 'ContactClientModel');
-            $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONVERSION_STATUS);
+            $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED);
 
             $conversions = $c->execute()->fetchAll();
             $conversions = array_column($conversions, 'converted', 'campaign_id');

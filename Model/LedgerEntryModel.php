@@ -118,15 +118,15 @@ class LedgerEntryModel extends AbstractCommonModel
     }
 
     /**
-     * @param Campaign $campaign
-     * @param DateTime $dateFrom
-     * @param DateTime $dateTo
+     * @param Campaign  $campaign
+     * @param \DateTime $dateFrom
+     * @param \DateTime $dateTo
      *
      * @return array
      */
-    public function getForCampaignChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
+    public function getForRevenueChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
     {
-        return $this->getRepository()->getForCampaignChartData($campaign, $dateFrom, $dateTo);
+        return $this->getRepository()->getForRevenueChartData($campaign, $dateFrom, $dateTo);
     }
 
     /**

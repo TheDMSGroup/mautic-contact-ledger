@@ -19,10 +19,11 @@
                 <div class="pt-0 pl-15 pb-10 pr-15">
                     <?php echo $view->render(
                         'MauticCoreBundle:Helper:chart.html.php',
-                        ['chartData' => $ledgerData, 'chartType' => 'line', 'chartHeight' => 300]
+                        ['chartData' => $CampaignRevenueData, 'chartType' => 'line', 'chartHeight' => 300]
                     ); ?>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script src=""
