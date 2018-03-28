@@ -29,11 +29,13 @@ class LeadSubscriberTest extends CommonMocks
 
         $lead->setId(60);
 
+        $lead->attribution = 0.123;
+
         $changes = [
             'fields'         => [
                 'attribution' => [
-                    '0' => '0',
-                    '1' => '0.123',
+                    0 => null,
+                    1 => 0.123,
                 ],
             ],
             'dateModified'   => [
@@ -65,7 +67,7 @@ class LeadSubscriberTest extends CommonMocks
             ->disableOriginalConstructor()
             ->getMock();
 
-        $leadEvent->expects($this->exactly(2))
+        $leadEvent->expects($this->exactly(4))
             ->method('getLead')
             ->will($this->returnValue($lead));
 
@@ -73,6 +75,8 @@ class LeadSubscriberTest extends CommonMocks
         //     ->method('getChanges')
         //     ->will($this->returnValue($changes));
 
+        $subscriber->postSaveAttributionCheck($leadEvent);
+        $subscriber->postSaveAttributionCheck($leadEvent);
         $subscriber->postSaveAttributionCheck($leadEvent);
         $subscriber->postSaveAttributionCheck($leadEvent);
     }

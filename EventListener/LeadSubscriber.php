@@ -63,10 +63,12 @@ class LeadSubscriber extends CommonSubscriber
      */
     public function postSaveAttributionCheck(LeadEvent $event)
     {
-        $lead    = $event->getLead();
-        $changes = $lead->getChanges();
+        $includePast = false;
+        $lead        = $event->getLead();
+        $changes     = $lead->getChanges($includePast);
         if (!isset($changes['fields']) || !isset($changes['fields']['attribution'])) {
-            $changes = $lead->getChanges(true);
+            $includePast = true;
+            $changes     = $lead->getChanges($includePast);
         }
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
             $oldValue = $changes['fields']['attribution'][0];
@@ -91,8 +93,11 @@ class LeadSubscriber extends CommonSubscriber
                     }
                 }
 
-                // unset($changes['fields']['attribution']);
-                // $lead->setChanges($changes);
+                if (!$includePast) {
+                    // Prevent further events on this change.
+                    unset($changes['fields']['attribution']);
+                    $lead->setChanges($changes);
+                }
             }
         }
     }
