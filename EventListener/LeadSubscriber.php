@@ -38,8 +38,11 @@ class LeadSubscriber extends CommonSubscriber
      * @param ContactLedgerContextSubscriber|null $context
      * @param Logger|null                         $logger
      */
-    public function __construct(LedgerEntryModel $model, ContactLedgerContextSubscriber $context = null, Logger $logger = null)
-    {
+    public function __construct(
+        LedgerEntryModel $model,
+        ContactLedgerContextSubscriber $context = null,
+        Logger $logger = null
+    ) {
         $this->model   = $model;
         $this->context = $context;
         $this->logger  = $logger;
@@ -61,31 +64,34 @@ class LeadSubscriber extends CommonSubscriber
     public function postSaveAttributionCheck(LeadEvent $event)
     {
         $lead    = $event->getLead();
-        $changes = $lead->getChanges(false);
+        $changes = $lead->getChanges(true);
 
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
-            $oldValue   = $changes['fields']['attribution'][0];
-            $newValue   = $changes['fields']['attribution'][1];
-            $difference = $newValue - $oldValue;
+            $oldValue = $changes['fields']['attribution'][0];
+            $newValue = $changes['fields']['attribution'][1];
+            // Ensure this is the latest change, even if it came from the PastChanges array on the contact.
+            if ($oldValue !== $newValue && $newValue === $lead->getAttribution()) {
+                $difference = $newValue - $oldValue;
 
-            if ($this->logger) {
-                $this->logger->debug('Found an attribution change of: '.$difference);
-            }
-
-            $campaign = $this->context ? $this->context->getCampaign() : null;
-            $actor    = $this->context ? $this->context->getActor() : null;
-            $activity = $this->context ? $this->context->getActivity() : null;
-
-            if ($difference > 0) {
-                $this->model->addEntry($lead, $campaign, $actor, $activity, null, $difference);
-            } else {
-                if ($difference < 0) {
-                    $this->model->addEntry($lead, $campaign, $actor, $activity, abs($difference));
+                if ($this->logger) {
+                    $this->logger->debug('Found an attribution change of: '.$difference);
                 }
-            }
 
-            unset($changes['fields']['attribution']);
-            $lead->setChanges($changes);
+                $campaign = $this->context ? $this->context->getCampaign() : null;
+                $actor    = $this->context ? $this->context->getActor() : null;
+                $activity = $this->context ? $this->context->getActivity() : null;
+
+                if ($difference > 0) {
+                    $this->model->addEntry($lead, $campaign, $actor, $activity, null, $difference);
+                } else {
+                    if ($difference < 0) {
+                        $this->model->addEntry($lead, $campaign, $actor, $activity, abs($difference));
+                    }
+                }
+
+                unset($changes['fields']['attribution']);
+                $lead->setChanges($changes);
+            }
         }
     }
 }
