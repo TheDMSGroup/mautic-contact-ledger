@@ -64,13 +64,14 @@ class LeadSubscriber extends CommonSubscriber
     public function postSaveAttributionCheck(LeadEvent $event)
     {
         $lead    = $event->getLead();
-        $changes = $lead->getChanges(true);
+        $changes = $event->getChanges();
+        // $changes = $lead->getChanges(true);
 
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
             $oldValue = $changes['fields']['attribution'][0];
             $newValue = $changes['fields']['attribution'][1];
             // Ensure this is the latest change, even if it came from the PastChanges array on the contact.
-            if ($oldValue !== $newValue && $newValue === $lead->getAttribution()) {
+            if ($oldValue !== $newValue) {
                 $difference = $newValue - $oldValue;
 
                 if ($this->logger) {
@@ -89,8 +90,8 @@ class LeadSubscriber extends CommonSubscriber
                     }
                 }
 
-                unset($changes['fields']['attribution']);
-                $lead->setChanges($changes);
+                // unset($changes['fields']['attribution']);
+                // $lead->setChanges($changes);
             }
         }
     }
