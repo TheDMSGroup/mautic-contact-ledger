@@ -26,6 +26,12 @@ mQuery(document).ready(function () {
                     },
                     {
                         render: function (data, type, row) {
+                            return renderCampaignName(row);
+                        },
+                        targets: 2
+                    },
+                    {
+                        render: function (data, type, row) {
                             return '$' + data;
                         },
                         targets: [5, 6, 7, 9]
@@ -114,6 +120,10 @@ function renderPublishToggle (id, active) {
     }
     var UpperStatus = status.charAt(0).toUpperCase() + status.substring(1);
     return '<a data-toggle="ajax"><i title="' + UpperStatus + '"class="fa fa-fw fa-lg ' + icon + ' text-success has-click-event campaign-publish-icon' + id + '" data-toggle="tooltip" data-container="body" data-placement="right" data-status="' + status + '" onclick="Mautic.togglePublishStatus(event, \'.campaign-publish-icon' + id + '\', \'campaign\', ' + id + ', \'\', false);" data-original-title="' + UpperStatus + '"></i></a>';
+}
+
+function renderCampaignName (row) {
+    return '<a href="./campaigns/view/'+ row[1] +'" class="campaign-name-link" title="'+ row[2] + '">'+ row[2] + '</a>';
 }
 
 function FormatFooter (column, value, index) {
