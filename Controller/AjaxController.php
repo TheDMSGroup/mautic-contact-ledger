@@ -33,8 +33,8 @@ class AjaxController extends CommonAjaxController
     protected function globalRevenueAction(Request $request)
     {
         // Get the API payload to test.
-        $params['dateFrom'] = $_SESSION['_sf2_attributes']['mautic.dashboard.date.from'];
-        $params['dateTo']   = $_SESSION['_sf2_attributes']['mautic.dashboard.date.to'];
+        $params['dateFrom'] = $this->request->getSession()->get('mautic.dashboard.date.from');
+        $params['dateTo']   = $this->request->getSession()->get('mautic.dashboard.date.to');
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
         $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
