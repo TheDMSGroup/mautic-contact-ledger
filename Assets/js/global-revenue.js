@@ -123,8 +123,7 @@ function renderPublishToggle (id, active) {
 }
 
 function renderCampaignName (row) {
-    console.log(row);
-    return '<a href="./campaigns/view/'+ row[1] +'" class="" title="">'+ row[2];
+    return '<a href="./campaigns/view/'+ row[1] +'" class="campaign-name-link" title="'+ row[2] + '">'+ row[2] + '</a>';
 }
 
 function FormatFooter (column, value, index) {
