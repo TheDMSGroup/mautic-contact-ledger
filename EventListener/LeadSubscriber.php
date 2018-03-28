@@ -64,8 +64,10 @@ class LeadSubscriber extends CommonSubscriber
     public function postSaveAttributionCheck(LeadEvent $event)
     {
         $lead    = $event->getLead();
-        $changes = $lead->getChanges(true);
-
+        $changes = $lead->getChanges();
+        if (!isset($changes['fields']) || !isset($changes['fields']['attribution'])) {
+            $changes = $lead->getChanges(true);
+        }
         if (isset($changes['fields']) && isset($changes['fields']['attribution'])) {
             $oldValue = $changes['fields']['attribution'][0];
             $newValue = $changes['fields']['attribution'][1];
