@@ -323,8 +323,6 @@ class LedgerEntryRepository extends CommonRepository
             $f->setParameter('ContactClientSource', 'ContactSource');
             $f->setParameter('lead', 'lead');
 
-
-
             // join Contact Source table to get contact source name
             $f->join('cl', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'i.internal_entity_id = cs.id');
 
