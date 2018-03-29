@@ -9,17 +9,13 @@
  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 ?>
-<script src="/plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js"></script>
-<script src="/plugins/MauticContactLedgerBundle/Assets/js/global-revenue.js"></script>
-
-<link href="/plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css" rel="stylesheet">
-<link href="/plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css" rel="stylesheet">
+<script src="/plugins/MauticContactLedgerBundle/Assets/js/source-revenue.js"></script>
 
 <?php
 $params = $data['params'];
 ?>
 <script>
-    var widgetHeight = <?php echo $data['height']; ?> ;
+    var detailWidgetHeight = <?php echo $data['height']; ?> ;
 </script>
 
 <div class="chart-wrapper">

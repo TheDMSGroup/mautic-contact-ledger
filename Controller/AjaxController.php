@@ -69,7 +69,7 @@ class AjaxController extends CommonAjaxController
      *
      * @throws \Exception
      */
-    protected function globalRevenueAction(Request $request)
+    protected function sourceRevenueAction(Request $request)
     {
         // Get the API payload to test.
         $params['dateFrom'] = $this->request->getSession()->get('mautic.dashboard.date.from');
