@@ -48,7 +48,6 @@
 </div>
 <?php
 // TODO: There are better ways to do this but I haven't gotten them to work
-// TODO: Get the dateRangeForm to update this datatable
 $params  = '?action=plugin:MauticContactLedger:datatables';
 $params .= '&which=campaign-ledger';
 $params .= '&campaignId='.$campaign->getId();

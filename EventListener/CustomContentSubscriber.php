@@ -72,8 +72,8 @@ class CustomContentSubscriber extends CommonSubscriber
 
     /**
      * @param CustomContentEvent $customContentEvent
-     *
      * @return CustomContentEvent
+     * @throws \Doctrine\DBAL\DBALException
      */
     public function getContentInjection(CustomContentEvent $customContentEvent)
     {
