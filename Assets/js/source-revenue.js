@@ -20,7 +20,7 @@ mQuery(document).ready(function () {
                             data: response.rows,
                             autoFill: true,
                             columns: response.columns,
-                            order: [[3, 'desc']],
+                            order: [[5, 'asc']],
                             bLengthChange: false,
                             lengthMenu: [[rowCount]],
                             columnDefs: [
