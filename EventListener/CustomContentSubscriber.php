@@ -77,8 +77,6 @@ class CustomContentSubscriber extends CommonSubscriber
      */
     public function getContentInjection(CustomContentEvent $customContentEvent)
     {
-        $this->logger->warning('heard '.CoreEvents::VIEW_INJECT_CUSTOM_CONTENT);
-
         /** @var \DateTime[] $dateRange */
         $dateRange = $this->request->request->get('daterange', []);
 
