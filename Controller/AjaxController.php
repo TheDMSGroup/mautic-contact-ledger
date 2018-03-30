@@ -38,8 +38,8 @@ class AjaxController extends CommonAjaxController
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
         $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
-        $ledgerRepo = $entryModel->getRepository();
-        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params);
+        $data       = $entryModel->getDashboardRevenueWidgetData($params);
+
         $headers    = [
             'mautic.contactledger.dashboard.revenue.header.active',
             'mautic.contactledger.dashboard.revenue.header.id',
@@ -60,5 +60,49 @@ class AjaxController extends CommonAjaxController
         $data = UTF8Helper::fixUTF8($data);
 
         return $this->sendJsonResponse($data);
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return string
+     */
+    protected function formatCurrency($value)
+    {
+        return sprintf('$%0.2f', floatval($value));
+    }
+
+    /**
+     * @param $which
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     *
+     * @throws \Exception
+     */
+    protected function datatablesAction(Request $request)
+    {
+        $response         = [];
+        $response['data'] = [];
+
+        switch ($request->query->get('which', 'default')) {
+            case 'campaign-ledger':
+
+                /** @var \Mautic\CampaignBundle\Model\CampaignModel $campaignModel */
+                $campaignModel = $this->get('mautic.campaign.model.campaign');
+                $campaign      = $campaignModel->getEntity($request->query->get('campaignId'));
+
+                $dateFrom      = new \DateTime($request->query->get('date_from'));
+                $dateTo        = new \DateTime($request->query->get('date_to'));
+
+                /** @var \MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel $ledgerEntry */
+                $ledgerEntry      = $this->get('mautic.contactledger.model.ledgerentry');
+                $response['data'] = $ledgerEntry->getCampaignRevenueDatatableData($campaign, $dateFrom, $dateTo);
+
+                break;
+            default:
+        }
+        $stop='here';
+
+        return $this->sendJsonResponse($response);
     }
 }

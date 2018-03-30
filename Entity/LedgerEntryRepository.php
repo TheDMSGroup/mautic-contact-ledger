@@ -25,11 +25,6 @@ class LedgerEntryRepository extends CommonRepository
     const MAUTIC_CONTACT_LEDGER_STATUS_ENHANCED  = 'received';
     const MAUTIC_CONTACT_LEDGER_STATUS_SCRUBBED  = 'received';
 
-    public static function formatDollar($dollarValue)
-    {
-        return sprintf('%19.4f', floatval($dollarValue));
-    }
-
     /**
      * @return string
      */
@@ -44,26 +39,33 @@ class LedgerEntryRepository extends CommonRepository
      * @param \DateTime $dateTo
      *
      * @return array
+     *
+     * @throws \Doctrine\DBAL\DBALException
      */
-    public function getForRevenueChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
+    public function getCampaignRevenueData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
     {
         $resultDateTime = null;
-        $labels         = $costs         = $revenues         = $profits         = [];
-        $defaultDollars = self::formatDollar('0');
+        $results        = [];
+
+        $sqlFrom = new \DateTime($dateFrom->format('Y-m-d'));
+        $sqlFrom->modify('midnight');
+
+        $sqlTo = new \DateTime($dateTo->format('Y-m-d'));
+        $sqlTo->modify('midnight +1 day');
 
         $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $builder
             ->select(
-                'DATE_FORMAT(date_added, "%Y%m%d")           as label',
-                'SUM(IFNULL(cost, 0.0))                      as cost',
-                'SUM(IFNULL(revenue, 0.0))                   as revenue',
+                'DATE_FORMAT(date_added, "%Y%m%d") as label',
+                'SUM(IFNULL(cost, 0.0)) as cost',
+                'SUM(IFNULL(revenue, 0.0)) as revenue',
                 'SUM(IFNULL(revenue, 0.0))-SUM(IFNULL(cost, 0.0)) as profit'
             )
             ->from('contact_ledger')
             ->where(
                 $builder->expr()->eq('?', 'campaign_id'),
                 $builder->expr()->lte('?', 'date_added'),
-                $builder->expr()->gte('?', 'date_added')
+                $builder->expr()->gt('?', 'date_added')
             )
             ->groupBy('label')
             ->orderBy('label', 'ASC');
@@ -74,73 +76,15 @@ class LedgerEntryRepository extends CommonRepository
 
         // query the database
         $stmt->bindValue(1, $campaign->getId(), Type::INTEGER);
-        $stmt->bindValue(2, $dateFrom, Type::DATETIME);
-        $stmt->bindValue(3, $dateTo, Type::DATETIME);
+        $stmt->bindValue(2, $sqlFrom, Type::DATETIME);
+        $stmt->bindValue(3, $sqlTo, Type::DATETIME);
         $stmt->execute();
 
         if (0 < $stmt->rowCount()) {
-            $results        = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            $result         = array_shift($results);
-            $resultDateTime = new \DateTime($result['label']);
+            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
 
-        // iterate over range steps
-        $labelDateTime = new \DateTime($dateFrom->format('Ymd'));
-        while ($dateTo >= $labelDateTime) {
-            $labels[] = $labelDateTime->format('M j, y');
-
-            if ($labelDateTime == $resultDateTime) {
-                // record match
-                $costs[]    = self::formatDollar(-$result['cost']);
-                $revenues[] = self::formatDollar($result['revenue']);
-                $profits[]  = self::formatDollar($result['profit']);
-
-                // prep next entry
-                if (0 < count($results)) {
-                    $result         = array_shift($results);
-                    $resultDateTime = new \DateTime($result['label']);
-                }
-            } else {
-                $costs[]    = $defaultDollars;
-                $revenues[] = $defaultDollars;
-                $profits[]  = $defaultDollars;
-            }
-
-            $labelDateTime->modify('+1 day');
-        }
-
-        //undo change for inclusive filters
-        $dateTo->modify('-1 second');
-
-        return [
-            'labels'   => $labels,
-            'datasets' => [
-                [
-                    'label'                     => 'Cost',
-                    'data'                      => $costs,
-                    'backgroundColor'           => 'rgba(204,51,51,0.1)',
-                    'borderColor'               => 'rgba(204,51,51,0.8)',
-                    'pointHoverBackgroundColor' => 'rgba(204,51,51,0.75)',
-                    'pointHoverBorderColor'     => 'rgba(204,51,51,1)',
-                ],
-                [
-                    'label'                     => 'Reveue',
-                    'data'                      => $revenues,
-                    'backgroundColor'           => 'rgba(51,51,51,0.1)',
-                    'borderColor'               => 'rgba(51,51,51,0.8)',
-                    'pointHoverBackgroundColor' => 'rgba(51,51,51,0.75)',
-                    'pointHoverBorderColor'     => 'rgba(51,51,51,1)',
-                ],
-                [
-                    'label'                     => 'Profit',
-                    'data'                      => $profits,
-                    'backgroundColor'           => 'rgba(51,204,51,0.1)',
-                    'borderColor'               => 'rgba(51,204,51,0.8)',
-                    'pointHoverBackgroundColor' => 'rgba(51,204,51,0.75)',
-                    'pointHoverBorderColor'     => 'rgba(51,204,51,1)',
-                ],
-            ],
-        ];
+        return $results;
     }
 
     /**

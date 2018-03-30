@@ -11,8 +11,8 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
-use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\CoreEvents;
+use Mautic\CoreBundle\Event\CustomAssetsEvent;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\DashboardBundle\Model\DashboardModel;
@@ -52,7 +52,22 @@ class CustomContentSubscriber extends CommonSubscriber
     {
         return [
             CoreEvents::VIEW_INJECT_CUSTOM_CONTENT => ['getContentInjection', 0],
+            CoreEvents::VIEW_INJECT_CUSTOM_ASSETS  => ['getAssetInjection', 0],
+           // CoreEvents::BUILD_MAUTIC_JS => ['getJSBuild', 0],
         ];
+    }
+
+    /**
+     * @param CustomAssetsEvent $event
+     *
+     * @return CustomAssetsEvent
+     */
+    public function getAssetInjection(CustomAssetsEvent $event)
+    {
+        $event->addScript('plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', 'bodyClose');
+        $event->addStylesheet('plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css');
+
+        return $event;
     }
 
     /**
@@ -62,16 +77,10 @@ class CustomContentSubscriber extends CommonSubscriber
      */
     public function getContentInjection(CustomContentEvent $customContentEvent)
     {
+        $this->logger->warning('heard '.CoreEvents::VIEW_INJECT_CUSTOM_CONTENT);
+
         /** @var \DateTime[] $dateRange */
         $dateRange = $this->request->request->get('daterange', []);
-        /** @var array $vars */
-        $vars = $customContentEvent->getVars();
-
-        /** @var mixed $chartData */
-        $chartData = null;
-
-        /** @var string $chartTemplate */
-        $chartTemplate = '';
 
         if (empty($dateRange)) {
             $dateRange = $this->dashboardModel->getDefaultFilter();
@@ -82,23 +91,32 @@ class CustomContentSubscriber extends CommonSubscriber
             $dateTo   = $dateRange['dateTo'] = new \DateTime($dateRange['date_to']);
         }
 
+        /** @var array $vars */
+        $vars = $customContentEvent->getVars();
+
+        /** @var mixed $chartData */
+        $chartData = null;
+
+        /** @var string $chartTemplate */
+        $chartTemplate = '';
+
         switch ($customContentEvent->getViewName()) {
             case 'MauticCampaignBundle:Campaign:details.html.php':
                 if ('left.section.top' === $customContentEvent->getContext()) {
                     if (isset($vars['campaign'])) {
                         $chartTemplate = 'MauticContactLedgerBundle:Charts:campaign_revenue_chart.html.php';
-                        $chartData     = $this->ledgerEntryModel->getForRevenueChartData(
+                        $chartData     = $this->ledgerEntryModel->getCampaignRevenueChartData(
                             $vars['campaign'],
                             $dateFrom,
                             $dateTo
                         );
                     }
-                    $customContentEvent->addTemplate($chartTemplate, ['CampaignRevenueData' => $chartData]);
+                    $customContentEvent->addTemplate($chartTemplate, ['campaignRevenueChartData' => $chartData]);
                 }
                 break;
             //default:
         }
 
-        return true;
+        return $customContentEvent;
     }
 }

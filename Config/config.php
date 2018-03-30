@@ -39,6 +39,7 @@ return [
                 'arguments' => [
                     '@mautic.contactledger.model.ledgerentry',
                     '@mautic.dashboard.model.dashboard',
+                    '@router',
                 ],
             ],
             'mautic.contactledger.dashboard.subscriber'       => [
@@ -52,6 +53,13 @@ return [
             'mautic.contactledger.model.ledgerentry' => [
                 'class' => 'MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel',
             ],
+        ],
+    ],
+    'routes' => [
+        'main' => [
+//            'contact_ledger_datatables_data' => [
+//                'path' => '/contact-ledger/datatables/{which}',
+//                'controler' => 'MauticContactLedgerBundle:Ajax:datatables'
         ],
     ],
 ];
