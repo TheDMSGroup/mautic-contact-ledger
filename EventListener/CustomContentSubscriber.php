@@ -35,8 +35,9 @@ class CustomContentSubscriber extends CommonSubscriber
 
     /**
      * CustomContentSubscriber constructor.
+     *
      * @param LedgerEntryModel $ledgerEntryModel
-     * @param DashboardModel $dashboardModel
+     * @param DashboardModel   $dashboardModel
      */
     public function __construct(LedgerEntryModel $ledgerEntryModel, DashboardModel $dashboardModel)
     {
@@ -51,7 +52,7 @@ class CustomContentSubscriber extends CommonSubscriber
     {
         return [
             CoreEvents::VIEW_INJECT_CUSTOM_CONTENT => ['getContentInjection', 0],
-            CoreEvents::VIEW_INJECT_CUSTOM_ASSETS  => ['getAssetInjection', 0]
+            CoreEvents::VIEW_INJECT_CUSTOM_ASSETS  => ['getAssetInjection', 0],
         ];
     }
 
