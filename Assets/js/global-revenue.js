@@ -139,11 +139,15 @@ function FormatFooter (column, value, index) {
     column = column.trim();
     var numFormat = mQuery.fn.dataTable.render.number(',', '.', 0).display;
     var curFormat = mQuery.fn.dataTable.render.number(',', '.', 2, '$').display;
+    var curPreciseFormat = mQuery.fn.dataTable.render.number(',', '.', 4, '$').display;
     if (column === 'Margin') {
         return ' - ';
     }
-    if (column === 'Revenue' || column === 'Cost' || column === 'GM' || column === 'eCPM') {
+    if (column === 'Revenue' || column === 'Cost' || column === 'GM') {
         return curFormat(value);
+    }
+    if (column === 'eCPM') {
+        return curPreciseFormat(value);
     }
     return numFormat(value);
 }

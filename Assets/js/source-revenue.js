@@ -46,7 +46,7 @@ mQuery(document).ready(function () {
                                     render: function (data, type, row) {
                                         return '$' + data;
                                     },
-                                    targets: [7, 8, 9, 10]
+                                    targets: [7, 8, 9, 11]
                                 },
                                 {
                                     render: function (data, type, row) {
@@ -63,12 +63,12 @@ mQuery(document).ready(function () {
                                 // Add table footer if it doesnt exist
                                 var container = mQuery('#source-revenue');
                                 var columns = data[0].length;
-                                if (mQuery('tr.pageTotal').length == 0) {
+                                if (mQuery('tr.detailPageTotal').length == 0) {
                                     var footer = mQuery('<tfoot></tfoot>');
-                                    var tr = mQuery('<tr class=\'pageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
-                                    var tr2 = mQuery('<tr class=\'grandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
-                                    tr.append(mQuery('<td colspan=\'2\'>Page totals</td>'));
-                                    tr2.append(mQuery('<td colspan=\'2\'>Grand totals</td>'));
+                                    var tr = mQuery('<tr class=\'detailPTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                    var tr2 = mQuery('<tr class=\'detailGrandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                    tr.append(mQuery('<td colspan=\'3\'>Page totals</td>'));
+                                    tr2.append(mQuery('<td colspan=\'3\'>Grand totals</td>'));
                                     for (var i = 2; i < columns; i++) {
                                         tr.append(mQuery('<td class=\'td-right\'></td>'));
                                         tr2.append(mQuery('<td class=\'td-right\'></td>'));
@@ -96,18 +96,18 @@ mQuery(document).ready(function () {
                                     var footer2 = mQuery(container).find('tfoot tr:nth-child(2)');
                                     for (var i = 2; i < total; i++) {
                                         var pageSum = api
-                                            .column(i + 1, {page: 'current'})
+                                            .column(i+3, {page: 'current'})
                                             .data()
                                             .reduce(function (a, b) {
                                                 return intVal(a) + intVal(b);
                                             }, 0);
                                         var sum = api
-                                            .column(i + 1)
+                                            .column(i+3)
                                             .data()
                                             .reduce(function (a, b) {
                                                 return intVal(a) + intVal(b);
                                             }, 0);
-                                        var title = mQuery(container).find('thead th:nth-child(' + (i + 1) + ')').text();
+                                        var title = mQuery(container).find('thead th:nth-child(' + (i+2) + ')').text();
                                         footer1.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, pageSum, i));
                                         footer2.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, sum, i));
                                     }
@@ -149,11 +149,15 @@ function FormatFooter (column, value, index) {
     column = column.trim();
     var numFormat = mQuery.fn.dataTable.render.number(',', '.', 0).display;
     var curFormat = mQuery.fn.dataTable.render.number(',', '.', 2, '$').display;
+    var curPreciseFormat = mQuery.fn.dataTable.render.number(',', '.', 4, '$').display;
     if (column === 'Margin') {
         return ' - ';
     }
-    if (column === 'Revenue' || column === 'Cost' || column === 'GM' || column === 'eCPM') {
+    if (column === 'Revenue' || column === 'Cost' || column === 'GM') {
         return curFormat(value);
+    }
+    if (column === 'eCPM') {
+        return curPreciseFormat(value);
     }
     return numFormat(value);
 }
