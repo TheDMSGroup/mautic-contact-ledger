@@ -139,7 +139,7 @@ class LedgerEntryModel extends AbstractCommonModel
     public function getCampaignRevenueChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
     {
         $chartData = ['labels' => [], 'datasets' => []];
-        $labels = $costs = $revenues = $profits = [];
+        $labels    = $costs    = $revenues    = $profits    = [];
 
         $data = $this->getRepository()->getCampaignRevenueData($campaign, $dateFrom, $dateTo);
 
@@ -210,10 +210,12 @@ class LedgerEntryModel extends AbstractCommonModel
     }
 
     /**
-     * @param Campaign $campaign
+     * @param Campaign  $campaign
      * @param \DateTime $dateFrom
      * @param \DateTime $dateTo
+     *
      * @return array
+     *
      * @throws \Doctrine\DBAL\DBALException
      */
     public function getCampaignRevenueDatatableData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
@@ -234,7 +236,7 @@ class LedgerEntryModel extends AbstractCommonModel
     }
 
     /**
-     * @param $params
+     * @param mixed $params
      *
      * @return mixed
      */
