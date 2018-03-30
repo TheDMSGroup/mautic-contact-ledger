@@ -54,7 +54,7 @@ mQuery(document).ready(function () {
                                     },
                                     targets: 10
                                 },
-                                {visible: false, targets: [1]},
+                                {visible: false, targets: [1, 3]},
                                 {width: '5%', targets: [0]},
                                 {width: '20%', targets: [2]}
                             ],

@@ -158,6 +158,9 @@ class LedgerEntryRepository extends CommonRepository
             ->from(MAUTIC_TABLE_PREFIX.'leads', 'l');
 
         if ($params['dateFrom']) {
+            $date = date_create($params['dateFrom']);
+            date_sub($date, date_interval_create_from_date_string('1 days'));
+            $params['dateFrom'] = date_format($date, 'Y-m-d');
             $q->where(
                 $q->expr()->gte('l.date_added', ':dateFrom')
             );
@@ -165,6 +168,9 @@ class LedgerEntryRepository extends CommonRepository
         }
 
         if ($params['dateTo']) {
+            $date = date_create($params['dateTo']);
+            date_add($date, date_interval_create_from_date_string('1 days'));
+            $params['dateTo'] = date_format($date, 'Y-m-d');
             if (!$params['dateFrom']) {
                 $q->where(
                     $q->expr()->lte('l.date_added', ':dateTo')
@@ -193,6 +199,10 @@ class LedgerEntryRepository extends CommonRepository
                 'c.name, c.is_published, c.id as campaign_id, SUM(cl.cost) as cost, SUM(cl.revenue) as revenue, COUNT(cl.contact_id) as received'
             )->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'cl');
 
+            $f->where(
+                $f->expr()->in('cl.contact_id', $leads)
+            );
+
             $f->groupBy('cl.campaign_id');
 
             // join Campaign table to get name and publish status
@@ -216,10 +226,10 @@ class LedgerEntryRepository extends CommonRepository
                 $c->expr()->in('cl.contact_id', $leads)
             );
             $c->andWhere(
-                $c->expr()->eq('cl.class_name', ':ContactClientModel'),
+                $c->expr()->eq('cl.class_name', ':ContactClient'),
                 $c->expr()->eq('cl.activity', ':MAUTIC_CONVERSION_LABEL')
             );
-            $c->setParameter('ContactClientModel', 'ContactClientModel');
+            $c->setParameter('ContactClient', 'ContactClient');
             $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED);
 
             $conversions = $c->execute()->fetchAll();
@@ -275,6 +285,9 @@ class LedgerEntryRepository extends CommonRepository
             ->from(MAUTIC_TABLE_PREFIX.'leads', 'l');
 
         if ($params['dateFrom']) {
+            $date = date_create($params['dateFrom']);
+            date_sub($date, date_interval_create_from_date_string('1 days'));
+            $params['dateFrom'] = date_format($date, 'Y-m-d');
             $q->where(
                 $q->expr()->gte('l.date_added', ':dateFrom')
             );
@@ -282,6 +295,9 @@ class LedgerEntryRepository extends CommonRepository
         }
 
         if ($params['dateTo']) {
+            $date = date_create($params['dateTo']);
+            date_add($date, date_interval_create_from_date_string('1 days'));
+            $params['dateTo'] = date_format($date, 'Y-m-d');
             if (!$params['dateFrom']) {
                 $q->where(
                     $q->expr()->lte('l.date_added', ':dateTo')
@@ -293,6 +309,7 @@ class LedgerEntryRepository extends CommonRepository
             }
             $q->setParameter('dateTo', $params['dateTo']);
         }
+
         $count = $q->execute()->fetch();
         // now get ledger data for selected leads
         if ($count['count']) {
@@ -310,7 +327,11 @@ class LedgerEntryRepository extends CommonRepository
                 'c.name as campaign_name, c.is_published, c.id as campaign_id, SUM(cl.cost) as cost, SUM(cl.revenue) as revenue, COUNT(cl.contact_id) as received, cs.id as source_id, cs.name as source_name'
             )->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'cl');
 
-            $f->groupBy('cl.campaign_id');
+            $f->where(
+                $f->expr()->in('cl.contact_id', $leads)
+            );
+
+            $f->groupBy('cl.campaign_id, cs.id');
 
             // join Campaign table to get name and publish status
             $f->join('cl', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = cl.campaign_id');
@@ -324,7 +345,7 @@ class LedgerEntryRepository extends CommonRepository
             $f->setParameter('lead', 'lead');
 
             // join Contact Source table to get contact source name
-            $f->join('cl', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'i.internal_entity_id = cs.id');
+            $f->join('cl', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'i.integration_entity_id = cs.id');
 
             $f->orderBy('COUNT(cl.contact_id)', 'DESC');
 
@@ -344,10 +365,10 @@ class LedgerEntryRepository extends CommonRepository
                 $c->expr()->in('cl.contact_id', $leads)
             );
             $c->andWhere(
-                $c->expr()->eq('cl.class_name', ':ContactClientModel'),
+                $c->expr()->eq('cl.class_name', ':ContactClient'),
                 $c->expr()->eq('cl.activity', ':MAUTIC_CONVERSION_LABEL')
             );
-            $c->setParameter('ContactClientModel', 'ContactClientModel');
+            $c->setParameter('ContactClient', 'ContactClient');
             $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED);
 
             $conversions = $c->execute()->fetchAll();
