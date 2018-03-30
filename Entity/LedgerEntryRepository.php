@@ -196,7 +196,7 @@ class LedgerEntryRepository extends CommonRepository
             // get financials from ledger based on returned Lead list
             $f = $this->_em->getConnection()->createQueryBuilder();
             $f->select(
-                'c.name, c.is_published, c.id as campaign_id, SUM(cl.cost) as cost, SUM(cl.revenue) as revenue, COUNT(cl.contact_id) as received'
+                'c.name, c.is_published, c.id as campaign_id, SUM(cl.cost) as cost, SUM(cl.revenue) as revenue, COUNT(DISTINCT(cl.contact_id)) as received'
             )->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'cl');
 
             $f->where(
@@ -324,7 +324,7 @@ class LedgerEntryRepository extends CommonRepository
             // get financials from ledger based on returned Lead list
             $f = $this->_em->getConnection()->createQueryBuilder();
             $f->select(
-                'c.name as campaign_name, c.is_published, c.id as campaign_id, SUM(cl.cost) as cost, SUM(cl.revenue) as revenue, COUNT(cl.contact_id) as received, cs.id as source_id, cs.name as source_name'
+                'c.name as campaign_name, c.is_published, c.id as campaign_id, SUM(cl.cost) as cost, SUM(cl.revenue) as revenue, COUNT(DISTINCT(cl.contact_id)) as received, cs.id as source_id, cs.name as source_name'
             )->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'cl');
 
             $f->where(
