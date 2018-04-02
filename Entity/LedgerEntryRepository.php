@@ -45,6 +45,7 @@ class LedgerEntryRepository extends CommonRepository
      */
     public function getForRevenueChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
     {
+        $results        = [];
         $resultDateTime = null;
         $labels         = $costs = $revenues = $profits = [];
         $defaultDollars = self::formatDollar('0');
@@ -236,8 +237,8 @@ class LedgerEntryRepository extends CommonRepository
                     ','
                 ) : 0;
                 $financial['ecpm']      = number_format($financial['gm'] / 1000, 4, '.', ',');
-                $financial['received']  = intval($received[$financial['campaign_id']]['sum']);
-                $financial['converted'] = intval($converted[$financial['campaign_id']]['sum']);
+                $financial['received']  = isset($received[$financial['campaign_id']]['sum']) ? $received[$financial['campaign_id']]['sum'] : 0;
+                $financial['converted'] = isset($converted[$financial['campaign_id']]['sum']) ? $converted[$financial['campaign_id']]['sum'] : 0;
                 $results['rows'][]      = [
                     $financial['is_published'],
                     $financial['campaign_id'],
@@ -292,7 +293,8 @@ class LedgerEntryRepository extends CommonRepository
         $c->setParameter('ContactClient', 'ContactClient');
         $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED);
 
-        $results = $c->execute()->fetchAll();
+        $results     = $c->execute()->fetchAll();
+        $campaignSum = [];
 
         foreach ($results as $row) {
             $campaignSum[$row['campaign_id']]['sum']          = isset($campaignSum[$row['campaign_id']]['sum']) ? $campaignSum[$row['campaign_id']]['sum'] += $row['converted'] : $row['converted'];
@@ -435,8 +437,8 @@ class LedgerEntryRepository extends CommonRepository
                     ','
                 ) : 0;
                 $financial['ecpm']      = number_format($financial['gm'] / 1000, 4, '.', ',');
-                $financial['received']  = intval($received[$financial['campaign_id']][$financial['source_id']]);
-                $financial['converted'] = intval($converted[$financial['campaign_id']][$financial['source_id']]);
+                $financial['received']  = isset($received[$financial['campaign_id']][$financial['source_id']]) ? $received[$financial['campaign_id']][$financial['source_id']] : 0;
+                $financial['converted'] = isset($converted[$financial['campaign_id']][$financial['source_id']]) ? $converted[$financial['campaign_id']][$financial['source_id']] : 0;
                 $results['rows'][]      = [
                     $financial['is_published'],
                     $financial['campaign_id'],
