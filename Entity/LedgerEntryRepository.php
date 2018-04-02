@@ -21,14 +21,12 @@ use Mautic\CoreBundle\Entity\CommonRepository;
 class LedgerEntryRepository extends CommonRepository
 {
     const MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED = 'converted';
-    const MAUTIC_CONTACT_LEDGER_STATUS_RECEIVED  = 'received';
-    const MAUTIC_CONTACT_LEDGER_STATUS_ENHANCED  = 'received';
-    const MAUTIC_CONTACT_LEDGER_STATUS_SCRUBBED  = 'received';
 
-    public static function formatDollar($dollarValue)
-    {
-        return sprintf('%19.4f', floatval($dollarValue));
-    }
+    const MAUTIC_CONTACT_LEDGER_STATUS_ENHANCED  = 'received';
+
+    const MAUTIC_CONTACT_LEDGER_STATUS_RECEIVED  = 'received';
+
+    const MAUTIC_CONTACT_LEDGER_STATUS_SCRUBBED  = 'received';
 
     /**
      * @return string
@@ -48,7 +46,7 @@ class LedgerEntryRepository extends CommonRepository
     public function getForRevenueChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
     {
         $resultDateTime = null;
-        $labels         = $costs         = $revenues         = $profits         = [];
+        $labels         = $costs = $revenues = $profits = [];
         $defaultDollars = self::formatDollar('0');
 
         $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
@@ -141,6 +139,11 @@ class LedgerEntryRepository extends CommonRepository
                 ],
             ],
         ];
+    }
+
+    public static function formatDollar($dollarValue)
+    {
+        return sprintf('%19.4f', floatval($dollarValue));
     }
 
     /**
@@ -261,6 +264,79 @@ class LedgerEntryRepository extends CommonRepository
         return $results;
     }
 
+    private function getConvertedByCampaign($leads = [])
+    {
+        // get conversions from ledger based on class and activity
+        $c = $this->_em->getConnection()->createQueryBuilder();
+        $c->select('COUNT(cl.activity) as converted, cl.campaign_id, ie.integration_entity_id as source')
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'cl');
+
+        $c->groupBy('cl.campaign_id, ie.integration_entity_id');
+
+        $c->join(
+            'cl',
+            MAUTIC_TABLE_PREFIX.'integration_entity',
+            'ie',
+            'cl.contact_id = ie.internal_entity_id AND ie.internal_entity = :lead AND ie.integration_entity = :ContactSource'
+        );
+        $c->setParameter('ContactSource', 'ContactSource');
+        $c->setParameter('lead', 'lead');
+
+        $c->where(
+            $c->expr()->in('cl.contact_id', $leads)
+        );
+        $c->andWhere(
+            $c->expr()->eq('cl.class_name', ':ContactClient'),
+            $c->expr()->eq('cl.activity', ':MAUTIC_CONVERSION_LABEL')
+        );
+        $c->setParameter('ContactClient', 'ContactClient');
+        $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED);
+
+        $results = $c->execute()->fetchAll();
+
+        foreach ($results as $row) {
+            $campaignSum[$row['campaign_id']]['sum']          = isset($campaignSum[$row['campaign_id']]['sum']) ? $campaignSum[$row['campaign_id']]['sum'] += $row['converted'] : $row['converted'];
+            $campaignSum[$row['campaign_id']][$row['source']] = $row['converted'];
+        }
+
+        return $campaignSum;
+    }
+
+    private function getReceivedByCampaign($leads = [])
+    {
+        if (!empty($leads)) {
+            $r = $this->_em->getConnection()->createQueryBuilder();
+            $r->select(
+                'cal.campaign_id as campaign, ie.integration_entity_id as source_id, COUNT(ie.integration_entity_id) as source'
+            )
+                ->from(MAUTIC_TABLE_PREFIX.'campaign_leads', 'cal');
+
+            $r->groupBy('ie.integration_entity_id, cal.campaign_id');
+            $r->where(
+                $r->expr()->in('cal.lead_id', $leads)
+            );
+
+            $r->join(
+                'cal',
+                MAUTIC_TABLE_PREFIX.'integration_entity',
+                'ie',
+                'cal.lead_id = ie.internal_entity_id AND ie.internal_entity = :lead AND ie.integration_entity = :ContactSource'
+            );
+            $r->setParameter('ContactSource', 'ContactSource');
+            $r->setParameter('lead', 'lead');
+
+            $results     = $r->execute()->fetchAll();
+            $campaignSum = [];
+
+            foreach ($results as $row) {
+                $campaignSum[$row['campaign']]['sum']             = isset($campaignSum[$row['campaign']]['sum']) ? $campaignSum[$row['campaign']]['sum'] += $row['source'] : $row['source'];
+                $campaignSum[$row['campaign']][$row['source_id']] = $row['source'];
+            }
+
+            return $campaignSum;
+        }
+    }
+
     public function getDashboardSourceRevenueWidgetData($params)
     {
         $results = $financials = [];
@@ -323,10 +399,12 @@ class LedgerEntryRepository extends CommonRepository
             $f->join('cl', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = cl.campaign_id');
 
             // join Integration table to get contact source from lead mapping
-            $f->join('cl',
+            $f->join(
+                'cl',
                 MAUTIC_TABLE_PREFIX.'integration_entity',
                 'i',
-                'cl.contact_id = i.internal_entity_id AND i.internal_entity = :lead AND i.integration_entity = :ContactClientSource');
+                'cl.contact_id = i.internal_entity_id AND i.internal_entity = :lead AND i.integration_entity = :ContactClientSource'
+            );
             $f->setParameter('ContactClientSource', 'ContactSource');
             $f->setParameter('lead', 'lead');
 
@@ -386,73 +464,4 @@ class LedgerEntryRepository extends CommonRepository
 
         return $results;
     }
-
-    private function getReceivedByCampaign($leads = [])
-    {
-        if (!empty($leads))
-        {
-            $r = $this->_em->getConnection()->createQueryBuilder();
-            $r->select('cal.campaign_id as campaign, ie.integration_entity_id as source_id, COUNT(ie.integration_entity_id) as source')
-                ->from(MAUTIC_TABLE_PREFIX.'campaign_leads', 'cal');
-
-            $r->groupBy('ie.integration_entity_id, cal.campaign_id');
-            $r->where(
-                $r->expr()->in('cal.lead_id', $leads)
-            );
-
-            $r->join('cal',
-            MAUTIC_TABLE_PREFIX.'integration_entity',
-            'ie',
-            'cal.lead_id = ie.internal_entity_id AND ie.internal_entity = :lead AND ie.integration_entity = :ContactSource');
-            $r->setParameter('ContactSource', 'ContactSource');
-            $r->setParameter('lead', 'lead');
-
-            $results = $r->execute()->fetchAll();
-            $campaignSum = [];
-
-            foreach($results as $row){
-                $campaignSum[$row['campaign']]['sum'] = isset($campaignSum[$row['campaign']]['sum']) ? $campaignSum[$row['campaign']]['sum'] += $row['source'] : $row['source'];
-                $campaignSum[$row['campaign']][$row['source_id']] = $row['source'];
-            }
-            return $campaignSum;
-
-        }
-    }
-
-    private function getConvertedByCampaign($leads = [])
-    {
-        // get conversions from ledger based on class and activity
-        $c = $this->_em->getConnection()->createQueryBuilder();
-        $c->select('COUNT(cl.activity) as converted, cl.campaign_id, ie.integration_entity_id as source')
-            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'cl');
-
-        $c->groupBy('cl.campaign_id, ie.integration_entity_id');
-
-        $c->join('cl',
-            MAUTIC_TABLE_PREFIX.'integration_entity',
-            'ie',
-            'cl.contact_id = ie.internal_entity_id AND ie.internal_entity = :lead AND ie.integration_entity = :ContactSource');
-        $c->setParameter('ContactSource', 'ContactSource');
-        $c->setParameter('lead', 'lead');
-
-        $c->where(
-            $c->expr()->in('cl.contact_id', $leads)
-        );
-        $c->andWhere(
-            $c->expr()->eq('cl.class_name', ':ContactClient'),
-            $c->expr()->eq('cl.activity', ':MAUTIC_CONVERSION_LABEL')
-        );
-        $c->setParameter('ContactClient', 'ContactClient');
-        $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED);
-
-        $results = $c->execute()->fetchAll();
-
-        foreach($results as $row){
-            $campaignSum[$row['campaign_id']]['sum'] = isset($campaignSum[$row['campaign_id']]['sum']) ? $campaignSum[$row['campaign_id']]['sum'] += $row['converted'] : $row['converted'];
-            $campaignSum[$row['campaign_id']][$row['source']] = $row['converted'];
-        }
-
-        return $campaignSum;
-    }
-
 }
