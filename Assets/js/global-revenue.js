@@ -1,7 +1,7 @@
 mQuery(document).ready(function () {
-    mQuery.getScriptCachedOnce('/plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
-        mQuery.getCssOnce('/plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css', function () {
-            mQuery.getCssOnce('/plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css', function () {
+    mQuery.getScriptCachedOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
+        mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css', function () {
+            mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css', function () {
                 // dependent files loaded, now get the data and render
                 mQuery.ajax({
                     url: mauticAjaxUrl,

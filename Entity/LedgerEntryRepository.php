@@ -217,23 +217,9 @@ class LedgerEntryRepository extends CommonRepository
             $financials = $f->execute()->fetchAll();
 
             // get conversions from ledger based on class and activity
-            $c = $this->_em->getConnection()->createQueryBuilder();
-            $c->select('COUNT(activity) as converted, campaign_id')
-                ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'cl');
+            $converted = $this->getConvertedByCampaign($leads);
 
-            $c->groupBy('cl.campaign_id');
-            $c->where(
-                $c->expr()->in('cl.contact_id', $leads)
-            );
-            $c->andWhere(
-                $c->expr()->eq('cl.class_name', ':ContactClient'),
-                $c->expr()->eq('cl.activity', ':MAUTIC_CONVERSION_LABEL')
-            );
-            $c->setParameter('ContactClient', 'ContactClient');
-            $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED);
-
-            $conversions = $c->execute()->fetchAll();
-            $conversions = array_column($conversions, 'converted', 'campaign_id');
+            $received = $this->getReceivedByCampaign($leads);
 
             foreach ($financials as $financial) {
                 // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
@@ -247,8 +233,8 @@ class LedgerEntryRepository extends CommonRepository
                     ','
                 ) : 0;
                 $financial['ecpm']      = number_format($financial['gm'] / 1000, 4, '.', ',');
-                $financial['received']  = intval($financial['received']);
-                $financial['converted'] = isset($conversions[$financial['campaign_id']]) ? $conversions[$financial['campaign_id']] : 0;
+                $financial['received']  = intval($received[$financial['campaign_id']]['sum']);
+                $financial['converted'] = intval($converted[$financial['campaign_id']]['sum']);
                 $results['rows'][]      = [
                     $financial['is_published'],
                     $financial['campaign_id'],
@@ -324,7 +310,7 @@ class LedgerEntryRepository extends CommonRepository
             // get financials from ledger based on returned Lead list
             $f = $this->_em->getConnection()->createQueryBuilder();
             $f->select(
-                'c.name as campaign_name, c.is_published, c.id as campaign_id, SUM(cl.cost) as cost, SUM(cl.revenue) as revenue, COUNT(DISTINCT(cl.contact_id)) as received, cs.id as source_id, cs.name as source_name'
+                'c.name as campaign_name, c.is_published, c.id as campaign_id, SUM(cl.cost) as cost, SUM(cl.revenue) as revenue, cs.id as source_id, cs.name as source_name'
             )->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'cl');
 
             $f->where(
@@ -355,24 +341,9 @@ class LedgerEntryRepository extends CommonRepository
 
             $financials = $f->execute()->fetchAll();
 
-            // get conversions from ledger based on class and activity
-            $c = $this->_em->getConnection()->createQueryBuilder();
-            $c->select('COUNT(activity) as converted, campaign_id')
-                ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'cl');
+            $converted = $this->getConvertedByCampaign($leads);
 
-            $c->groupBy('cl.campaign_id');
-            $c->where(
-                $c->expr()->in('cl.contact_id', $leads)
-            );
-            $c->andWhere(
-                $c->expr()->eq('cl.class_name', ':ContactClient'),
-                $c->expr()->eq('cl.activity', ':MAUTIC_CONVERSION_LABEL')
-            );
-            $c->setParameter('ContactClient', 'ContactClient');
-            $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED);
-
-            $conversions = $c->execute()->fetchAll();
-            $conversions = array_column($conversions, 'converted', 'campaign_id');
+            $received = $this->getReceivedByCampaign($leads);
 
             foreach ($financials as $financial) {
                 // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
@@ -386,8 +357,8 @@ class LedgerEntryRepository extends CommonRepository
                     ','
                 ) : 0;
                 $financial['ecpm']      = number_format($financial['gm'] / 1000, 4, '.', ',');
-                $financial['received']  = intval($financial['received']);
-                $financial['converted'] = isset($conversions[$financial['campaign_id']]) ? $conversions[$financial['campaign_id']] : 0;
+                $financial['received']  = intval($received[$financial['campaign_id']][$financial['source_id']]);
+                $financial['converted'] = intval($converted[$financial['campaign_id']][$financial['source_id']]);
                 $results['rows'][]      = [
                     $financial['is_published'],
                     $financial['campaign_id'],
@@ -415,4 +386,73 @@ class LedgerEntryRepository extends CommonRepository
 
         return $results;
     }
+
+    private function getReceivedByCampaign($leads = [])
+    {
+        if (!empty($leads))
+        {
+            $r = $this->_em->getConnection()->createQueryBuilder();
+            $r->select('cal.campaign_id as campaign, ie.integration_entity_id as source_id, COUNT(ie.integration_entity_id) as source')
+                ->from(MAUTIC_TABLE_PREFIX.'campaign_leads', 'cal');
+
+            $r->groupBy('ie.integration_entity_id, cal.campaign_id');
+            $r->where(
+                $r->expr()->in('cal.lead_id', $leads)
+            );
+
+            $r->join('cal',
+            MAUTIC_TABLE_PREFIX.'integration_entity',
+            'ie',
+            'cal.lead_id = ie.internal_entity_id AND ie.internal_entity = :lead AND ie.integration_entity = :ContactSource');
+            $r->setParameter('ContactSource', 'ContactSource');
+            $r->setParameter('lead', 'lead');
+
+            $results = $r->execute()->fetchAll();
+            $campaignSum = [];
+
+            foreach($results as $row){
+                $campaignSum[$row['campaign']]['sum'] = isset($campaignSum[$row['campaign']]['sum']) ? $campaignSum[$row['campaign']]['sum'] += $row['source'] : $row['source'];
+                $campaignSum[$row['campaign']][$row['source_id']] = $row['source'];
+            }
+            return $campaignSum;
+
+        }
+    }
+
+    private function getConvertedByCampaign($leads = [])
+    {
+        // get conversions from ledger based on class and activity
+        $c = $this->_em->getConnection()->createQueryBuilder();
+        $c->select('COUNT(cl.activity) as converted, cl.campaign_id, ie.integration_entity_id as source')
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'cl');
+
+        $c->groupBy('cl.campaign_id, ie.integration_entity_id');
+
+        $c->join('cl',
+            MAUTIC_TABLE_PREFIX.'integration_entity',
+            'ie',
+            'cl.contact_id = ie.internal_entity_id AND ie.internal_entity = :lead AND ie.integration_entity = :ContactSource');
+        $c->setParameter('ContactSource', 'ContactSource');
+        $c->setParameter('lead', 'lead');
+
+        $c->where(
+            $c->expr()->in('cl.contact_id', $leads)
+        );
+        $c->andWhere(
+            $c->expr()->eq('cl.class_name', ':ContactClient'),
+            $c->expr()->eq('cl.activity', ':MAUTIC_CONVERSION_LABEL')
+        );
+        $c->setParameter('ContactClient', 'ContactClient');
+        $c->setParameter('MAUTIC_CONVERSION_LABEL', self::MAUTIC_CONTACT_LEDGER_STATUS_CONVERTED);
+
+        $results = $c->execute()->fetchAll();
+
+        foreach($results as $row){
+            $campaignSum[$row['campaign_id']]['sum'] = isset($campaignSum[$row['campaign_id']]['sum']) ? $campaignSum[$row['campaign_id']]['sum'] += $row['converted'] : $row['converted'];
+            $campaignSum[$row['campaign_id']][$row['source']] = $row['converted'];
+        }
+
+        return $campaignSum;
+    }
+
 }
