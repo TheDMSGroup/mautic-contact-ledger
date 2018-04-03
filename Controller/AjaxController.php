@@ -40,7 +40,7 @@ class AjaxController extends CommonAjaxController
         $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
         $data       = $entryModel->getDashboardRevenueWidgetData($params);
 
-        $headers    = [
+        $headers = [
             'mautic.contactledger.dashboard.revenue.header.active',
             'mautic.contactledger.dashboard.revenue.header.id',
             'mautic.contactledger.dashboard.revenue.header.name',
@@ -63,6 +63,47 @@ class AjaxController extends CommonAjaxController
     }
 
     /**
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     *
+     * @throws \Exception
+     */
+    protected function sourceRevenueAction(Request $request)
+    {
+        // Get the API payload to test.
+        $params['dateFrom'] = $this->request->getSession()->get('mautic.dashboard.date.from');
+        $params['dateTo']   = $this->request->getSession()->get('mautic.dashboard.date.to');
+        //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
+
+        $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
+        $ledgerRepo = $entryModel->getRepository();
+        $data       = $ledgerRepo->getDashboardSourceRevenueWidgetData($params);
+        $headers    = [
+            'mautic.contactledger.dashboard.source-revenue.header.active',
+            'mautic.contactledger.dashboard.source-revenue.header.id',
+            'mautic.contactledger.dashboard.source-revenue.header.name',
+            'mautic.contactledger.dashboard.source-revenue.header.sourceid',
+            'mautic.contactledger.dashboard.source-revenue.header.sourcename',
+            'mautic.contactledger.dashboard.source-revenue.header.received',
+            'mautic.contactledger.dashboard.source-revenue.header.converted',
+            'mautic.contactledger.dashboard.source-revenue.header.revenue',
+            'mautic.contactledger.dashboard.source-revenue.header.cost',
+            'mautic.contactledger.dashboard.source-revenue.header.gm',
+            'mautic.contactledger.dashboard.source-revenue.header.margin',
+            'mautic.contactledger.dashboard.source-revenue.header.ecpm',
+        ];
+        foreach ($headers as $header) {
+            $data['columns'][] = [
+                'title' => $this->translator->trans($header),
+            ];
+        }
+        $data = UTF8Helper::fixUTF8($data);
+
+        return $this->sendJsonResponse($data);
+    }
+
+    /**
      * @param mixed $value
      *
      * @return string
@@ -73,10 +114,11 @@ class AjaxController extends CommonAjaxController
     }
 
     /**
-     * @param $which
+     * @param Request $request
      *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      *
+     * @throws \Doctrine\DBAL\DBALException
      * @throws \Exception
      */
     protected function datatablesAction(Request $request)
@@ -91,8 +133,8 @@ class AjaxController extends CommonAjaxController
                 $campaignModel = $this->get('mautic.campaign.model.campaign');
                 $campaign      = $campaignModel->getEntity($request->query->get('campaignId'));
 
-                $dateFrom      = new \DateTime($request->query->get('date_from'));
-                $dateTo        = new \DateTime($request->query->get('date_to'));
+                $dateFrom = new \DateTime($request->query->get('date_from'));
+                $dateTo   = new \DateTime($request->query->get('date_to'));
 
                 /** @var \MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel $ledgerEntry */
                 $ledgerEntry      = $this->get('mautic.contactledger.model.ledgerentry');
@@ -101,7 +143,6 @@ class AjaxController extends CommonAjaxController
                 break;
             default:
         }
-        $stop='here';
 
         return $this->sendJsonResponse($response);
     }

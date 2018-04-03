@@ -56,7 +56,7 @@ $params .= '&date_from='.urlencode($dateRangeForm['date_from']->vars['value']);
 ?><script>
     var datatableRequest = {
         'ajax': {
-            'url'    : mauticAjaxUrl + '<?php echo $params ?>',
+            'url'    : mauticAjaxUrl + '<?php echo $params; ?>',
             'dataSrc': 'data'
         },
         'columns': [

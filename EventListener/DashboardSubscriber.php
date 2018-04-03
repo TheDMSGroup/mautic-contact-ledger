@@ -33,7 +33,8 @@ class DashboardSubscriber extends MainDashboardSubscriber
      * @var string
      */
     protected $types = [
-        'campaign.revenue' => [],
+        'campaign.revenue'        => [],
+        'campaign.source.revenue' => [],
     ];
 
     /**
@@ -58,27 +59,32 @@ class DashboardSubscriber extends MainDashboardSubscriber
      */
     public function onWidgetDetailGenerate(WidgetDetailEvent $event)
     {
-        if ('campaign.revenue' == $event->getType()) {
-            //       if (!$event->isCached()) {
-            $widget = $event->getWidget();
-            if ($widget->getHeight() < 330) {
-                $widget->setHeight(330);
-            }
-            $params = $widget->getParams();
-            // check date params and set defaults if not exist
-            if (!isset($params['dateTo']) || !$params['dateTo'] instanceof \DateTime) {
-                $params['dateTo'] = new \DateTime();
-            }
-            if (!isset($params['dateFrom']) || !$params['dateFrom'] instanceof \DateTime) {
-                $params['dateFrom'] = $params['dateTo']->modify('-1 day');
-            }
-
-            $data['params'] = $params;
-            $data['height'] = $widget->getHeight();
-            $event->setTemplateData(['data' => $data]);
+        //       if (!$event->isCached()) {
+        $widget = $event->getWidget();
+        if ($widget->getHeight() < 330) {
+            $widget->setHeight(330);
+        }
+        $params = $widget->getParams();
+        // check date params and set defaults if not exist
+        if (!isset($params['dateTo']) || !$params['dateTo'] instanceof \DateTime) {
+            $params['dateTo'] = new \DateTime();
+        }
+        if (!isset($params['dateFrom']) || !$params['dateFrom'] instanceof \DateTime) {
+            $params['dateFrom'] = $params['dateTo']->modify('-1 day');
         }
 
-        $event->setTemplate('MauticContactLedgerBundle:Widgets:revenue.html.php');
+        $data['params'] = $params;
+        $data['height'] = $widget->getHeight();
+        $event->setTemplateData(['data' => $data]);
+
+        if ('campaign.revenue' == $event->getType()) {
+            $event->setTemplate('MauticContactLedgerBundle:Widgets:revenue.html.php');
+        }
+
+        if ('campaign.source.revenue' == $event->getType()) {
+            $event->setTemplate('MauticContactLedgerBundle:Widgets:sourceRevenue.html.php');
+        }
+
         $event->stopPropagation();
     }
 }

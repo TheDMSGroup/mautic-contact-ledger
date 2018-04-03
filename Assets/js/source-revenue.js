@@ -7,20 +7,20 @@ mQuery(document).ready(function () {
                     url: mauticAjaxUrl,
                     type: 'POST',
                     data: {
-                        action: 'plugin:mauticContactLedger:globalRevenue',
+                        action: 'plugin:mauticContactLedger:sourceRevenue',
                     },
                     cache: true,
                     dataType: 'json',
                     success: function (response) {
-                        var rowCount = Math.floor((globalWidgetHeight - 220) / 40);
-                        mQuery('#global-revenue').DataTable({
+                        var rowCount = Math.floor((detailWidgetHeight - 220) / 40);
+                        mQuery('#source-revenue').DataTable({
                             language:{
                                 emptyTable: "No results found for this date range and filters."
                             },
                             data: response.rows,
                             autoFill: true,
                             columns: response.columns,
-                            order: [[3, 'desc']],
+                            order: [[5, 'asc']],
                             bLengthChange: false,
                             lengthMenu: [[rowCount]],
                             columnDefs: [
@@ -38,31 +38,37 @@ mQuery(document).ready(function () {
                                 },
                                 {
                                     render: function (data, type, row) {
+                                        return renderSourceName(row);
+                                    },
+                                    targets: 4
+                                },
+                                {
+                                    render: function (data, type, row) {
                                         return '$' + data;
                                     },
-                                    targets: [5, 6, 7, 9]
+                                    targets: [7, 8, 9, 11]
                                 },
                                 {
                                     render: function (data, type, row) {
                                         return data + '%';
                                     },
-                                    targets: 8
+                                    targets: 10
                                 },
-                                {visible: false, targets: [1]},
+                                {visible: false, targets: [1, 3]},
                                 {width: '5%', targets: [0]},
                                 {width: '20%', targets: [2]}
                             ],
 
                             footerCallback: function (row, data, start, end, display) {
                                 // Add table footer if it doesnt exist
-                                var container = mQuery('#global-revenue');
+                                var container = mQuery('#source-revenue');
                                 var columns = data[0].length;
-                                if (mQuery('tr.pageTotal').length == 0) {
+                                if (mQuery('tr.detailPageTotal').length == 0) {
                                     var footer = mQuery('<tfoot></tfoot>');
-                                    var tr = mQuery('<tr class=\'pageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
-                                    var tr2 = mQuery('<tr class=\'grandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
-                                    tr.append(mQuery('<td colspan=\'2\'>Page totals</td>'));
-                                    tr2.append(mQuery('<td colspan=\'2\'>Grand totals</td>'));
+                                    var tr = mQuery('<tr class=\'detailPTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                    var tr2 = mQuery('<tr class=\'detailGrandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                    tr.append(mQuery('<td colspan=\'3\'>Page totals</td>'));
+                                    tr2.append(mQuery('<td colspan=\'3\'>Grand totals</td>'));
                                     for (var i = 2; i < columns; i++) {
                                         tr.append(mQuery('<td class=\'td-right\'></td>'));
                                         tr2.append(mQuery('<td class=\'td-right\'></td>'));
@@ -90,18 +96,18 @@ mQuery(document).ready(function () {
                                     var footer2 = mQuery(container).find('tfoot tr:nth-child(2)');
                                     for (var i = 2; i < total; i++) {
                                         var pageSum = api
-                                            .column(i + 1, {page: 'current'})
+                                            .column(i+3, {page: 'current'})
                                             .data()
                                             .reduce(function (a, b) {
                                                 return intVal(a) + intVal(b);
                                             }, 0);
                                         var sum = api
-                                            .column(i + 1)
+                                            .column(i+3)
                                             .data()
                                             .reduce(function (a, b) {
                                                 return intVal(a) + intVal(b);
                                             }, 0);
-                                        var title = mQuery(container).find('thead th:nth-child(' + (i + 1) + ')').text();
+                                        var title = mQuery(container).find('thead th:nth-child(' + (i+2) + ')').text();
                                         footer1.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, pageSum, i));
                                         footer2.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, sum, i));
                                     }
@@ -133,6 +139,10 @@ function renderPublishToggle (id, active) {
 
 function renderCampaignName (row) {
     return '<a href="./campaigns/view/'+ row[1] +'" class="campaign-name-link" title="'+ row[2] + '">'+ row[2] + '</a>';
+}
+
+function renderSourceName (row) {
+    return '<a href="./contactsource/view/'+ row[3] +'" class="campaign-name-link" title="'+ row[4] + '">'+ row[4] + '</a>';
 }
 
 function FormatFooter (column, value, index) {
