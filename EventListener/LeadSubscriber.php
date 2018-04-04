@@ -77,9 +77,9 @@ class LeadSubscriber extends CommonSubscriber
             if ($oldValue !== $newValue && $newValue === $lead->getAttribution()) {
                 $difference = $newValue - $oldValue;
 
-                if ($this->logger) {
-                    $this->logger->debug('Found an attribution change of: '.$difference);
-                }
+                // if ($this->logger) {
+                //     $this->logger->debug('Found an attribution change of: '.$difference);
+                // }
 
                 $campaign = $this->context ? $this->context->getCampaign() : null;
                 $actor    = $this->context ? $this->context->getActor() : null;

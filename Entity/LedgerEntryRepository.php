@@ -31,6 +31,16 @@ class LedgerEntryRepository extends CommonRepository
     const MAUTIC_CONTACT_LEDGER_STATUS_SCRUBBED  = 'received';
 
     /**
+     * @param $dollarValue
+     *
+     * @return string
+     */
+    public static function formatDollar($dollarValue)
+    {
+        return sprintf('%19.4f', floatval($dollarValue));
+    }
+
+    /**
      * @return string
      */
     public function getTableAlias()
@@ -45,12 +55,17 @@ class LedgerEntryRepository extends CommonRepository
      *
      * @return array
      */
-    public function getForRevenueChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
+    public function getCampaignRevenueData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
     {
         $results        = [];
         $resultDateTime = null;
-        $labels         = $costs = $revenues = $profits = [];
-        $defaultDollars = self::formatDollar('0');
+        $results        = [];
+
+        $sqlFrom = new \DateTime($dateFrom->format('Y-m-d'));
+        $sqlFrom->modify('midnight');
+
+        $sqlTo = new \DateTime($dateTo->format('Y-m-d'));
+        $sqlTo->modify('midnight +1 day');
 
         $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $builder
@@ -64,7 +79,7 @@ class LedgerEntryRepository extends CommonRepository
             ->where(
                 $builder->expr()->eq('?', 'campaign_id'),
                 $builder->expr()->lte('?', 'date_added'),
-                $builder->expr()->gte('?', 'date_added')
+                $builder->expr()->gt('?', 'date_added')
             )
             ->groupBy('label')
             ->orderBy('label', 'ASC');
@@ -75,78 +90,15 @@ class LedgerEntryRepository extends CommonRepository
 
         // query the database
         $stmt->bindValue(1, $campaign->getId(), Type::INTEGER);
-        $stmt->bindValue(2, $dateFrom, Type::DATETIME);
-        $stmt->bindValue(3, $dateTo, Type::DATETIME);
+        $stmt->bindValue(2, $sqlFrom, Type::DATETIME);
+        $stmt->bindValue(3, $sqlTo, Type::DATETIME);
         $stmt->execute();
 
         if (0 < $stmt->rowCount()) {
-            $results        = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            $result         = array_shift($results);
-            $resultDateTime = new \DateTime($result['label']);
+            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
 
-        // iterate over range steps
-        $labelDateTime = new \DateTime($dateFrom->format('Ymd'));
-        while ($dateTo >= $labelDateTime) {
-            $labels[] = $labelDateTime->format('M j, y');
-
-            if ($labelDateTime == $resultDateTime) {
-                // record match
-                $costs[]    = self::formatDollar(-$result['cost']);
-                $revenues[] = self::formatDollar($result['revenue']);
-                $profits[]  = self::formatDollar($result['profit']);
-
-                // prep next entry
-                if (0 < count($results)) {
-                    $result         = array_shift($results);
-                    $resultDateTime = new \DateTime($result['label']);
-                }
-            } else {
-                $costs[]    = $defaultDollars;
-                $revenues[] = $defaultDollars;
-                $profits[]  = $defaultDollars;
-            }
-
-            $labelDateTime->modify('+1 day');
-        }
-
-        //undo change for inclusive filters
-        $dateTo->modify('-1 second');
-
-        return [
-            'labels'   => $labels,
-            'datasets' => [
-                [
-                    'label'                     => 'Cost',
-                    'data'                      => $costs,
-                    'backgroundColor'           => 'rgba(204,51,51,0.1)',
-                    'borderColor'               => 'rgba(204,51,51,0.8)',
-                    'pointHoverBackgroundColor' => 'rgba(204,51,51,0.75)',
-                    'pointHoverBorderColor'     => 'rgba(204,51,51,1)',
-                ],
-                [
-                    'label'                     => 'Reveue',
-                    'data'                      => $revenues,
-                    'backgroundColor'           => 'rgba(51,51,51,0.1)',
-                    'borderColor'               => 'rgba(51,51,51,0.8)',
-                    'pointHoverBackgroundColor' => 'rgba(51,51,51,0.75)',
-                    'pointHoverBorderColor'     => 'rgba(51,51,51,1)',
-                ],
-                [
-                    'label'                     => 'Profit',
-                    'data'                      => $profits,
-                    'backgroundColor'           => 'rgba(51,204,51,0.1)',
-                    'borderColor'               => 'rgba(51,204,51,0.8)',
-                    'pointHoverBackgroundColor' => 'rgba(51,204,51,0.75)',
-                    'pointHoverBorderColor'     => 'rgba(51,204,51,1)',
-                ],
-            ],
-        ];
-    }
-
-    public static function formatDollar($dollarValue)
-    {
-        return sprintf('%19.4f', floatval($dollarValue));
+        return $results;
     }
 
     /**
@@ -202,11 +154,9 @@ class LedgerEntryRepository extends CommonRepository
         }
 
         // either by Campaign, or by campaign & source
-        if($bySource)
-        {
+        if ($bySource) {
             $f->groupBy('cl.campaign_id, ss.contactsource_id');
-        } else
-        {
+        } else {
             $f->groupBy('cl.campaign_id');
         }
 
@@ -231,7 +181,7 @@ class LedgerEntryRepository extends CommonRepository
                 ','
             ) : 0;
             $financial['ecpm']      = number_format($financial['gm'] / 1000, 4, '.', ',');
-            $result     = [
+            $result                 = [
                 $financial['is_published'],
                 $financial['campaign_id'],
                 $financial['name'],
@@ -247,8 +197,7 @@ class LedgerEntryRepository extends CommonRepository
                 $financial['margin'],
                 $financial['ecpm'],
             ];
-            if(!$bySource)
-            {
+            if (!$bySource) {
                 unset($result[3], $result[4]);
                 $result = array_values($result);
             }

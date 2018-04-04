@@ -11,8 +11,8 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
-use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\CoreEvents;
+use Mautic\CoreBundle\Event\CustomAssetsEvent;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\DashboardBundle\Model\DashboardModel;
@@ -52,26 +52,39 @@ class CustomContentSubscriber extends CommonSubscriber
     {
         return [
             CoreEvents::VIEW_INJECT_CUSTOM_CONTENT => ['getContentInjection', 0],
+            CoreEvents::VIEW_INJECT_CUSTOM_ASSETS  => ['getAssetInjection', 0],
         ];
     }
 
     /**
-     * @param CustomContentEvent $customContentEvent
+     * @param CustomAssetsEvent $event
+     *
+     * @return CustomAssetsEvent
+     */
+    public function getAssetInjection(CustomAssetsEvent $event)
+    {
+        $location = $this->router->getContext()->getPathInfo();
+
+        $this->logger->warning("at $location");
+        if (preg_match('#campaigns/view/\d+$#', $location)) {
+            $event->addScript('plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', 'bodyClose');
+            $event->addStylesheet('plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css');
+        }
+
+        return $event;
+    }
+
+    /**
+     * @param CustomContentEvent $event
      *
      * @return CustomContentEvent
+     *
+     * @throws \Doctrine\DBAL\DBALException
      */
-    public function getContentInjection(CustomContentEvent $customContentEvent)
+    public function getContentInjection(CustomContentEvent $event)
     {
         /** @var \DateTime[] $dateRange */
         $dateRange = $this->request->request->get('daterange', []);
-        /** @var array $vars */
-        $vars = $customContentEvent->getVars();
-
-        /** @var mixed $chartData */
-        $chartData = null;
-
-        /** @var string $chartTemplate */
-        $chartTemplate = '';
 
         if (empty($dateRange)) {
             $dateRange = $this->dashboardModel->getDefaultFilter();
@@ -82,23 +95,34 @@ class CustomContentSubscriber extends CommonSubscriber
             $dateTo   = $dateRange['dateTo'] = new \DateTime($dateRange['date_to']);
         }
 
-        switch ($customContentEvent->getViewName()) {
+        /** @var array $vars */
+        $vars = $event->getVars();
+
+        /** @var mixed $chartData */
+        $chartData = null;
+
+        /** @var string $chartTemplate */
+        $chartTemplate = '';
+
+        switch ($event->getViewName()) {
             case 'MauticCampaignBundle:Campaign:details.html.php':
-                if ('left.section.top' === $customContentEvent->getContext()) {
+                if ('left.section.top' === $event->getContext()) {
                     if (isset($vars['campaign'])) {
                         $chartTemplate = 'MauticContactLedgerBundle:Charts:campaign_revenue_chart.html.php';
-                        $chartData     = $this->ledgerEntryModel->getForRevenueChartData(
+                        $chartData     = $this->ledgerEntryModel->getCampaignRevenueChartData(
                             $vars['campaign'],
                             $dateFrom,
                             $dateTo
                         );
                     }
-                    $customContentEvent->addTemplate($chartTemplate, ['CampaignRevenueData' => $chartData]);
+                    $event->addTemplate($chartTemplate, [
+                        'campaignRevenueChartData' => $chartData,
+                    ]);
                 }
                 break;
             //default:
         }
 
-        return true;
+        return $event;
     }
 }
