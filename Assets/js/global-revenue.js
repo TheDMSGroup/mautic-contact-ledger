@@ -20,7 +20,7 @@ mQuery(document).ready(function () {
                             data: response.rows,
                             autoFill: true,
                             columns: response.columns,
-                            order: [[3, 'desc']],
+                            order: [[2, 'asc']],
                             bLengthChange: false,
                             lengthMenu: [[rowCount]],
                             columnDefs: [
@@ -40,13 +40,13 @@ mQuery(document).ready(function () {
                                     render: function (data, type, row) {
                                         return '$' + data;
                                     },
-                                    targets: [5, 6, 7, 9]
+                                    targets: [7, 8, 9, 11]
                                 },
                                 {
                                     render: function (data, type, row) {
                                         return data + '%';
                                     },
-                                    targets: 8
+                                    targets: 10
                                 },
                                 {visible: false, targets: [1]},
                                 {width: '5%', targets: [0]},

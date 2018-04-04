@@ -39,12 +39,14 @@ class AjaxController extends CommonAjaxController
 
         $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
         $ledgerRepo = $entryModel->getRepository();
-        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params);
+        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, false);
         $headers    = [
             'mautic.contactledger.dashboard.revenue.header.active',
             'mautic.contactledger.dashboard.revenue.header.id',
             'mautic.contactledger.dashboard.revenue.header.name',
             'mautic.contactledger.dashboard.revenue.header.received',
+            'mautic.contactledger.dashboard.revenue.header.scrubbed',
+            'mautic.contactledger.dashboard.revenue.header.declined',
             'mautic.contactledger.dashboard.revenue.header.converted',
             'mautic.contactledger.dashboard.revenue.header.revenue',
             'mautic.contactledger.dashboard.revenue.header.cost',
@@ -78,7 +80,7 @@ class AjaxController extends CommonAjaxController
 
         $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
         $ledgerRepo = $entryModel->getRepository();
-        $data       = $ledgerRepo->getDashboardSourceRevenueWidgetData($params);
+        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, true);
         $headers    = [
             'mautic.contactledger.dashboard.source-revenue.header.active',
             'mautic.contactledger.dashboard.source-revenue.header.id',
@@ -86,6 +88,8 @@ class AjaxController extends CommonAjaxController
             'mautic.contactledger.dashboard.source-revenue.header.sourceid',
             'mautic.contactledger.dashboard.source-revenue.header.sourcename',
             'mautic.contactledger.dashboard.source-revenue.header.received',
+            'mautic.contactledger.dashboard.source-revenue.header.scrubbed',
+            'mautic.contactledger.dashboard.source-revenue.header.declined',
             'mautic.contactledger.dashboard.source-revenue.header.converted',
             'mautic.contactledger.dashboard.source-revenue.header.revenue',
             'mautic.contactledger.dashboard.source-revenue.header.cost',
