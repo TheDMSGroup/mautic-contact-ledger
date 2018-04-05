@@ -51,7 +51,7 @@ class CustomContentSubscriber extends CommonSubscriber
     public static function getSubscribedEvents()
     {
         return [
-            CoreEvents::VIEW_INJECT_CUSTOM_CONTENT => ['getContentInjection', 0]
+            CoreEvents::VIEW_INJECT_CUSTOM_CONTENT => ['getContentInjection', 0],
            // CoreEvents::VIEW_INJECT_CUSTOM_ASSETS  => ['getAssetInjection', 0],
         ];
     }
