@@ -1,3 +1,4 @@
+<script src="/plugins/MauticContactLedgerBundle/Assets/js/campaign-revenue.js"></script>
 <div class="pa-md">
     <div class="row">
         <div class="col-sm-12">
@@ -66,8 +67,4 @@ $params .= '&date_from='.urlencode($dateRangeForm['date_from']->vars['value']);
             {'data': 'profit'}
         ]
     };
-
-    jQuery(document).ready(function() {
-        jQuery('#campaign-revenue-table').DataTable(datatableRequest);
-    });
 </script>
