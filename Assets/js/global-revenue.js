@@ -1,5 +1,6 @@
-mQuery(document).ready(function () {
-    mQuery.getScriptCachedOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
+Mautic.loadGlobalRevenueWidget = function () {
+    if (mQuery('#global-revenue').hasClass('table-initialized') == false) {
+        mQuery.getScriptCachedOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
         mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css', function () {
             mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css', function () {
                 // dependent files loaded, now get the data and render
@@ -116,7 +117,9 @@ mQuery(document).ready(function () {
             }); //getScriptsCachedOnce - fonteawesome css
         });//getScriptsCachedOnce - datatables css
     });  //getScriptsCachedOnce - datatables js
-}); //docready
+    } // if table initialized
+    mQuery('#global-revenue').addClass('table-initialized');
+    }; //loadGlobalRevenueWidget
 
 function renderPublishToggle (id, active) {
     if (active == 1) {
@@ -186,3 +189,10 @@ mQuery.getCssOnce = function (url, callback) {
     callback();
 };
 
+
+mQuery(document).ready(function () {
+    Mautic.loadGlobalRevenueWidget();
+});
+mQuery(document).ajaxComplete(function (event, xhr, settings) {
+    Mautic.loadGlobalRevenueWidget();
+});

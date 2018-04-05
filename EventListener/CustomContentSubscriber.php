@@ -52,27 +52,26 @@ class CustomContentSubscriber extends CommonSubscriber
     {
         return [
             CoreEvents::VIEW_INJECT_CUSTOM_CONTENT => ['getContentInjection', 0],
-            CoreEvents::VIEW_INJECT_CUSTOM_ASSETS  => ['getAssetInjection', 0],
+           // CoreEvents::VIEW_INJECT_CUSTOM_ASSETS  => ['getAssetInjection', 0],
         ];
     }
 
-    /**
-     * @param CustomAssetsEvent $event
-     *
-     * @return CustomAssetsEvent
-     */
-    public function getAssetInjection(CustomAssetsEvent $event)
-    {
-        $location = $this->router->getContext()->getPathInfo();
-
-        $this->logger->warning("at $location");
-        if (preg_match('#campaigns/view/\d+$#', $location)) {
-            $event->addScript('plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', 'bodyClose');
-            $event->addStylesheet('plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css');
-        }
-
-        return $event;
-    }
+    // /**
+    //  * @param CustomAssetsEvent $event
+    //  *
+    //  * @return CustomAssetsEvent
+    //  */
+    // public function getAssetInjection(CustomAssetsEvent $event)
+    // {
+    //     // $location = $this->router->getContext()->getPathInfo();
+    //     //
+    //     // if (preg_match('#campaigns/view/\d+$#', $location)) {
+    //     //     $event->addScript('plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', 'bodyClose');
+    //     //     $event->addStylesheet('plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css');
+    //     // }
+    //     //
+    //     // return $event;
+    // }
 
     /**
      * @param CustomContentEvent $event
