@@ -63,14 +63,14 @@ class CustomContentSubscriber extends CommonSubscriber
      */
     public function getAssetInjection(CustomAssetsEvent $event)
     {
-        $location = $this->router->getContext()->getPathInfo();
-
-        if (preg_match('#campaigns/view/\d+$#', $location)) {
-            $event->addScript('plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', 'bodyClose');
-            $event->addStylesheet('plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css');
-        }
-
-        return $event;
+        // $location = $this->router->getContext()->getPathInfo();
+        //
+        // if (preg_match('#campaigns/view/\d+$#', $location)) {
+        //     $event->addScript('plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', 'bodyClose');
+        //     $event->addStylesheet('plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css');
+        // }
+        //
+        // return $event;
     }
 
     /**
