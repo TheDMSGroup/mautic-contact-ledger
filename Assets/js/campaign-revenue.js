@@ -1,5 +1,5 @@
 Mautic.loadCampaignRevenueWidget = function () {
-    if (mQuery('#campaign-revenue-table').hasClass('table-initialized') == false) {
+    mQuery('#campaign-revenue-table:not(.table-initialized):first').addClass('table-initialized').each(function() {
         mQuery.getScriptCachedOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
             mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css', function () {
                 mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css', function () {
@@ -7,8 +7,7 @@ Mautic.loadCampaignRevenueWidget = function () {
                 }); //getScriptsCachedOnce - fonteawesome css
             });//getScriptsCachedOnce - datatables css
         });  //getScriptsCachedOnce - datatables js
-    } // if table initialized
-    mQuery('#campaign-revenue-table').addClass('table-initialized');
+    });
 }; //loadCampaignRevenueWidget
 
 // getScriptCachedOnce for faster page loads in the backend.
