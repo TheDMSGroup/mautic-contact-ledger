@@ -1,5 +1,5 @@
 Mautic.loadGlobalRevenueWidget = function () {
-    if (mQuery('#global-revenue').hasClass('table-initialized') == false) {
+    mQuery('#global-revenue:not(.table-initialized):first').addClass('table-initialized').each(function() {
         mQuery.getScriptCachedOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
         mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css', function () {
             mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css', function () {
@@ -117,8 +117,7 @@ Mautic.loadGlobalRevenueWidget = function () {
             }); //getScriptsCachedOnce - fonteawesome css
         });//getScriptsCachedOnce - datatables css
     });  //getScriptsCachedOnce - datatables js
-    } // if table initialized
-    mQuery('#global-revenue').addClass('table-initialized');
+    });
     }; //loadGlobalRevenueWidget
 
 function renderPublishToggle (id, active) {

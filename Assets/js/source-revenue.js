@@ -1,5 +1,5 @@
 Mautic.loadSourceRevenueWidget = function () {
-    if (mQuery('#source-revenue').hasClass('table-initialized') == false) {
+    mQuery('#source-revenue:not(.table-initialized):first').addClass('table-initialized').each(function() {
         mQuery.getScriptCachedOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
             mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css', function () {
                 mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css', function () {
@@ -123,8 +123,7 @@ Mautic.loadSourceRevenueWidget = function () {
                 }); //getScriptsCachedOnce - fonteawesome css
             });//getScriptsCachedOnce - datatables css
         });  //getScriptsCachedOnce - datatables js
-    } // if table initialized
-        mQuery('#source-revenue').addClass('table-initialized');
+    });
 }; //loadSourceRevenueWidget
 
 function renderPublishToggle (id, active) {
