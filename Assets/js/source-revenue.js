@@ -95,7 +95,7 @@ Mautic.loadSourceRevenueWidget = function () {
                                         var total = mQuery('#' + container[0].id + ' thead th').length;
                                         var footer1 = mQuery(container).find('tfoot tr:nth-child(1)');
                                         var footer2 = mQuery(container).find('tfoot tr:nth-child(2)');
-                                        for (var i = 2; i < total; i++) {
+                                        for (var i = 2; i < total-1; i++) {
                                             var pageSum = api
                                                 .column(i + 3, {page: 'current'})
                                                 .data()
