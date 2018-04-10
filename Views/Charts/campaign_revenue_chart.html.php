@@ -24,7 +24,7 @@
                     ); ?>
                 </div>
                 <div class="pt-0 pl-15 pb-10 pr-15">
-                    <table id="campaign-revenue-table" class="display" style="width:100%">
+                    <table id="campaign-revenue-table" class="table table-striped table-bordered no-footer display" style="width:100%">
                         <thead>
                             <tr>
                                 <th>Date</th>
