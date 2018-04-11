@@ -134,12 +134,11 @@ class LedgerEntryRepository extends CommonRepository
         $f->join('ss', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = ss.contactsource_id');
 
         // add cost column
-        $groupExprCost = $bySource ? ', cl.object_id' : '';
+        $groupExprCost     = $bySource ? ', cl.object_id' : '';
         $conditionExprCost = $bySource ? ' AND ss.contactsource_id = cl1.object_id' : '';
-        $selectExprCost = $bySource ? ' cl.object_id,' : '';
+        $selectExprCost    = $bySource ? ' cl.object_id,' : '';
 
-        $f->leftJoin
-            (
+        $f->leftJoin(
                 'ss',
                 "(SELECT cl.campaign_id,$selectExprCost SUM(cl.cost) AS cost
                        FROM contact_ledger cl
@@ -151,11 +150,10 @@ class LedgerEntryRepository extends CommonRepository
         ;
 
         // add revenue column
-        $groupExprRev = $bySource ? ', contactsource_id' : '';
+        $groupExprRev     = $bySource ? ', contactsource_id' : '';
         $conditionExprRev = $bySource ? ' AND ss.contactsource_id = cl2.contactsource_id' : '';
-        $selectExprRev = $bySource ? ' contactsource_id,' : '';
-        $f->leftJoin
-            (
+        $selectExprRev    = $bySource ? ' contactsource_id,' : '';
+        $f->leftJoin(
                 'ss',
                 "(SELECT a.campaign_id,$selectExprRev SUM(a.revenue) AS revenue
                        FROM contact_ledger a
