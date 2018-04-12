@@ -33,11 +33,11 @@ class AjaxController extends CommonAjaxController
      */
     protected function globalRevenueAction(Request $request)
     {
-        $cache = $this->get('Mautic\CoreBundle\Helper\CacheStorageHelper');
+        $params = $this->getDateParams();
+        $cache  = $this->get('Mautic\CoreBundle\Helper\CacheStorageHelper');
         if (!$data = $this->isAjaxDataCached('global-revenue-dashboard-widget', $cache)) {
             // Get the API payload to test.
-            $params['dateFrom'] = $this->request->getSession()->get('mautic.dashboard.date.from');
-            $params['dateTo']   = $this->request->getSession()->get('mautic.dashboard.date.to');
+
             //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
             $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
@@ -78,11 +78,11 @@ class AjaxController extends CommonAjaxController
      */
     protected function sourceRevenueAction(Request $request)
     {
+        $params = $this->getDateParams();
+
         $cache = $this->get('Mautic\CoreBundle\Helper\CacheStorageHelper');
         if (!$data = $this->isAjaxDataCached('source-revenue-dashboard-widget', $cache)) {
             // Get the API payload to test.
-            $params['dateFrom'] = $this->request->getSession()->get('mautic.dashboard.date.from');
-            $params['dateTo']   = $this->request->getSession()->get('mautic.dashboard.date.to');
             //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
             $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
@@ -176,5 +176,25 @@ class AjaxController extends CommonAjaxController
 
             return false;
         }
+    }
+
+    private function getDateParams()
+    {
+        $params=[];
+        $from  = $this->request->getSession()->get('mautic.dashboard.date.from');
+        $to    = $this->request->getSession()->get('mautic.dashboard.date.to');
+
+        $params['dateFrom'] = (empty($from))
+            ?
+            date('Y-m-d', strtotime('-30 days'))
+            :
+            $from;
+        $params['dateTo'] = (empty($to))
+            ?
+            date('Y-m-d')
+            :
+            $to;
+
+        return $params;
     }
 }

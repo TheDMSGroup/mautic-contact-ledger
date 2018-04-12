@@ -168,9 +168,6 @@ class LedgerEntryRepository extends CommonRepository
 
         //add optional date conditionals
         if ($params['dateFrom']) {
-            $date = date_create($params['dateFrom']);
-            date_sub($date, date_interval_create_from_date_string('1 days'));
-            $params['dateFrom'] = date_format($date, 'Y-m-d');
             $f->where(
                 $f->expr()->gte('ss.date_added', ':dateFrom')
             );
