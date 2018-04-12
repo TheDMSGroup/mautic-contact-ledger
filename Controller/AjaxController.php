@@ -13,9 +13,9 @@ namespace MauticPlugin\MauticContactLedgerBundle\Controller;
 
 use Mautic\CoreBundle\Controller\AjaxController as CommonAjaxController;
 use Mautic\CoreBundle\Controller\AjaxLookupControllerTrait;
+use Mautic\CoreBundle\Helper\CacheStorageHelper;
 use Mautic\CoreBundle\Helper\UTF8Helper;
 use Symfony\Component\HttpFoundation\Request;
-use Mautic\CoreBundle\Helper\CacheStorageHelper;
 
 /**
  * Class AjaxController.
@@ -34,7 +34,7 @@ class AjaxController extends CommonAjaxController
     protected function globalRevenueAction(Request $request)
     {
         $cache = $this->get('Mautic\CoreBundle\Helper\CacheStorageHelper');
-        if( !$data = $this->isAjaxDataCached('global-revenue-dashboard-widget', $cache)) {
+        if (!$data = $this->isAjaxDataCached('global-revenue-dashboard-widget', $cache)) {
             // Get the API payload to test.
             $params['dateFrom'] = $this->request->getSession()->get('mautic.dashboard.date.from');
             $params['dateTo']   = $this->request->getSession()->get('mautic.dashboard.date.to');
@@ -79,9 +79,7 @@ class AjaxController extends CommonAjaxController
     protected function sourceRevenueAction(Request $request)
     {
         $cache = $this->get('Mautic\CoreBundle\Helper\CacheStorageHelper');
-        if( !$data = $this->isAjaxDataCached('source-revenue-dashboard-widget', $cache)) {
-
-
+        if (!$data = $this->isAjaxDataCached('source-revenue-dashboard-widget', $cache)) {
             // Get the API payload to test.
             $params['dateFrom'] = $this->request->getSession()->get('mautic.dashboard.date.from');
             $params['dateTo']   = $this->request->getSession()->get('mautic.dashboard.date.to');
@@ -164,9 +162,8 @@ class AjaxController extends CommonAjaxController
 
     private function isAjaxDataCached($cacheKey, CacheStorageHelper $cache)
     {
-        $data = $cache->get($cacheKey);;
-        if($data)
-        {
+        $data = $cache->get($cacheKey);
+        if ($data) {
             return $data;
         } else {
             return false;
