@@ -10,9 +10,9 @@
  */
 
 return [
-    'name'        => 'Mautic Contact Ledger',
+    'name'        => 'Contact Ledger',
     'description' => 'Adds cost and revenue tracking on a per ler lead basis.',
-    'version'     => '1.0.0',
+    'version'     => '1.0',
     'author'      => 'Nicholai Bush',
 
     'services' => [
