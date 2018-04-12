@@ -43,7 +43,7 @@ class AjaxController extends CommonAjaxController
             $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
             $ledgerRepo = $entryModel->getRepository();
             $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, false);
-            $cache->set('global-revenue-dashboard-widget', $data);
+            $cache->set('global-revenue-dashboard-widget', $data, 900);
         }
         $headers    = [
             'mautic.contactledger.dashboard.revenue.header.active',
@@ -88,7 +88,7 @@ class AjaxController extends CommonAjaxController
             $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
             $ledgerRepo = $entryModel->getRepository();
             $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, true);
-            $cache->set('source-revenue-dashboard-widget', $data);
+            $cache->set('source-revenue-dashboard-widget', $data, 900);
         }
         $headers    = [
             'mautic.contactledger.dashboard.source-revenue.header.active',
@@ -160,12 +160,20 @@ class AjaxController extends CommonAjaxController
         return $this->sendJsonResponse($response);
     }
 
+    /**
+     * @param                    $cacheKey
+     * @param CacheStorageHelper $cache
+     *
+     * @return bool|mixed
+     */
     private function isAjaxDataCached($cacheKey, CacheStorageHelper $cache)
     {
         $data = $cache->get($cacheKey);
         if ($data) {
             return $data;
         } else {
+            $cache->set($cacheKey, NULL, 900);
+
             return false;
         }
     }
