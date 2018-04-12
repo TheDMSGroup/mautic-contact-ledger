@@ -34,7 +34,7 @@ class AjaxController extends CommonAjaxController
     protected function globalRevenueAction(Request $request)
     {
         $params = $this->getDateParams();
-        $cache = $this->get('Mautic\CoreBundle\Helper\CacheStorageHelper');
+        $cache  = $this->get('Mautic\CoreBundle\Helper\CacheStorageHelper');
         if (!$data = $this->isAjaxDataCached('global-revenue-dashboard-widget', $cache)) {
             // Get the API payload to test.
 
@@ -181,12 +181,12 @@ class AjaxController extends CommonAjaxController
     private function getDateParams()
     {
         $params=[];
-        $from = $this->request->getSession()->get('mautic.dashboard.date.from');
-        $to   = $this->request->getSession()->get('mautic.dashboard.date.to');
+        $from  = $this->request->getSession()->get('mautic.dashboard.date.from');
+        $to    = $this->request->getSession()->get('mautic.dashboard.date.to');
 
         $params['dateFrom'] = (empty($from))
             ?
-            date('Y-m-d', strtotime("-30 days"))
+            date('Y-m-d', strtotime('-30 days'))
             :
             $from;
         $params['dateTo'] = (empty($to))
