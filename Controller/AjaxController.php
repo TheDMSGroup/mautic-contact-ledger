@@ -15,6 +15,7 @@ use Mautic\CoreBundle\Controller\AjaxController as CommonAjaxController;
 use Mautic\CoreBundle\Controller\AjaxLookupControllerTrait;
 use Mautic\CoreBundle\Helper\UTF8Helper;
 use Symfony\Component\HttpFoundation\Request;
+use Mautic\CoreBundle\Helper\CacheStorageHelper;
 
 /**
  * Class AjaxController.
@@ -32,14 +33,18 @@ class AjaxController extends CommonAjaxController
      */
     protected function globalRevenueAction(Request $request)
     {
-        // Get the API payload to test.
-        $params['dateFrom'] = $this->request->getSession()->get('mautic.dashboard.date.from');
-        $params['dateTo']   = $this->request->getSession()->get('mautic.dashboard.date.to');
-        //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
+        $cache = $this->get('Mautic\CoreBundle\Helper\CacheStorageHelper');
+        if( !$data = $this->isAjaxDataCached('global-revenue-dashboard-widget', $cache)) {
+            // Get the API payload to test.
+            $params['dateFrom'] = $this->request->getSession()->get('mautic.dashboard.date.from');
+            $params['dateTo']   = $this->request->getSession()->get('mautic.dashboard.date.to');
+            //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
-        $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
-        $ledgerRepo = $entryModel->getRepository();
-        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, false);
+            $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
+            $ledgerRepo = $entryModel->getRepository();
+            $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, false);
+            $cache->set('global-revenue-dashboard-widget', $data);
+        }
         $headers    = [
             'mautic.contactledger.dashboard.revenue.header.active',
             'mautic.contactledger.dashboard.revenue.header.id',
@@ -73,14 +78,20 @@ class AjaxController extends CommonAjaxController
      */
     protected function sourceRevenueAction(Request $request)
     {
-        // Get the API payload to test.
-        $params['dateFrom'] = $this->request->getSession()->get('mautic.dashboard.date.from');
-        $params['dateTo']   = $this->request->getSession()->get('mautic.dashboard.date.to');
-        //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
+        $cache = $this->get('Mautic\CoreBundle\Helper\CacheStorageHelper');
+        if( !$data = $this->isAjaxDataCached('source-revenue-dashboard-widget', $cache)) {
 
-        $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
-        $ledgerRepo = $entryModel->getRepository();
-        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, true);
+
+            // Get the API payload to test.
+            $params['dateFrom'] = $this->request->getSession()->get('mautic.dashboard.date.from');
+            $params['dateTo']   = $this->request->getSession()->get('mautic.dashboard.date.to');
+            //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
+
+            $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
+            $ledgerRepo = $entryModel->getRepository();
+            $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, true);
+            $cache->set('source-revenue-dashboard-widget', $data);
+        }
         $headers    = [
             'mautic.contactledger.dashboard.source-revenue.header.active',
             'mautic.contactledger.dashboard.source-revenue.header.id',
@@ -149,5 +160,16 @@ class AjaxController extends CommonAjaxController
         }
 
         return $this->sendJsonResponse($response);
+    }
+
+    private function isAjaxDataCached($cacheKey, CacheStorageHelper $cache)
+    {
+        $data = $cache->get($cacheKey);;
+        if($data)
+        {
+            return $data;
+        } else {
+            return false;
+        }
     }
 }
