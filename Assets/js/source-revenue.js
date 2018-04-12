@@ -66,7 +66,7 @@ Mautic.loadSourceRevenueWidget = function () {
                                     var columns = data[0].length;
                                     if (mQuery('tr.detailPageTotal').length == 0) {
                                         var footer = mQuery('<tfoot></tfoot>');
-                                        var tr = mQuery('<tr class=\'detailPTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                        var tr = mQuery('<tr class=\'detailPageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
                                         var tr2 = mQuery('<tr class=\'detailGrandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
                                         tr.append(mQuery('<td colspan=\'3\'>Page totals</td>'));
                                         tr2.append(mQuery('<td colspan=\'3\'>Grand totals</td>'));
