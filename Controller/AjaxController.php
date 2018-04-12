@@ -172,7 +172,7 @@ class AjaxController extends CommonAjaxController
         if ($data) {
             return $data;
         } else {
-            $cache->set($cacheKey, NULL, 900);
+            $cache->set($cacheKey, null, 900);
 
             return false;
         }
