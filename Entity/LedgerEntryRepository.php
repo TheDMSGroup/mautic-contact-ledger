@@ -175,8 +175,7 @@ class LedgerEntryRepository extends CommonRepository
             $statBuilder->setMaxResults($params['limit']);
         }
 
-
-        $results = ['rows' => []];
+        $results    = ['rows' => []];
         $financials = $statBuilder->execute()->fetchAll();
 
         foreach ($financials as $financial) {
