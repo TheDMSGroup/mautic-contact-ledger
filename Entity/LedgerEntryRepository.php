@@ -11,6 +11,8 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
+use Doctrine\Common\Cache\FilesystemCache;
+use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Doctrine\DBAL\Types\Type;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
@@ -102,12 +104,12 @@ class LedgerEntryRepository extends CommonRepository
     }
 
     /**
-     * @param array $params
-     * @param bool  $bySource
+     * @param      $params
+     * @param bool $bySource
      *
      * @return array
      */
-    public function getDashboardRevenueWidgetData($params, $bySource = false)
+    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__)
     {
         $statBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $statBuilder
@@ -127,57 +129,68 @@ class LedgerEntryRepository extends CommonRepository
             ->where('ss.date_added BETWEEN :dateFrom AND :dateTo')
             ->groupBy('ss.campaign_id, c.is_published, c.name, clc.cost, clr.revenue')
             ->orderBy('COUNT(ss.campaign_id)', 'ASC');
-
         $costBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $costBuilder
             ->select('lc.campaign_id', 'SUM(lc.cost) AS cost')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'lc')
             ->groupBy('lc.campaign_id');
         $costJoinCond = 'clc.campaign_id = ss.campaign_id';
-
-        $revBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $revBuilder   = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $revBuilder
             ->select('lr.campaign_id', 'SUM(lr.revenue) AS revenue')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'lr')
             ->groupBy('lr.campaign_id');
         $revJoinCond = 'clr.campaign_id = ss.campaign_id';
-
         if ($bySource) {
             $statBuilder
                 ->addSelect('ss.contactsource_id', 'cs.name as source')
                 ->join('ss', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = ss.contactsource_id')
                 ->addGroupBy('ss.contactsource_id, cs.name');
-
             $costBuilder
                 ->addSelect('sc.contactsource_id')
-                ->innerJoin('lc', 'contactsource_stats', 'sc', 'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id')
+                ->innerJoin(
+                    'lc',
+                    'contactsource_stats',
+                    'sc',
+                    'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id'
+                )
                 ->addGroupBy('sc.contactsource_id');
             $costJoinCond .= ' AND clc.contactsource_id = ss.contactsource_id';
-
             $revBuilder
                 ->addSelect('sr.contactsource_id')
-                ->innerJoin('lr', 'contactsource_stats', 'sr', 'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id')
+                ->innerJoin(
+                    'lr',
+                    'contactsource_stats',
+                    'sr',
+                    'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id'
+                )
                 ->addGroupBy('sr.contactsource_id');
             $revJoinCond .= ' AND clr.contactsource_id = ss.contactsource_id';
         }
-
         $statBuilder
             ->leftJoin('ss', '('.$costBuilder->getSQL().')', 'clc', $costJoinCond)
             ->leftJoin('ss', '('.$revBuilder->getSQL().')', 'clr', $revJoinCond);
-
         $dateFrom = new \DateTime(isset($params['dateFrom']) ? $params['dateFrom'] : '-30 days');
         $dateTo   = new \DateTime(isset($params['dateTo']) ? $params['dateTo'] : 'tomorrow -1 second');
         $statBuilder
             ->setParameter('dateFrom', $dateFrom->format('Y-m-d H:i:s'))
             ->setParameter('dateTo', $dateTo->format('Y-m-d H:i:s'));
-
         if (isset($params['limit']) && (0 < $params['limit'])) {
             $statBuilder->setMaxResults($params['limit']);
         }
+        $results = ['rows' => []];
 
-        $results    = ['rows' => []];
-        $financials = $statBuilder->execute()->fetchAll();
-
+        // setup cache
+        $cache = new FilesystemCache($cache_dir.'/sql');
+        $statBuilder->getConnection()->getConfiguration()->setResultCacheImpl($cache);
+        $stmt       = $statBuilder->getConnection()->executeCacheQuery(
+            $statBuilder->getSQL(),
+            $statBuilder->getParameters(),
+            $statBuilder->getParameterTypes(),
+            new QueryCacheProfile(900, 'dashboard-revenue-queries', $cache)
+        );
+        $financials = $stmt->fetchAll();
+        $stmt->closeCursor();
         foreach ($financials as $financial) {
             // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
             $financial['revenue']      = floatval($financial['revenue']);
@@ -192,7 +205,7 @@ class LedgerEntryRepository extends CommonRepository
                 $financial['ecpm']         = 0;
             }
 
-            $result                 = [
+            $result = [
                 $financial['is_published'],
                 $financial['campaign_id'],
                 $financial['name'],

@@ -13,7 +13,6 @@ namespace MauticPlugin\MauticContactLedgerBundle\Controller;
 
 use Mautic\CoreBundle\Controller\AjaxController as CommonAjaxController;
 use Mautic\CoreBundle\Controller\AjaxLookupControllerTrait;
-use Mautic\CoreBundle\Helper\CacheStorageHelper;
 use Mautic\CoreBundle\Helper\UTF8Helper;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -33,18 +32,16 @@ class AjaxController extends CommonAjaxController
      */
     protected function globalRevenueAction(Request $request)
     {
-        $params = $this->getDateParams();
-        $cache  = $this->get('Mautic\CoreBundle\Helper\CacheStorageHelper');
-        if (!$data = $this->isAjaxDataCached('global-revenue-dashboard-widget', $cache)) {
-            // Get the API payload to test.
+        $params    = $this->getDateParams();
+        $cache_dir =$this->container->getParameter('kernel.cache_dir');
 
-            //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
+        // Get the API payload to test.
+        //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
-            $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
-            $ledgerRepo = $entryModel->getRepository();
-            $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, false);
-            $cache->set('global-revenue-dashboard-widget', $data, 900);
-        }
+        $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
+        $ledgerRepo = $entryModel->getRepository();
+        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, false, $cache_dir);
+
         $headers    = [
             'mautic.contactledger.dashboard.revenue.header.active',
             'mautic.contactledger.dashboard.revenue.header.id',
@@ -78,18 +75,16 @@ class AjaxController extends CommonAjaxController
      */
     protected function sourceRevenueAction(Request $request)
     {
-        $params = $this->getDateParams();
+        $params    = $this->getDateParams();
+        $cache_dir = $this->container->getParameter('kernel.cache_dir');
 
-        $cache = $this->get('Mautic\CoreBundle\Helper\CacheStorageHelper');
-        if (!$data = $this->isAjaxDataCached('source-revenue-dashboard-widget', $cache)) {
-            // Get the API payload to test.
-            //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
+        // Get the API payload to test.
+        //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
-            $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
-            $ledgerRepo = $entryModel->getRepository();
-            $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, true);
-            $cache->set('source-revenue-dashboard-widget', $data, 900);
-        }
+        $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
+        $ledgerRepo = $entryModel->getRepository();
+        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, true, $cache_dir);
+
         $headers    = [
             'mautic.contactledger.dashboard.source-revenue.header.active',
             'mautic.contactledger.dashboard.source-revenue.header.id',
@@ -160,24 +155,6 @@ class AjaxController extends CommonAjaxController
         return $this->sendJsonResponse($response);
     }
 
-    /**
-     * @param                    $cacheKey
-     * @param CacheStorageHelper $cache
-     *
-     * @return bool|mixed
-     */
-    private function isAjaxDataCached($cacheKey, CacheStorageHelper $cache)
-    {
-        $data = $cache->get($cacheKey);
-        if ($data) {
-            return $data;
-        } else {
-            $cache->set($cacheKey, null, 900);
-
-            return false;
-        }
-    }
-
     private function getDateParams()
     {
         $params=[];
@@ -191,9 +168,9 @@ class AjaxController extends CommonAjaxController
             $from;
         $params['dateTo'] = (empty($to))
             ?
-            date('Y-m-d')
+            date('Y-m-d', strtotime('tomorrow -1 second'))
             :
-            $to;
+            date('Y-m-d 23:59:59', strtotime($to));
 
         return $params;
     }
