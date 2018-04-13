@@ -109,7 +109,7 @@ class LedgerEntryRepository extends CommonRepository
      *
      * @return array
      */
-    public function getDashboardRevenueWidgetData($params, $bySource = false)
+    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__)
     {
         $results = $financials = [];
 
@@ -203,12 +203,12 @@ class LedgerEntryRepository extends CommonRepository
             $f->setMaxResults($params['limit']);
         }
         // setup cache
-        $cache      = new FilesystemCache(__DIR__);
+        $cache      = new FilesystemCache($cache_dir.'/sql');
         $f->getConnection()->getConfiguration()->setResultCacheImpl($cache);
         $stmt = $f->getConnection()->executeCacheQuery(
             $f->getSQL(),
             $f->getParameters(),
-            $f->getType(),
+            $f->getParameterTypes(),
             new QueryCacheProfile(900, 'dashboard-revenue-queries', $cache)
         );
         $financials = $stmt->fetchAll();

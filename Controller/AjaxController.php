@@ -33,13 +33,14 @@ class AjaxController extends CommonAjaxController
     protected function globalRevenueAction(Request $request)
     {
         $params = $this->getDateParams();
+        $cache_dir =$this->container->getParameter('kernel.cache_dir');
 
         // Get the API payload to test.
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
         $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
         $ledgerRepo = $entryModel->getRepository();
-        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, false);
+        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, false, $cache_dir);
 
         $headers    = [
             'mautic.contactledger.dashboard.revenue.header.active',
@@ -75,13 +76,14 @@ class AjaxController extends CommonAjaxController
     protected function sourceRevenueAction(Request $request)
     {
         $params = $this->getDateParams();
+        $cache_dir = $this->container->getParameter('kernel.cache_dir');
 
         // Get the API payload to test.
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
         $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
         $ledgerRepo = $entryModel->getRepository();
-        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, true);
+        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, true, $cache_dir);
 
         $headers    = [
             'mautic.contactledger.dashboard.source-revenue.header.active',
