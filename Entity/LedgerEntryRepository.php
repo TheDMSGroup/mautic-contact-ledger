@@ -11,11 +11,11 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
+use Doctrine\Common\Cache\FilesystemCache;
+use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Doctrine\DBAL\Types\Type;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
-use Doctrine\DBAL\Cache\QueryCacheProfile;
-use Doctrine\Common\Cache\FilesystemCache;
 
 /**
  * Class LedgerEntryRepository.
@@ -209,7 +209,7 @@ class LedgerEntryRepository extends CommonRepository
             $f->getSQL(),
             $f->getParameters(),
             $f->getType(),
-            new QueryCacheProfile(900, "dashboard-revenue-queries", $cache)
+            new QueryCacheProfile(900, 'dashboard-revenue-queries', $cache)
         );
         $financials = $stmt->fetchAll();
         $stmt->closeCursor();

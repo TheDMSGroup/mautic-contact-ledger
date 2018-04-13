@@ -16,14 +16,12 @@ use Mautic\CoreBundle\Controller\AjaxLookupControllerTrait;
 use Mautic\CoreBundle\Helper\UTF8Helper;
 use Symfony\Component\HttpFoundation\Request;
 
-
 /**
  * Class AjaxController.
  */
 class AjaxController extends CommonAjaxController
 {
     use AjaxLookupControllerTrait;
-
 
     /**
      * @param Request $request
@@ -36,8 +34,8 @@ class AjaxController extends CommonAjaxController
     {
         $params = $this->getDateParams();
 
-            // Get the API payload to test.
-            //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
+        // Get the API payload to test.
+        //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
         $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
         $ledgerRepo = $entryModel->getRepository();
