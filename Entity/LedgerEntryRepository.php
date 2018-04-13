@@ -103,7 +103,7 @@ class LedgerEntryRepository extends CommonRepository
 
     /**
      * @param array $params
-     * @param bool $bySource
+     * @param bool  $bySource
      *
      * @return array
      */
@@ -112,19 +112,20 @@ class LedgerEntryRepository extends CommonRepository
         $statBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $statBuilder
             ->select(
-                'c.is_published',
                 'ss.campaign_id',
+                'c.is_published',
                 'c.name',
                 'SUM(IF(ss.type IS NULL                     , 0, 1)) AS received',
                 "SUM(IF(ss.type IN ('accepted' , 'scrubbed'), 0, 1)) AS rejected",
                 "SUM(IF(ss.type = 'accepted'                , 1, 0)) AS converted",
                 "SUM(IF(ss.type = 'scrubbed'                , 1, 0)) AS scrubbed",
-                'IFNULL(cost, 0)                                     AS cost',
-                'IFNULL(revenue, 0)                                  AS revenue'
+                'IFNULL(clc.cost, 0)                                 AS cost',
+                'IFNULL(clr.revenue, 0)                              AS revenue'
             )
             ->from(MAUTIC_TABLE_PREFIX.'contactsource_stats', 'ss')
-            ->join('ss',MAUTIC_TABLE_PREFIX.'campaign','c', 'c.id = ss.campaign_id')
+            ->join('ss', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = ss.campaign_id')
             ->where('ss.date_added BETWEEN :dateFrom AND :dateTo')
+            ->groupBy('ss.campaign_id, c.is_published, c.name, clc.cost, clr.revenue')
             ->orderBy('COUNT(ss.campaign_id)', 'ASC');
 
         $costBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
@@ -135,18 +136,17 @@ class LedgerEntryRepository extends CommonRepository
         $costJoinCond = 'clc.campaign_id = ss.campaign_id';
 
         $revBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
-
         $revBuilder
             ->select('l.campaign_id', 'SUM(l.revenue) AS revenue')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'l')
             ->groupBy('l.campaign_id');
-        $revJoinCond = 'clr.campaign_id = ss.campagin_id';
+        $revJoinCond = 'clr.campaign_id = ss.campaign_id';
 
         if ($bySource) {
             $statBuilder
                 ->addSelect('ss.contactsource_id', 'cs.name as source')
-                ->join('ss', MAUTIC_TABLE_PREFIX.'contactsources', 'cs', 'cs.id = ss.contactsource_id')
-                ->addGroupBy('ss.contactsource_id');
+                ->join('ss', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = ss.contactsource_id')
+                ->addGroupBy('ss.contactsource_id, cs.name');
 
             $costBuilder
                 ->addSelect('object_id AS contactsource_id')
@@ -162,16 +162,16 @@ class LedgerEntryRepository extends CommonRepository
         }
 
         $statBuilder
-            ->leftJoin('ss','('.$costBuilder->getSQL().')', 'clc', $costJoinCond)
-            ->leftJoin('ss','('.$revBuilder->getSQL().')', 'clr', $revJoinCond);
+            ->leftJoin('ss', '('.$costBuilder->getSQL().')', 'clc', $costJoinCond)
+            ->leftJoin('ss', '('.$revBuilder->getSQL().')', 'clr', $revJoinCond);
 
         $dateFrom = new \DateTime(isset($params['dateFrom']) ? $params['dateFrom'] : '-30 days');
-        $dateTo   = new \DateTime(isset($params['dateTo'])   ? $params['dateTo']   : 'tomorrow -1 second');
+        $dateTo   = new \DateTime(isset($params['dateTo']) ? $params['dateTo'] : 'tomorrow -1 second');
         $statBuilder
-            ->setParameter('dateFrom', $dateFrom->format('Y-m-d'))
-            ->setParameter('dateTo', $dateTo)->from('Y-m-d');
+            ->setParameter('dateFrom', $dateFrom->format('Y-m-d H:i:s'))
+            ->setParameter('dateTo', $dateTo->format('Y-m-d H:i:s'));
 
-        if ($params['limit']) {
+        if (isset($params['limit'])) {
             $statBuilder->setMaxResults($params['limit']);
         }
 
