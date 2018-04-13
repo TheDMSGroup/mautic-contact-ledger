@@ -11,6 +11,8 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
+use Doctrine\Common\Cache\FilesystemCache;
+use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Doctrine\DBAL\Types\Type;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
@@ -107,7 +109,7 @@ class LedgerEntryRepository extends CommonRepository
      *
      * @return array
      */
-    public function getDashboardRevenueWidgetData($params, $bySource = false)
+    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__)
     {
         $results = $financials = [];
 
@@ -139,32 +141,30 @@ class LedgerEntryRepository extends CommonRepository
         $selectExprCost    = $bySource ? ' cl.object_id,' : '';
 
         $f->leftJoin(
-                'ss',
-                "(SELECT cl.campaign_id,$selectExprCost SUM(cl.cost) AS cost
+            'ss',
+            "(SELECT cl.campaign_id,$selectExprCost SUM(cl.cost) AS cost
                        FROM contact_ledger cl
                        WHERE class_name = 'ContactSource'
                        GROUP BY cl.campaign_id$groupExprCost)",
-                'cl1',
-                "ss.campaign_id = cl1.campaign_id$conditionExprCost"
-            )
-        ;
+            'cl1',
+            "ss.campaign_id = cl1.campaign_id$conditionExprCost"
+        );
 
         // add revenue column
         $groupExprRev     = $bySource ? ', contactsource_id' : '';
         $conditionExprRev = $bySource ? ' AND ss.contactsource_id = cl2.contactsource_id' : '';
         $selectExprRev    = $bySource ? ' contactsource_id,' : '';
         $f->leftJoin(
-                'ss',
-                "(SELECT a.campaign_id,$selectExprRev SUM(a.revenue) AS revenue
+            'ss',
+            "(SELECT a.campaign_id,$selectExprRev SUM(a.revenue) AS revenue
                        FROM contact_ledger a
                        JOIN contactsource_stats
                             ON contactsource_stats.contact_id = a.contact_id
                        WHERE class_name = 'ContactClient'
                        GROUP BY campaign_id$groupExprRev)",
-                'cl2',
-                "ss.campaign_id = cl2.campaign_id$conditionExprRev"
-            )
-        ;
+            'cl2',
+            "ss.campaign_id = cl2.campaign_id$conditionExprRev"
+        );
 
         //add optional date conditionals
         if ($params['dateFrom']) {
@@ -202,22 +202,33 @@ class LedgerEntryRepository extends CommonRepository
         if (isset($params['limit'])) {
             $f->setMaxResults($params['limit']);
         }
+        // setup cache
+        $cache      = new FilesystemCache($cache_dir.'/sql');
+        $f->getConnection()->getConfiguration()->setResultCacheImpl($cache);
+        $stmt = $f->getConnection()->executeCacheQuery(
+            $f->getSQL(),
+            $f->getParameters(),
+            $f->getParameterTypes(),
+            new QueryCacheProfile(900, 'dashboard-revenue-queries', $cache)
+        );
+        $financials = $stmt->fetchAll();
+        $stmt->closeCursor();
 
-        $financials = $f->execute()->fetchAll();
+        // $financials = $f->execute()->fetchAll();
 
         foreach ($financials as $financial) {
             // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
-            $financial['revenue']   = floatval($financial['revenue']);
-            $financial['cost']      = floatval($financial['cost']);
-            $financial['gm']        = $financial['revenue'] - $financial['cost'];
-            $financial['margin']    = $financial['revenue'] ? number_format(
+            $financial['revenue'] = floatval($financial['revenue']);
+            $financial['cost']    = floatval($financial['cost']);
+            $financial['gm']      = $financial['revenue'] - $financial['cost'];
+            $financial['margin']  = $financial['revenue'] ? number_format(
                 ($financial['gm'] / $financial['revenue']) * 100,
                 2,
                 '.',
                 ','
             ) : 0;
-            $financial['ecpm']      = number_format($financial['gm'] / 1000, 4, '.', ',');
-            $result                 = [
+            $financial['ecpm']    = number_format($financial['gm'] / 1000, 4, '.', ',');
+            $result               = [
                 $financial['is_published'],
                 $financial['campaign_id'],
                 $financial['name'],
