@@ -111,143 +111,119 @@ class LedgerEntryRepository extends CommonRepository
      */
     public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__)
     {
-        $results = $financials = [];
-
-        // get financials from ledger based on returned Lead list
-        $f = $this->_em->getConnection()->createQueryBuilder();
-        $f->select(
-            "c.name,
-                    c.is_published,
-                    c.id AS campaign_id,
-                    ss.contactsource_id,
-                    cs.name AS source,
-                    SUM(IF(ss.type IS NOT NULL,1,0)) AS received,
-                    SUM(IF(ss.type IN ('accepted' , 'scrubbed'), 0, 1)) AS rejected,
-                    SUM(IF(ss.type = 'accepted',1,0)) AS converted,
-                    SUM(IF(ss.type = 'scrubbed',1,0)) AS scrubbed,
-                    cl1.cost,
-                    cl2.revenue"
-        )->from(MAUTIC_TABLE_PREFIX.'contactsource_stats', 'ss');
-
-        // join Campaign table to get name and publish status
-        $f->join('ss', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = ss.campaign_id');
-
-        // join Contact Source table to get source name
-        $f->join('ss', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = ss.contactsource_id');
-
-        // add cost column
-        $groupExprCost     = $bySource ? ', cl.object_id' : '';
-        $conditionExprCost = $bySource ? ' AND ss.contactsource_id = cl1.object_id' : '';
-        $selectExprCost    = $bySource ? ' cl.object_id,' : '';
-
-        $f->leftJoin(
-            'ss',
-            "(SELECT cl.campaign_id,$selectExprCost SUM(cl.cost) AS cost
-                       FROM contact_ledger cl
-                       WHERE class_name = 'ContactSource'
-                       GROUP BY cl.campaign_id$groupExprCost)",
-            'cl1',
-            "ss.campaign_id = cl1.campaign_id$conditionExprCost"
-        );
-
-        // add revenue column
-        $groupExprRev     = $bySource ? ', contactsource_id' : '';
-        $conditionExprRev = $bySource ? ' AND ss.contactsource_id = cl2.contactsource_id' : '';
-        $selectExprRev    = $bySource ? ' contactsource_id,' : '';
-        $f->leftJoin(
-            'ss',
-            "(SELECT a.campaign_id,$selectExprRev SUM(a.revenue) AS revenue
-                       FROM contact_ledger a
-                       JOIN contactsource_stats
-                            ON contactsource_stats.contact_id = a.contact_id
-                       WHERE class_name = 'ContactClient'
-                       GROUP BY campaign_id$groupExprRev)",
-            'cl2',
-            "ss.campaign_id = cl2.campaign_id$conditionExprRev"
-        );
-
-        //add optional date conditionals
-        if ($params['dateFrom']) {
-            $f->where(
-                $f->expr()->gte('ss.date_added', ':dateFrom')
-            );
-            $f->setParameter('dateFrom', $params['dateFrom']);
-        }
-
-        if ($params['dateTo']) {
-            $date = date_create($params['dateTo']);
-            date_add($date, date_interval_create_from_date_string('1 days'));
-            $params['dateTo'] = date_format($date, 'Y-m-d');
-            if (!$params['dateFrom']) {
-                $f->where(
-                    $f->expr()->lte('ss.date_added', ':dateTo')
-                );
-            } else {
-                $f->andWhere(
-                    $f->expr()->lte('ss.date_added', ':dateTo')
-                );
-            }
-            $f->setParameter('dateTo', $params['dateTo']);
-        }
-
-        // either by Campaign, or by campaign & source
+        $statBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $statBuilder
+            ->select(
+                'ss.campaign_id',
+                'c.is_published',
+                'c.name',
+                'SUM(IF(ss.type IS NULL                     , 0, 1)) AS received',
+                "SUM(IF(ss.type IN ('accepted' , 'scrubbed'), 0, 1)) AS rejected",
+                "SUM(IF(ss.type = 'accepted'                , 1, 0)) AS converted",
+                "SUM(IF(ss.type = 'scrubbed'                , 1, 0)) AS scrubbed",
+                'IFNULL(clc.cost, 0)                                 AS cost',
+                'IFNULL(clr.revenue, 0)                              AS revenue'
+            )
+            ->from(MAUTIC_TABLE_PREFIX.'contactsource_stats', 'ss')
+            ->join('ss', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = ss.campaign_id')
+            ->where('ss.date_added BETWEEN :dateFrom AND :dateTo')
+            ->groupBy('ss.campaign_id, c.is_published, c.name, clc.cost, clr.revenue')
+            ->orderBy('COUNT(ss.campaign_id)', 'ASC');
+        $costBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $costBuilder
+            ->select('lc.campaign_id', 'SUM(lc.cost) AS cost')
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'lc')
+            ->groupBy('lc.campaign_id');
+        $costJoinCond = 'clc.campaign_id = ss.campaign_id';
+        $revBuilder   = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $revBuilder
+            ->select('lr.campaign_id', 'SUM(lr.revenue) AS revenue')
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'lr')
+            ->groupBy('lr.campaign_id');
+        $revJoinCond = 'clr.campaign_id = ss.campaign_id';
         if ($bySource) {
-            $f->groupBy('ss.campaign_id, ss.contactsource_id');
-        } else {
-            $f->groupBy('ss.campaign_id');
+            $statBuilder
+                ->addSelect('ss.contactsource_id', 'cs.name as source')
+                ->join('ss', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = ss.contactsource_id')
+                ->addGroupBy('ss.contactsource_id, cs.name');
+            $costBuilder
+                ->addSelect('sc.contactsource_id')
+                ->innerJoin(
+                    'lc',
+                    'contactsource_stats',
+                    'sc',
+                    'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id'
+                )
+                ->addGroupBy('sc.contactsource_id');
+            $costJoinCond .= ' AND clc.contactsource_id = ss.contactsource_id';
+            $revBuilder
+                ->addSelect('sr.contactsource_id')
+                ->innerJoin(
+                    'lr',
+                    'contactsource_stats',
+                    'sr',
+                    'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id'
+                )
+                ->addGroupBy('sr.contactsource_id');
+            $revJoinCond .= ' AND clr.contactsource_id = ss.contactsource_id';
         }
-
-        $f->orderBy('COUNT(c.name)', 'ASC');
-
-        if (isset($params['limit'])) {
-            $f->setMaxResults($params['limit']);
+        $statBuilder
+            ->leftJoin('ss', '('.$costBuilder->getSQL().')', 'clc', $costJoinCond)
+            ->leftJoin('ss', '('.$revBuilder->getSQL().')', 'clr', $revJoinCond);
+        $dateFrom = new \DateTime(isset($params['dateFrom']) ? $params['dateFrom'] : '-30 days');
+        $dateTo   = new \DateTime(isset($params['dateTo']) ? $params['dateTo'] : 'tomorrow -1 second');
+        $statBuilder
+            ->setParameter('dateFrom', $dateFrom->format('Y-m-d H:i:s'))
+            ->setParameter('dateTo', $dateTo->format('Y-m-d H:i:s'));
+        if (isset($params['limit']) && (0 < $params['limit'])) {
+            $statBuilder->setMaxResults($params['limit']);
         }
+        $results = ['rows' => []];
+
         // setup cache
-        $cache      = new FilesystemCache($cache_dir.'/sql');
-        $f->getConnection()->getConfiguration()->setResultCacheImpl($cache);
-        $stmt = $f->getConnection()->executeCacheQuery(
-            $f->getSQL(),
-            $f->getParameters(),
-            $f->getParameterTypes(),
+        $cache = new FilesystemCache($cache_dir.'/sql');
+        $statBuilder->getConnection()->getConfiguration()->setResultCacheImpl($cache);
+        $stmt       = $statBuilder->getConnection()->executeCacheQuery(
+            $statBuilder->getSQL(),
+            $statBuilder->getParameters(),
+            $statBuilder->getParameterTypes(),
             new QueryCacheProfile(900, 'dashboard-revenue-queries', $cache)
         );
         $financials = $stmt->fetchAll();
         $stmt->closeCursor();
-
-        // $financials = $f->execute()->fetchAll();
-
         foreach ($financials as $financial) {
             // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
-            $financial['revenue'] = floatval($financial['revenue']);
-            $financial['cost']    = floatval($financial['cost']);
-            $financial['gm']      = $financial['revenue'] - $financial['cost'];
-            $financial['margin']  = $financial['revenue'] ? number_format(
-                ($financial['gm'] / $financial['revenue']) * 100,
-                2,
-                '.',
-                ','
-            ) : 0;
-            $financial['ecpm']    = number_format($financial['gm'] / 1000, 4, '.', ',');
-            $result               = [
+            $financial['revenue']      = floatval($financial['revenue']);
+            $financial['cost']         = floatval($financial['cost']);
+            $financial['gross_income'] = $financial['revenue'] - $financial['cost'];
+
+            if ($financial['gross_income'] > 0) {
+                $financial['gross_margin'] = 100 * $financial['gross_income'] / $financial['revenue'];
+                $financial['ecpm']         = $financial['gross_income'] / 1000;
+            } else {
+                $financial['gross_margin'] = 0;
+                $financial['ecpm']         = 0;
+            }
+
+            $result = [
                 $financial['is_published'],
                 $financial['campaign_id'],
                 $financial['name'],
-                $financial['contactsource_id'],
-                $financial['source'],
-                intval($financial['received']),
-                intval($financial['scrubbed']),
-                intval($financial['rejected']),
-                intval($financial['converted']),
-                $financial['revenue'],
-                $financial['cost'],
-                $financial['gm'],
-                $financial['margin'],
-                $financial['ecpm'],
             ];
-            if (!$bySource) {
-                unset($result[3], $result[4]);
-                $result = array_values($result);
+            if ($bySource) {
+                $result[] = $financial['contactsource_id'];
+                $result[] = $financial['source'];
             }
+            $result[] = $financial['received'];
+            $result[] = $financial['scrubbed'];
+            $result[] = $financial['rejected'];
+            $result[] = $financial['converted'];
+            $result[] = $financial['revenue'];
+            $result[] = $financial['cost'];
+            $result[] = $financial['gross_income'];
+            $result[] = $financial['gross_margin'];
+            $result[] = $financial['ecpm'];
+
             $results['rows'][] = $result;
         }
 

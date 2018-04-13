@@ -168,9 +168,9 @@ class AjaxController extends CommonAjaxController
             $from;
         $params['dateTo'] = (empty($to))
             ?
-            date('Y-m-d')
+            date('Y-m-d', strtotime('tomorrow -1 second'))
             :
-            $to;
+            date('Y-m-d 23:59:59', strtotime($to));
 
         return $params;
     }
