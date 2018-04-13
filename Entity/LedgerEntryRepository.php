@@ -130,16 +130,16 @@ class LedgerEntryRepository extends CommonRepository
 
         $costBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $costBuilder
-            ->select('campaign_id', 'SUM(cost) AS cost')
-            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger')
-            ->groupBy('campaign_id');
+            ->select('lc.campaign_id', 'SUM(lc.cost) AS cost')
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'lc')
+            ->groupBy('lc.campaign_id');
         $costJoinCond = 'clc.campaign_id = ss.campaign_id';
 
         $revBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $revBuilder
-            ->select('l.campaign_id', 'SUM(l.revenue) AS revenue')
-            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'l')
-            ->groupBy('l.campaign_id');
+            ->select('lr.campaign_id', 'SUM(lr.revenue) AS revenue')
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'lr')
+            ->groupBy('lr.campaign_id');
         $revJoinCond = 'clr.campaign_id = ss.campaign_id';
 
         if ($bySource) {
@@ -149,15 +149,15 @@ class LedgerEntryRepository extends CommonRepository
                 ->addGroupBy('ss.contactsource_id, cs.name');
 
             $costBuilder
-                ->addSelect('object_id AS contactsource_id')
-                ->where("class_name = 'ContactSource'")
-                ->addGroupBy('object_id');
+                ->addSelect('sc.contactsource_id')
+                ->innerJoin('lc', 'contactsource_stats', 'sc', 'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id')
+                ->addGroupBy('sc.contactsource_id');
             $costJoinCond .= ' AND clc.contactsource_id = ss.contactsource_id';
 
             $revBuilder
-                ->addSelect('s.contactsource_id')
-                ->innerJoin('l', 'contactsource_stats', 's', 'l.campaign_id = s.campaign_id AND l.contact_id = s.contact_id')
-                ->addGroupBy('s.contactsource_id');
+                ->addSelect('sr.contactsource_id')
+                ->innerJoin('lr', 'contactsource_stats', 'sr', 'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id')
+                ->addGroupBy('sr.contactsource_id');
             $revJoinCond .= ' AND clr.contactsource_id = ss.contactsource_id';
         }
 
@@ -171,10 +171,12 @@ class LedgerEntryRepository extends CommonRepository
             ->setParameter('dateFrom', $dateFrom->format('Y-m-d H:i:s'))
             ->setParameter('dateTo', $dateTo->format('Y-m-d H:i:s'));
 
-        if (isset($params['limit'])) {
+        if (isset($params['limit']) && (0 < $params['limit'])) {
             $statBuilder->setMaxResults($params['limit']);
         }
 
+
+        $results = ['rows' => []];
         $financials = $statBuilder->execute()->fetchAll();
 
         foreach ($financials as $financial) {
