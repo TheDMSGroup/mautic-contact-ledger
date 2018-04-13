@@ -32,7 +32,7 @@ class AjaxController extends CommonAjaxController
      */
     protected function globalRevenueAction(Request $request)
     {
-        $params = $this->getDateParams();
+        $params    = $this->getDateParams();
         $cache_dir =$this->container->getParameter('kernel.cache_dir');
 
         // Get the API payload to test.
@@ -75,7 +75,7 @@ class AjaxController extends CommonAjaxController
      */
     protected function sourceRevenueAction(Request $request)
     {
-        $params = $this->getDateParams();
+        $params    = $this->getDateParams();
         $cache_dir = $this->container->getParameter('kernel.cache_dir');
 
         // Get the API payload to test.
