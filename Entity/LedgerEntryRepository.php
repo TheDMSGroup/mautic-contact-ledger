@@ -191,13 +191,13 @@ class LedgerEntryRepository extends CommonRepository
         $stmt->closeCursor();
         foreach ($financials as $financial) {
             // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
-            $financial['revenue']      = floatval($financial['revenue']);
-            $financial['cost']         = floatval($financial['cost']);
-            $financial['gross_income'] = $financial['revenue'] - $financial['cost'];
+            $financial['revenue']      = number_format(floatval($financial['revenue']), 2, '.', ',');
+            $financial['cost']         = number_format(floatval($financial['cost']), 2, '.', ',');
+            $financial['gross_income'] = number_format($financial['revenue'] - $financial['cost'], 2, '.', ',');
 
             if ($financial['gross_income'] > 0) {
-                $financial['gross_margin'] = 100 * $financial['gross_income'] / $financial['revenue'];
-                $financial['ecpm']         = $financial['gross_income'] / 1000;
+                $financial['gross_margin'] = number_format(100 * $financial['gross_income'] / $financial['revenue'], 0, '.', ',');
+                $financial['ecpm']         = number_format($financial['gross_income'] / 1000, 4, '.', ',');
             } else {
                 $financial['gross_margin'] = 0;
                 $financial['ecpm']         = 0;
