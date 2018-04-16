@@ -170,7 +170,7 @@ class LedgerEntryRepository extends CommonRepository
         $statBuilder
             ->leftJoin('ss', '('.$costBuilder->getSQL().')', 'clc', $costJoinCond)
             ->leftJoin('ss', '('.$revBuilder->getSQL().')', 'clr', $revJoinCond);
-         $statBuilder
+        $statBuilder
             ->setParameter('dateFrom', $params['dateFrom'])
             ->setParameter('dateTo', $params['dateTo']);
         if (isset($params['limit']) && (0 < $params['limit'])) {

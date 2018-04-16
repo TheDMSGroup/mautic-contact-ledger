@@ -157,14 +157,15 @@ class AjaxController extends CommonAjaxController
 
     /**
      * Get date params from session / or set defaults
-     * and convert User timezone to UTC before sending to Queries
+     * and convert User timezone to UTC before sending to Queries.
      *
      * @return array
+     *
      * @throws \Exception
      */
     private function getDateParams()
     {
-        $params=[];
+        $params    =[];
         $lastMonth = new \DateTime();
         $lastMonth->sub(new \DateInterval('P30D'));
         $today    = new \DateTime();
