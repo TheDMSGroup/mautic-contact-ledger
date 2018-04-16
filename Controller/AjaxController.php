@@ -155,22 +155,33 @@ class AjaxController extends CommonAjaxController
         return $this->sendJsonResponse($response);
     }
 
+    /**
+     * Get date params from session / or set defaults
+     * and convert User timezone to UTC before sending to Queries
+     *
+     * @return array
+     * @throws \Exception
+     */
     private function getDateParams()
     {
         $params=[];
-        $from  = $this->request->getSession()->get('mautic.dashboard.date.from');
-        $to    = $this->request->getSession()->get('mautic.dashboard.date.to');
+        $lastMonth = new \DateTime();
+        $lastMonth->sub(new \DateInterval('P30D'));
+        $today    = new \DateTime();
 
-        $params['dateFrom'] = (empty($from))
-            ?
-            date('Y-m-d', strtotime('-30 days'))
-            :
-            $from;
-        $params['dateTo'] = (empty($to))
-            ?
-            date('Y-m-d', strtotime('tomorrow -1 second'))
-            :
-            date('Y-m-d 23:59:59', strtotime($to));
+        $from = new \DateTime($this->request->getSession()
+            ->get('mautic.dashboard.date.from', $lastMonth->format('Y-m-d 00:00:00')));
+        $from->setTimezone(new \DateTimeZone('UTC'));
+
+        $to   = new \DateTime($this->request->getSession()
+            ->get('mautic.dashboard.date.to', $today->format('Y-m-d')));
+        $to->add(new \DateInterval('P1D'))
+            ->sub(new \DateInterval('PT1S'))
+            ->setTimezone(new \DateTimeZone('UTC'));
+
+        $params['dateFrom'] = $from->format('Y-m-d H:i:s');
+
+        $params['dateTo'] = $to->format('Y-m-d H:i:s');
 
         return $params;
     }

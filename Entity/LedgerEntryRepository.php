@@ -170,11 +170,9 @@ class LedgerEntryRepository extends CommonRepository
         $statBuilder
             ->leftJoin('ss', '('.$costBuilder->getSQL().')', 'clc', $costJoinCond)
             ->leftJoin('ss', '('.$revBuilder->getSQL().')', 'clr', $revJoinCond);
-        $dateFrom = new \DateTime(isset($params['dateFrom']) ? $params['dateFrom'] : '-30 days');
-        $dateTo   = new \DateTime(isset($params['dateTo']) ? $params['dateTo'] : 'tomorrow -1 second');
-        $statBuilder
-            ->setParameter('dateFrom', $dateFrom->format('Y-m-d H:i:s'))
-            ->setParameter('dateTo', $dateTo->format('Y-m-d H:i:s'));
+         $statBuilder
+            ->setParameter('dateFrom', $params['dateFrom'])
+            ->setParameter('dateTo', $params['dateTo']);
         if (isset($params['limit']) && (0 < $params['limit'])) {
             $statBuilder->setMaxResults($params['limit']);
         }
