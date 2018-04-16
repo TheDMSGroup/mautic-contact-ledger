@@ -57,7 +57,7 @@ Mautic.loadSourceRevenueWidget = function () {
                                     },
                                     {visible: false, targets: [1, 3]},
                                     {width: '5%', targets: [0]},
-                                    {width: '20%', targets: [2]}
+                                    {width: '20%', targets: [2, 4]}
                                 ],
 
                                 footerCallback: function (row, data, start, end, display) {
