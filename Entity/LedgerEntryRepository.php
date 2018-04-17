@@ -170,11 +170,9 @@ class LedgerEntryRepository extends CommonRepository
         $statBuilder
             ->leftJoin('ss', '('.$costBuilder->getSQL().')', 'clc', $costJoinCond)
             ->leftJoin('ss', '('.$revBuilder->getSQL().')', 'clr', $revJoinCond);
-        $dateFrom = new \DateTime(isset($params['dateFrom']) ? $params['dateFrom'] : '-30 days');
-        $dateTo   = new \DateTime(isset($params['dateTo']) ? $params['dateTo'] : 'tomorrow -1 second');
         $statBuilder
-            ->setParameter('dateFrom', $dateFrom->format('Y-m-d H:i:s'))
-            ->setParameter('dateTo', $dateTo->format('Y-m-d H:i:s'));
+            ->setParameter('dateFrom', $params['dateFrom'])
+            ->setParameter('dateTo', $params['dateTo']);
         if (isset($params['limit']) && (0 < $params['limit'])) {
             $statBuilder->setMaxResults($params['limit']);
         }
@@ -193,13 +191,13 @@ class LedgerEntryRepository extends CommonRepository
         $stmt->closeCursor();
         foreach ($financials as $financial) {
             // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
-            $financial['revenue']      = floatval($financial['revenue']);
-            $financial['cost']         = floatval($financial['cost']);
-            $financial['gross_income'] = $financial['revenue'] - $financial['cost'];
+            $financial['revenue']      = number_format(floatval($financial['revenue']), 2, '.', ',');
+            $financial['cost']         = number_format(floatval($financial['cost']), 2, '.', ',');
+            $financial['gross_income'] = number_format($financial['revenue'] - $financial['cost'], 2, '.', ',');
 
             if ($financial['gross_income'] > 0) {
-                $financial['gross_margin'] = 100 * $financial['gross_income'] / $financial['revenue'];
-                $financial['ecpm']         = $financial['gross_income'] / 1000;
+                $financial['gross_margin'] = number_format(100 * $financial['gross_income'] / $financial['revenue'], 0, '.', ',');
+                $financial['ecpm']         = number_format($financial['gross_income'] / 1000, 4, '.', ',');
             } else {
                 $financial['gross_margin'] = 0;
                 $financial['ecpm']         = 0;
