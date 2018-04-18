@@ -16,6 +16,7 @@ use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Doctrine\DBAL\Types\Type;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
+use Mautic\CoreBundle\Helper\Chart\ChartQuery;
 
 /**
  * Class LedgerEntryRepository.
@@ -62,17 +63,24 @@ class LedgerEntryRepository extends CommonRepository
         $results        = [];
         $resultDateTime = null;
         $results        = [];
+        $unit = $this->getTimeUnitFromDateRange($dateFrom, $dateTo);
+
 
         $sqlFrom = new \DateTime($dateFrom->format('Y-m-d'));
-        $sqlFrom->modify('midnight');
+        $sqlFrom->modify('midnight')->setTimeZone(new \DateTimeZone('UTC'));
 
         $sqlTo = new \DateTime($dateTo->format('Y-m-d'));
-        $sqlTo->modify('midnight +1 day');
+        $sqlTo->modify('midnight +1 day')->setTimeZone(new \DateTimeZone('UTC'));
 
         $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $chartQueryHelper = new ChartQuery($builder->getConnection(), $sqlFrom, $sqlTo, $unit);
+        $dbunit = $chartQueryHelper->translateTimeUnit($unit);
+        $userTZ     = new \DateTime('now');
+        $interval   = abs($userTZ->getOffset() / 3600);
+
         $builder
             ->select(
-                'DATE_FORMAT(date_added, "%Y%m%d")           as label',
+                "DATE_FORMAT(DATE_SUB(date_added, INTERVAL $interval HOUR), '$dbunit')           as label",
                 'SUM(IFNULL(cost, 0.0))                      as cost',
                 'SUM(IFNULL(revenue, 0.0))                   as revenue',
                 'SUM(IFNULL(revenue, 0.0))-SUM(IFNULL(cost, 0.0)) as profit'
@@ -82,9 +90,12 @@ class LedgerEntryRepository extends CommonRepository
                 $builder->expr()->eq('?', 'campaign_id'),
                 $builder->expr()->lte('?', 'date_added'),
                 $builder->expr()->gt('?', 'date_added')
-            )
-            ->groupBy('label')
+            );
+
+        $builder->groupBy("DATE_FORMAT(date_added, '$dbunit')")
+
             ->orderBy('label', 'ASC');
+
 
         $stmt = $this->getEntityManager()->getConnection()->prepare(
             $builder->getSQL()
@@ -226,5 +237,45 @@ class LedgerEntryRepository extends CommonRepository
         }
 
         return $results;
+    }
+
+    /**
+     * Returns appropriate time unit from a date range so the line/bar charts won't be too full/empty.
+     *
+     * @param $dateFrom
+     * @param $dateTo
+     *
+     * @return string
+     */
+    public function getTimeUnitFromDateRange($dateFrom, $dateTo)
+    {
+        $dayDiff = $dateTo->diff($dateFrom)->format('%a');
+        $unit    = 'd';
+
+        if ($dayDiff <= 1) {
+            $unit = 'H';
+
+            $sameDay    = $dateTo->format('d') == $dateFrom->format('d') ? 1 : 0;
+            $hourDiff   = $dateTo->diff($dateFrom)->format('%h');
+            $minuteDiff = $dateTo->diff($dateFrom)->format('%i');
+            if ($sameDay && !intval($hourDiff) && intval($minuteDiff)) {
+                $unit = 'i';
+            }
+            $secondDiff = $dateTo->diff($dateFrom)->format('%s');
+            if (!intval($minuteDiff) && intval($secondDiff)) {
+                $unit = 'm';
+            }
+        }
+        if ($dayDiff > 31) {
+            $unit = 'W';
+        }
+        if ($dayDiff > 100) {
+            $unit = 'm';
+        }
+        if ($dayDiff > 1000) {
+            $unit = 'Y';
+        }
+
+        return $unit;
     }
 }

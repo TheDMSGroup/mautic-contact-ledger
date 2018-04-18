@@ -145,36 +145,14 @@ class LedgerEntryModel extends AbstractCommonModel
 
         if (!empty($data)) {
             $defaultDollars = self::formatDollar(0);
-            $result         = array_shift($data);
-            $resultDateTime = new \DateTime($result['label']);
+           foreach($data as $item) {
+                $labels[] = $item['label'];
 
-            // iterate over range steps
-            $labelDateTime = new \DateTime($dateFrom->format('Ymd'));
-            while ($dateTo >= $labelDateTime) {
-                $labels[] = $labelDateTime->format('M j, y');
-
-                if ($labelDateTime == $resultDateTime) {
-                    // record match
-                    $costs[]    = self::formatDollar(-$result['cost']);
-                    $revenues[] = self::formatDollar($result['revenue']);
-                    $profits[]  = self::formatDollar($result['profit']);
-
-                    // prep next entry
-                    if (!empty($data)) {
-                        $result         = array_shift($data);
-                        $resultDateTime = new \DateTime($result['label']);
-                    }
-                } else {
-                    $costs[]    = $defaultDollars;
-                    $revenues[] = $defaultDollars;
-                    $profits[]  = $defaultDollars;
-                }
-
-                $labelDateTime->modify('+1 day');
+                $costs[]    = self::formatDollar(-$item['cost']);
+                $revenues[] = self::formatDollar($item['revenue']);
+                $profits[]  = self::formatDollar($item['profit']);
             }
 
-            //undo change for inclusive filters
-            $dateTo->modify('-1 second');
             $chartData = [
                 'labels'   => $labels,
                 'datasets' => [
@@ -225,7 +203,7 @@ class LedgerEntryModel extends AbstractCommonModel
         $results =  $this->getRepository()->getCampaignRevenueData($campaign, $dateFrom, $dateTo);
 
         foreach ($results as $result) {
-            $result['label']   = \DateTime::createFromFormat('Ymd', $result['label'])->format('m/d/Y');
+            $result['label']   = $result['label'];
             $result['cost']    = self::formatDollar($result['cost']);
             $result['revenue'] = self::formatDollar($result['revenue']);
             $result['profit']  = self::formatDollar($result['profit']);
