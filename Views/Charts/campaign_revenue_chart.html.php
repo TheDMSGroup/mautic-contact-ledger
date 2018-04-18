@@ -65,6 +65,15 @@ $params .= '&date_from='.urlencode($dateRangeForm['date_from']->vars['value']);
             {'data': 'cost'},
             {'data': 'revenue'},
             {'data': 'profit'}
+        ],
+        'columnDefs': [
+            {
+                render: function (data, type, row) {
+                    console.log(parseFloat(data, 10), data);
+                    return parseFloat(data, 10).toFixed(2);
+                },
+                targets: [1, 2, 3]
+            }
         ]
     };
 </script>
