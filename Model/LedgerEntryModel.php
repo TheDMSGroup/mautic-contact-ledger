@@ -145,7 +145,7 @@ class LedgerEntryModel extends AbstractCommonModel
 
         if (!empty($data)) {
             $defaultDollars = self::formatDollar(0);
-           foreach($data as $item) {
+            foreach ($data as $item) {
                 $labels[] = $item['label'];
 
                 $costs[]    = self::formatDollar(-$item['cost']);

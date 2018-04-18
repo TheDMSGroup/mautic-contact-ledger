@@ -63,8 +63,7 @@ class LedgerEntryRepository extends CommonRepository
         $results        = [];
         $resultDateTime = null;
         $results        = [];
-        $unit = $this->getTimeUnitFromDateRange($dateFrom, $dateTo);
-
+        $unit           = $this->getTimeUnitFromDateRange($dateFrom, $dateTo);
 
         $sqlFrom = new \DateTime($dateFrom->format('Y-m-d'));
         $sqlFrom->modify('midnight')->setTimeZone(new \DateTimeZone('UTC'));
@@ -72,11 +71,11 @@ class LedgerEntryRepository extends CommonRepository
         $sqlTo = new \DateTime($dateTo->format('Y-m-d'));
         $sqlTo->modify('midnight +1 day')->setTimeZone(new \DateTimeZone('UTC'));
 
-        $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $builder          = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $chartQueryHelper = new ChartQuery($builder->getConnection(), $sqlFrom, $sqlTo, $unit);
-        $dbunit = $chartQueryHelper->translateTimeUnit($unit);
-        $userTZ     = new \DateTime('now');
-        $interval   = abs($userTZ->getOffset() / 3600);
+        $dbunit           = $chartQueryHelper->translateTimeUnit($unit);
+        $userTZ           = new \DateTime('now');
+        $interval         = abs($userTZ->getOffset() / 3600);
 
         $builder
             ->select(
@@ -95,7 +94,6 @@ class LedgerEntryRepository extends CommonRepository
         $builder->groupBy("DATE_FORMAT(date_added, '$dbunit')")
 
             ->orderBy('label', 'ASC');
-
 
         $stmt = $this->getEntityManager()->getConnection()->prepare(
             $builder->getSQL()

@@ -85,7 +85,6 @@ class CustomContentSubscriber extends CommonSubscriber
         switch ($event->getViewName()) {
             case 'MauticCampaignBundle:Campaign:details.html.php':
                 if ('left.section.top' === $event->getContext()) {
-
                     /** @var \DateTime[] $dateRange */
                     $dateRange = $this->request->request->get('daterange', []);
 
