@@ -74,6 +74,7 @@ $params .= '&date_from='.urlencode($dateRangeForm['date_from']->vars['value']);
                 targets: [1, 2, 3]
             }
         ],
+        'aaSorting': [],
         'autoFill': true,
         'footerCallback': function (row, data, start, end, display) {
             // Add table footer if it doesnt exist

@@ -74,12 +74,20 @@ class LedgerEntryRepository extends CommonRepository
         $builder          = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $chartQueryHelper = new ChartQuery($builder->getConnection(), $sqlFrom, $sqlTo, $unit);
         $dbunit           = $chartQueryHelper->translateTimeUnit($unit);
+        $dbunit           = $dbunit == '%Y %U' ? '%Y week %u' : $dbunit;
+        $dbunit           = $dbunit == '%Y-%m' ? '%M %Y' : $dbunit;
+
         $userTZ           = new \DateTime('now');
         $interval         = abs($userTZ->getOffset() / 3600);
+        $selectExpr       = !in_array($unit, ['H', 'i', 's']) ?
+            "DATE_FORMAT(date_added,  '$dbunit')           as label" :
+            "DATE_FORMAT(DATE_SUB(date_added, INTERVAL $interval HOUR), '$dbunit')           as label";
+
+
 
         $builder
             ->select(
-                "DATE_FORMAT(DATE_SUB(date_added, INTERVAL $interval HOUR), '$dbunit')           as label",
+                $selectExpr,
                 'SUM(IFNULL(cost, 0.0))                      as cost',
                 'SUM(IFNULL(revenue, 0.0))                   as revenue',
                 'SUM(IFNULL(revenue, 0.0))-SUM(IFNULL(cost, 0.0)) as profit'
@@ -107,6 +115,11 @@ class LedgerEntryRepository extends CommonRepository
 
         if (0 < $stmt->rowCount()) {
             $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        // fix when only 1 result
+        if(count($results)==1){
+            $results = $this->fixSingleResultForCharts($results, $unit, $dbunit);
         }
 
         return $results;
@@ -261,7 +274,7 @@ class LedgerEntryRepository extends CommonRepository
             }
             $secondDiff = $dateTo->diff($dateFrom)->format('%s');
             if (!intval($minuteDiff) && intval($secondDiff)) {
-                $unit = 'm';
+                $unit = 'i';
             }
         }
         if ($dayDiff > 31) {
@@ -275,5 +288,35 @@ class LedgerEntryRepository extends CommonRepository
         }
 
         return $unit;
+    }
+
+    protected function fixSingleResultForCharts($results, $unit, $dbunit)
+    {
+        $unitStrings = [
+            'H' => '1 Hour',
+            'W' => '1 Week',
+            'D' => '1 Day',
+            'm' => '1 Month',
+            'i' => '1 Minute',
+            's' => '1 Second',
+            'Y' => '1 Year'
+        ];
+
+        $unitBefore = date_sub(new \DateTime($results[0]['label']), date_interval_create_from_date_string($unitStrings[$unit]));
+        $unitAfter = date_add(new \DateTime($results[0]['label']), date_interval_create_from_date_string($unitStrings[$unit]));
+        array_unshift($results,[
+            'cost' => "0",
+            'label' => $unitBefore->format(str_replace('%', '', $dbunit)),
+            'profit' => "0",
+            'revenue' => "0"
+        ]);
+        array_push($results,[
+            'cost' => "0",
+            'label' => $unitAfter->format(str_replace('%', '', $dbunit)),
+            'profit' => "0",
+            'revenue' => "0"
+        ]);
+
+        return $results;
     }
 }

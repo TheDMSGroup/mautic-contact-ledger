@@ -28,7 +28,7 @@ class LedgerEntryModel extends AbstractCommonModel
      */
     public static function formatDollar($dollarValue)
     {
-        return sprintf('%0.3f', floatval($dollarValue));
+        return sprintf('%0.2f', floatval($dollarValue));
     }
 
     /**
