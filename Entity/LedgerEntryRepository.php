@@ -74,16 +74,14 @@ class LedgerEntryRepository extends CommonRepository
         $builder          = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $chartQueryHelper = new ChartQuery($builder->getConnection(), $sqlFrom, $sqlTo, $unit);
         $dbunit           = $chartQueryHelper->translateTimeUnit($unit);
-        $dbunit           = $dbunit == '%Y %U' ? '%Y week %u' : $dbunit;
-        $dbunit           = $dbunit == '%Y-%m' ? '%M %Y' : $dbunit;
+        $dbunit           = '%Y %U' == $dbunit ? '%Y week %u' : $dbunit;
+        $dbunit           = '%Y-%m' == $dbunit ? '%M %Y' : $dbunit;
 
         $userTZ           = new \DateTime('now');
         $interval         = abs($userTZ->getOffset() / 3600);
         $selectExpr       = !in_array($unit, ['H', 'i', 's']) ?
             "DATE_FORMAT(date_added,  '$dbunit')           as label" :
             "DATE_FORMAT(DATE_SUB(date_added, INTERVAL $interval HOUR), '$dbunit')           as label";
-
-
 
         $builder
             ->select(
@@ -118,7 +116,7 @@ class LedgerEntryRepository extends CommonRepository
         }
 
         // fix when only 1 result
-        if(count($results)==1){
+        if (1 == count($results)) {
             $results = $this->fixSingleResultForCharts($results, $unit, $dbunit);
         }
 
@@ -299,22 +297,22 @@ class LedgerEntryRepository extends CommonRepository
             'm' => '1 Month',
             'i' => '1 Minute',
             's' => '1 Second',
-            'Y' => '1 Year'
+            'Y' => '1 Year',
         ];
 
         $unitBefore = date_sub(new \DateTime($results[0]['label']), date_interval_create_from_date_string($unitStrings[$unit]));
-        $unitAfter = date_add(new \DateTime($results[0]['label']), date_interval_create_from_date_string($unitStrings[$unit]));
-        array_unshift($results,[
-            'cost' => "0",
-            'label' => $unitBefore->format(str_replace('%', '', $dbunit)),
-            'profit' => "0",
-            'revenue' => "0"
+        $unitAfter  = date_add(new \DateTime($results[0]['label']), date_interval_create_from_date_string($unitStrings[$unit]));
+        array_unshift($results, [
+            'cost'    => '0',
+            'label'   => $unitBefore->format(str_replace('%', '', $dbunit)),
+            'profit'  => '0',
+            'revenue' => '0',
         ]);
-        array_push($results,[
-            'cost' => "0",
-            'label' => $unitAfter->format(str_replace('%', '', $dbunit)),
-            'profit' => "0",
-            'revenue' => "0"
+        array_push($results, [
+            'cost'    => '0',
+            'label'   => $unitAfter->format(str_replace('%', '', $dbunit)),
+            'profit'  => '0',
+            'revenue' => '0',
         ]);
 
         return $results;
