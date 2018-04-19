@@ -10,6 +10,17 @@ Mautic.loadCampaignRevenueWidget = function () {
     });
 }; //loadCampaignRevenueWidget
 
+function FormatFooter (column, value, index) {
+    column = column.trim();
+    var numFormat = mQuery.fn.dataTable.render.number(',', '.', 0).display;
+    var curFormat = mQuery.fn.dataTable.render.number(',', '.', 2, '$').display;
+    var curPreciseFormat = mQuery.fn.dataTable.render.number(',', '.', 4, '$').display;
+    if (column === 'Revenue' || column === 'Cost' || column === 'Profit') {
+        return curFormat(value);
+    }
+    return numFormat(value);
+}
+
 // getScriptCachedOnce for faster page loads in the backend.
 mQuery.getScriptCachedOnce = function (url, callback) {
     if (
