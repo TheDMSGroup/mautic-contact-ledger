@@ -57,22 +57,28 @@ class LedgerEntryRepository extends CommonRepository
      *
      * @return array
      */
-    public function getCampaignRevenueData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
+    public function getCampaignRevenueData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo, $unit, $dbunit)
     {
-        $results        = [];
         $resultDateTime = null;
         $results        = [];
 
         $sqlFrom = new \DateTime($dateFrom->format('Y-m-d'));
-        $sqlFrom->modify('midnight');
+        $sqlFrom->modify('midnight')->setTimeZone(new \DateTimeZone('UTC'));
 
         $sqlTo = new \DateTime($dateTo->format('Y-m-d'));
-        $sqlTo->modify('midnight +1 day');
+        $sqlTo->modify('midnight +1 day')->setTimeZone(new \DateTimeZone('UTC'));
 
         $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+
+        $userTZ     = new \DateTime('now');
+        $interval   = abs($userTZ->getOffset() / 3600);
+        $selectExpr = !in_array($unit, ['H', 'i', 's']) ?
+            "DATE_FORMAT(date_added,  '$dbunit')           as label" :
+            "DATE_FORMAT(DATE_SUB(date_added, INTERVAL $interval HOUR), '$dbunit')           as label";
+
         $builder
             ->select(
-                'DATE_FORMAT(date_added, "%Y%m%d")           as label',
+                $selectExpr,
                 'SUM(IFNULL(cost, 0.0))                      as cost',
                 'SUM(IFNULL(revenue, 0.0))                   as revenue',
                 'SUM(IFNULL(revenue, 0.0))-SUM(IFNULL(cost, 0.0)) as profit'
@@ -82,8 +88,9 @@ class LedgerEntryRepository extends CommonRepository
                 $builder->expr()->eq('?', 'campaign_id'),
                 $builder->expr()->lte('?', 'date_added'),
                 $builder->expr()->gt('?', 'date_added')
-            )
-            ->groupBy('label')
+            );
+
+        $builder->groupBy("DATE_FORMAT(date_added, '$dbunit')")
             ->orderBy('label', 'ASC');
 
         $stmt = $this->getEntityManager()->getConnection()->prepare(
@@ -196,7 +203,12 @@ class LedgerEntryRepository extends CommonRepository
             $financial['gross_income'] = number_format($financial['revenue'] - $financial['cost'], 2, '.', ',');
 
             if ($financial['gross_income'] > 0) {
-                $financial['gross_margin'] = number_format(100 * $financial['gross_income'] / $financial['revenue'], 0, '.', ',');
+                $financial['gross_margin'] = number_format(
+                    100 * $financial['gross_income'] / $financial['revenue'],
+                    0,
+                    '.',
+                    ','
+                );
                 $financial['ecpm']         = number_format($financial['gross_income'] / 1000, 4, '.', ',');
             } else {
                 $financial['gross_margin'] = 0;
