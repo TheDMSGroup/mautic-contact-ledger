@@ -16,7 +16,6 @@ use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Doctrine\DBAL\Types\Type;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
-use Mautic\CoreBundle\Helper\Chart\ChartQuery;
 
 /**
  * Class LedgerEntryRepository.
@@ -58,12 +57,10 @@ class LedgerEntryRepository extends CommonRepository
      *
      * @return array
      */
-    public function getCampaignRevenueData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
+    public function getCampaignRevenueData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo, $unit, $dbunit)
     {
-        $results        = [];
         $resultDateTime = null;
         $results        = [];
-        $unit           = $this->getTimeUnitFromDateRange($dateFrom, $dateTo);
 
         $sqlFrom = new \DateTime($dateFrom->format('Y-m-d'));
         $sqlFrom->modify('midnight')->setTimeZone(new \DateTimeZone('UTC'));
@@ -71,15 +68,11 @@ class LedgerEntryRepository extends CommonRepository
         $sqlTo = new \DateTime($dateTo->format('Y-m-d'));
         $sqlTo->modify('midnight +1 day')->setTimeZone(new \DateTimeZone('UTC'));
 
-        $builder          = $this->getEntityManager()->getConnection()->createQueryBuilder();
-        $chartQueryHelper = new ChartQuery($builder->getConnection(), $sqlFrom, $sqlTo, $unit);
-        $dbunit           = $chartQueryHelper->translateTimeUnit($unit);
-        $dbunit           = '%Y %U' == $dbunit ? '%Y week %u' : $dbunit;
-        $dbunit           = '%Y-%m' == $dbunit ? '%M %Y' : $dbunit;
+        $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
 
-        $userTZ           = new \DateTime('now');
-        $interval         = abs($userTZ->getOffset() / 3600);
-        $selectExpr       = !in_array($unit, ['H', 'i', 's']) ?
+        $userTZ     = new \DateTime('now');
+        $interval   = abs($userTZ->getOffset() / 3600);
+        $selectExpr = !in_array($unit, ['H', 'i', 's']) ?
             "DATE_FORMAT(date_added,  '$dbunit')           as label" :
             "DATE_FORMAT(DATE_SUB(date_added, INTERVAL $interval HOUR), '$dbunit')           as label";
 
@@ -98,7 +91,6 @@ class LedgerEntryRepository extends CommonRepository
             );
 
         $builder->groupBy("DATE_FORMAT(date_added, '$dbunit')")
-
             ->orderBy('label', 'ASC');
 
         $stmt = $this->getEntityManager()->getConnection()->prepare(
@@ -113,11 +105,6 @@ class LedgerEntryRepository extends CommonRepository
 
         if (0 < $stmt->rowCount()) {
             $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        }
-
-        // fix when only 1 result
-        if (1 == count($results)) {
-            $results = $this->fixSingleResultForCharts($results, $unit, $dbunit);
         }
 
         return $results;
@@ -216,7 +203,12 @@ class LedgerEntryRepository extends CommonRepository
             $financial['gross_income'] = number_format($financial['revenue'] - $financial['cost'], 2, '.', ',');
 
             if ($financial['gross_income'] > 0) {
-                $financial['gross_margin'] = number_format(100 * $financial['gross_income'] / $financial['revenue'], 0, '.', ',');
+                $financial['gross_margin'] = number_format(
+                    100 * $financial['gross_income'] / $financial['revenue'],
+                    0,
+                    '.',
+                    ','
+                );
                 $financial['ecpm']         = number_format($financial['gross_income'] / 1000, 4, '.', ',');
             } else {
                 $financial['gross_margin'] = 0;
@@ -244,76 +236,6 @@ class LedgerEntryRepository extends CommonRepository
 
             $results['rows'][] = $result;
         }
-
-        return $results;
-    }
-
-    /**
-     * Returns appropriate time unit from a date range so the line/bar charts won't be too full/empty.
-     *
-     * @param $dateFrom
-     * @param $dateTo
-     *
-     * @return string
-     */
-    public function getTimeUnitFromDateRange($dateFrom, $dateTo)
-    {
-        $dayDiff = $dateTo->diff($dateFrom)->format('%a');
-        $unit    = 'd';
-
-        if ($dayDiff <= 1) {
-            $unit = 'H';
-
-            $sameDay    = $dateTo->format('d') == $dateFrom->format('d') ? 1 : 0;
-            $hourDiff   = $dateTo->diff($dateFrom)->format('%h');
-            $minuteDiff = $dateTo->diff($dateFrom)->format('%i');
-            if ($sameDay && !intval($hourDiff) && intval($minuteDiff)) {
-                $unit = 'i';
-            }
-            $secondDiff = $dateTo->diff($dateFrom)->format('%s');
-            if (!intval($minuteDiff) && intval($secondDiff)) {
-                $unit = 'i';
-            }
-        }
-        if ($dayDiff > 31) {
-            $unit = 'W';
-        }
-        if ($dayDiff > 100) {
-            $unit = 'm';
-        }
-        if ($dayDiff > 1000) {
-            $unit = 'Y';
-        }
-
-        return $unit;
-    }
-
-    protected function fixSingleResultForCharts($results, $unit, $dbunit)
-    {
-        $unitStrings = [
-            'H' => '1 Hour',
-            'W' => '1 Week',
-            'D' => '1 Day',
-            'm' => '1 Month',
-            'i' => '1 Minute',
-            's' => '1 Second',
-            'Y' => '1 Year',
-        ];
-
-        $unitBefore = date_sub(new \DateTime($results[0]['label']), date_interval_create_from_date_string($unitStrings[$unit]));
-        $unitAfter  = date_add(new \DateTime($results[0]['label']), date_interval_create_from_date_string($unitStrings[$unit]));
-        array_unshift($results, [
-            'cost'    => '0',
-            'label'   => $unitBefore->format(str_replace('%', '', $dbunit)),
-            'profit'  => '0',
-            'revenue' => '0',
-        ]);
-        array_push($results, [
-            'cost'    => '0',
-            'label'   => $unitAfter->format(str_replace('%', '', $dbunit)),
-            'profit'  => '0',
-            'revenue' => '0',
-        ]);
 
         return $results;
     }

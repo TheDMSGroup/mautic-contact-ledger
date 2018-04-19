@@ -12,6 +12,7 @@
 namespace MauticPlugin\MauticContactLedgerBundle\Model;
 
 use Mautic\CampaignBundle\Entity\Campaign;
+use Mautic\CoreBundle\Helper\Chart\ChartQuery;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry;
@@ -21,16 +22,6 @@ use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry;
  */
 class LedgerEntryModel extends AbstractCommonModel
 {
-    /**
-     * @param mixed $dollarValue
-     *
-     * @return string
-     */
-    public static function formatDollar($dollarValue)
-    {
-        return sprintf('%0.2f', floatval($dollarValue));
-    }
-
     /**
      * @param Lead              $lead
      * @param Campaign|null     $campaign
@@ -139,9 +130,20 @@ class LedgerEntryModel extends AbstractCommonModel
     public function getCampaignRevenueChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
     {
         $chartData = ['labels' => [], 'datasets' => []];
-        $labels    = $costs    = $revenues    = $profits    = [];
+        $labels    = $costs = $revenues = $profits = [];
 
-        $data = $this->getRepository()->getCampaignRevenueData($campaign, $dateFrom, $dateTo);
+        $unit             = $this->getTimeUnitFromDateRange($dateFrom, $dateTo);
+        $chartQueryHelper = new ChartQuery($this->em->getConnection(), $dateFrom, $dateTo, $unit);
+        $dbunit           = $chartQueryHelper->translateTimeUnit($unit);
+        $dbunit           = '%Y %U' == $dbunit ? '%Y week %u' : $dbunit;
+        $dbunit           = '%Y-%m' == $dbunit ? '%M %Y' : $dbunit;
+
+        $data = $this->getRepository()->getCampaignRevenueData($campaign, $dateFrom, $dateTo, $unit, $dbunit);
+
+        // fix when only 1 result
+        if (1 == count($data)) {
+            $data = $this->fixSingleResultForCharts($data, $unit, $dbunit);
+        }
 
         if (!empty($data)) {
             $defaultDollars = self::formatDollar(0);
@@ -188,6 +190,106 @@ class LedgerEntryModel extends AbstractCommonModel
     }
 
     /**
+     * Returns appropriate time unit from a date range so the line/bar charts won't be too full/empty.
+     *
+     * @param $dateFrom
+     * @param $dateTo
+     *
+     * @return string
+     */
+    public function getTimeUnitFromDateRange($dateFrom, $dateTo)
+    {
+        $dayDiff = $dateTo->diff($dateFrom)->format('%a');
+        $unit    = 'd';
+
+        if ($dayDiff <= 1) {
+            $unit = 'H';
+
+            $sameDay    = $dateTo->format('d') == $dateFrom->format('d') ? 1 : 0;
+            $hourDiff   = $dateTo->diff($dateFrom)->format('%h');
+            $minuteDiff = $dateTo->diff($dateFrom)->format('%i');
+            if ($sameDay && !intval($hourDiff) && intval($minuteDiff)) {
+                $unit = 'i';
+            }
+            $secondDiff = $dateTo->diff($dateFrom)->format('%s');
+            if (!intval($minuteDiff) && intval($secondDiff)) {
+                $unit = 'i';
+            }
+        }
+        if ($dayDiff > 31) {
+            $unit = 'W';
+        }
+        if ($dayDiff > 100) {
+            $unit = 'm';
+        }
+        if ($dayDiff > 1000) {
+            $unit = 'Y';
+        }
+
+        return $unit;
+    }
+
+    /**
+     * @return bool|\Doctrine\ORM\EntityRepository|\MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository
+     */
+    public function getRepository()
+    {
+        return $this->em->getRepository('MauticContactLedgerBundle:LedgerEntry');
+    }
+
+    protected function fixSingleResultForCharts($results, $unit, $dbunit)
+    {
+        $unitStrings = [
+            'H' => '1 Hour',
+            'W' => '1 Week',
+            'D' => '1 Day',
+            'm' => '1 Month',
+            'i' => '1 Minute',
+            's' => '1 Second',
+            'Y' => '1 Year',
+        ];
+
+        $unitBefore = date_sub(
+            new \DateTime($results[0]['label']),
+            date_interval_create_from_date_string($unitStrings[$unit])
+        );
+        $unitAfter  = date_add(
+            new \DateTime($results[0]['label']),
+            date_interval_create_from_date_string($unitStrings[$unit])
+        );
+        array_unshift(
+            $results,
+            [
+                'cost'    => '0',
+                'label'   => $unitBefore->format(str_replace('%', '', $dbunit)),
+                'profit'  => '0',
+                'revenue' => '0',
+            ]
+        );
+        array_push(
+            $results,
+            [
+                'cost'    => '0',
+                'label'   => $unitAfter->format(str_replace('%', '', $dbunit)),
+                'profit'  => '0',
+                'revenue' => '0',
+            ]
+        );
+
+        return $results;
+    }
+
+    /**
+     * @param mixed $dollarValue
+     *
+     * @return string
+     */
+    public static function formatDollar($dollarValue)
+    {
+        return sprintf('%0.2f', floatval($dollarValue));
+    }
+
+    /**
      * @param Campaign  $campaign
      * @param \DateTime $dateFrom
      * @param \DateTime $dateTo
@@ -200,7 +302,13 @@ class LedgerEntryModel extends AbstractCommonModel
     {
         $response = [];
 
-        $results =  $this->getRepository()->getCampaignRevenueData($campaign, $dateFrom, $dateTo);
+        $unit             = $this->getTimeUnitFromDateRange($dateFrom, $dateTo);
+        $chartQueryHelper = new ChartQuery($this->em->getConnection(), $dateFrom, $dateTo, $unit);
+        $dbunit           = $chartQueryHelper->translateTimeUnit($unit);
+        $dbunit           = '%Y %U' == $dbunit ? '%Y week %u' : $dbunit;
+        $dbunit           = '%Y-%m' == $dbunit ? '%M %Y' : $dbunit;
+
+        $results = $this->getRepository()->getCampaignRevenueData($campaign, $dateFrom, $dateTo, $unit, $dbunit);
 
         foreach ($results as $result) {
             $result['label']   = $result['label'];
@@ -221,13 +329,5 @@ class LedgerEntryModel extends AbstractCommonModel
     public function getDashboardRevenueWidgetData($params)
     {
         return $this->getRepository()->getDashboardRevenueWidgetData($params);
-    }
-
-    /**
-     * @return bool|\Doctrine\ORM\EntityRepository|\MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository
-     */
-    public function getRepository()
-    {
-        return $this->em->getRepository('MauticContactLedgerBundle:LedgerEntry');
     }
 }
