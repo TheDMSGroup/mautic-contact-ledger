@@ -14,9 +14,6 @@
 <?php
 $params = $data['params'];
 ?>
-<script>
-    var globalWidgetHeight = <?php echo $data['height']; ?> ;
-</script>
 
 <div class="chart-wrapper">
     <div class="pt-sd pr-md pb-md pl-md">
@@ -30,3 +27,6 @@ $params = $data['params'];
         </div>
     </div>
 </div>
+<script>
+    Mautic.loadGlobalRevenueWidget(<?php echo $data['height']; ?>);
+</script>
