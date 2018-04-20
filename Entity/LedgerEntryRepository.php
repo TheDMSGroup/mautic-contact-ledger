@@ -50,7 +50,6 @@ class LedgerEntryRepository extends CommonRepository
         return 'cle';
     }
 
-
     /**
      * @param Campaign  $campaign
      * @param \DateTime $dateFrom
@@ -60,6 +59,7 @@ class LedgerEntryRepository extends CommonRepository
      * @param           $cache_dir
      *
      * @return array
+     *
      * @throws \Doctrine\DBAL\DBALException
      */
     public function getCampaignRevenueData(
