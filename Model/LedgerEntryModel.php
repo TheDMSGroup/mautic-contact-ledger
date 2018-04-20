@@ -131,6 +131,7 @@ class LedgerEntryModel extends AbstractCommonModel
     {
         $chartData = ['labels' => [], 'datasets' => []];
         $labels    = $costs = $revenues = $profits = [];
+        $cache_dir = $this->dispatcher->getContainer()->getParameter('kernel.cache_dir');
 
         $unit             = $this->getTimeUnitFromDateRange($dateFrom, $dateTo);
         $chartQueryHelper = new ChartQuery($this->em->getConnection(), $dateFrom, $dateTo, $unit);
@@ -138,7 +139,7 @@ class LedgerEntryModel extends AbstractCommonModel
         $dbunit           = '%Y %U' == $dbunit ? '%Y week %u' : $dbunit;
         $dbunit           = '%Y-%m' == $dbunit ? '%M %Y' : $dbunit;
 
-        $data = $this->getRepository()->getCampaignRevenueData($campaign, $dateFrom, $dateTo, $unit, $dbunit);
+        $data = $this->getRepository()->getCampaignRevenueData($campaign, $dateFrom, $dateTo, $unit, $dbunit, $cache_dir);
 
         // fix when only 1 result
         if (1 == count($data)) {
@@ -302,13 +303,15 @@ class LedgerEntryModel extends AbstractCommonModel
     {
         $response = [];
 
+        $cache_dir = $this->dispatcher->getContainer()->getParameter('kernel.cache_dir');
+
         $unit             = $this->getTimeUnitFromDateRange($dateFrom, $dateTo);
         $chartQueryHelper = new ChartQuery($this->em->getConnection(), $dateFrom, $dateTo, $unit);
         $dbunit           = $chartQueryHelper->translateTimeUnit($unit);
         $dbunit           = '%Y %U' == $dbunit ? '%Y week %u' : $dbunit;
         $dbunit           = '%Y-%m' == $dbunit ? '%M %Y' : $dbunit;
 
-        $results = $this->getRepository()->getCampaignRevenueData($campaign, $dateFrom, $dateTo, $unit, $dbunit);
+        $results = $this->getRepository()->getCampaignRevenueData($campaign, $dateFrom, $dateTo, $unit, $dbunit, $cache_dir);
 
         foreach ($results as $result) {
             $result['label']   = $result['label'];

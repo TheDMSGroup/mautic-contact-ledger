@@ -54,15 +54,25 @@ class LedgerEntryRepository extends CommonRepository
      * @param Campaign  $campaign
      * @param \DateTime $dateFrom
      * @param \DateTime $dateTo
+     * @param           $unit
+     * @param           $dbunit
+     * @param           $cache_dir
      *
      * @return array
+     *
+     * @throws \Doctrine\DBAL\DBALException
      */
-    public function getCampaignRevenueData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo, $unit, $dbunit)
-    {
+    public function getCampaignRevenueData(
+        Campaign $campaign,
+        \DateTime $dateFrom,
+        \DateTime $dateTo,
+        $unit,
+        $dbunit,
+        $cache_dir = __DIR__
+    ) {
         $resultDateTime = null;
         $results        = [];
-
-        $sqlFrom = new \DateTime($dateFrom->format('Y-m-d'));
+        $sqlFrom        = new \DateTime($dateFrom->format('Y-m-d'));
         $sqlFrom->modify('midnight')->setTimeZone(new \DateTimeZone('UTC'));
 
         $sqlTo = new \DateTime($dateTo->format('Y-m-d'));
@@ -85,27 +95,31 @@ class LedgerEntryRepository extends CommonRepository
             )
             ->from('contact_ledger')
             ->where(
-                $builder->expr()->eq('?', 'campaign_id'),
-                $builder->expr()->lte('?', 'date_added'),
-                $builder->expr()->gt('?', 'date_added')
+                $builder->expr()->eq(':campaign_id', 'campaign_id'),
+                $builder->expr()->lte(':fromDate', 'date_added'),
+                $builder->expr()->gt(':toDate', 'date_added')
             );
 
         $builder->groupBy("DATE_FORMAT(date_added, '$dbunit')")
             ->orderBy('label', 'ASC');
 
-        $stmt = $this->getEntityManager()->getConnection()->prepare(
-            $builder->getSQL()
+        // query the database
+        $builder->setParameter(':campaign_id', $campaign->getId(), Type::INTEGER);
+        $builder->setParameter(':fromDate', $sqlFrom, Type::DATETIME);
+        $builder->setParameter(':toDate', $sqlTo, Type::DATETIME);
+
+        $cache = new FilesystemCache($cache_dir.'/sql');
+
+        $stmt = $builder->getConnection()->executeCacheQuery(
+            $builder->getSQL(),
+            $builder->getParameters(),
+            $builder->getParameterTypes(),
+            new QueryCacheProfile(900, 'campaign-revenue-queries', $cache)
         );
 
-        // query the database
-        $stmt->bindValue(1, $campaign->getId(), Type::INTEGER);
-        $stmt->bindValue(2, $sqlFrom, Type::DATETIME);
-        $stmt->bindValue(3, $sqlTo, Type::DATETIME);
-        $stmt->execute();
+        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        if (0 < $stmt->rowCount()) {
-            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        }
+        $stmt->closeCursor();
 
         return $results;
     }
@@ -200,7 +214,12 @@ class LedgerEntryRepository extends CommonRepository
             // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
             $financial['revenue']      = number_format(floatval($financial['revenue']), 2, '.', ',');
             $financial['cost']         = number_format(floatval($financial['cost']), 2, '.', ',');
-            $financial['gross_income'] = number_format($financial['revenue'] - $financial['cost'], 2, '.', ',');
+            $financial['gross_income'] = number_format(
+                (float) $financial['revenue'] - (float) $financial['cost'],
+                2,
+                '.',
+                ','
+            );
 
             if ($financial['gross_income'] > 0) {
                 $financial['gross_margin'] = number_format(
@@ -209,7 +228,7 @@ class LedgerEntryRepository extends CommonRepository
                     '.',
                     ','
                 );
-                $financial['ecpm']         = number_format($financial['gross_income'] / 1000, 4, '.', ',');
+                $financial['ecpm']         = number_format((float) $financial['gross_income'] / 1000, 4, '.', ',');
             } else {
                 $financial['gross_margin'] = 0;
                 $financial['ecpm']         = 0;
