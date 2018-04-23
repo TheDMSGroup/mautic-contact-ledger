@@ -108,6 +108,8 @@ Mautic.loadGlobalRevenueWidget = function (globalWidgetHeight) {
                                                 footer1.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, pageSum, i));
                                                 footer2.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, sum, i));
                                             }
+                                            mQuery('#global-builder-overlay').hide();
+
                                         }
                                         catch (e) {
                                             console.log(e);
@@ -191,3 +193,8 @@ Mautic.loadGlobalRevenueWidget = function (globalWidgetHeight) {
         }
         callback();
     };
+
+
+mQuery(document).ready(function () {
+    Mautic.loadGlobalRevenueWidget(globalWidgetHeight);
+});
