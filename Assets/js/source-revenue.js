@@ -115,6 +115,8 @@ Mautic.loadSourceRevenueWidget = function (detailWidgetHeight) {
                                                 footer1.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, pageSum, i));
                                                 footer2.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, sum, i));
                                             }
+                                            mQuery('#source-builder-overlay').hide();
+
                                         }
                                         catch (e) {
                                             console.log(e);
@@ -122,7 +124,7 @@ Mautic.loadSourceRevenueWidget = function (detailWidgetHeight) {
                                     } // FooterCallback
                                 }); //.DataTables
                             } //success
-                        }); //ajax
+                        });//ajax
                     }); //getScriptsCachedOnce - fonteawesome css
                 });//getScriptsCachedOnce - datatables css
             });  //getScriptsCachedOnce - datatables js
@@ -203,6 +205,7 @@ mQuery.getCssOnce = function (url, callback) {
 };
 
 mQuery(document).ready(function () {
-    Mautic.loadSourceRevenueWidget();
+    Mautic.loadSourceRevenueWidget(detailWidgetHeight);
 });
+
 

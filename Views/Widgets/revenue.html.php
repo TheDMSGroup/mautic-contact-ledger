@@ -20,6 +20,7 @@ $params = $data['params'];
         <div id="campaign-revenue-table" style="height:<?php echo $data['height']; ?>px">
             <!-- Revenue By Campaign -->
             <div class="responsive-table">
+                <div id="global-builder-overlay"><div style="position: relative; top: <?php echo $data['height'] / 3; ?>px; left: 45%; index: 1024;display:inline-block;"><i class="fa fa-spinner fa-spin fa-5x"></i></div></div>
                 <table id="global-revenue" class="table table-striped table-bordered" width="100%">
                 </table>
             </div>
@@ -28,5 +29,6 @@ $params = $data['params'];
     </div>
 </div>
 <script>
-    Mautic.loadGlobalRevenueWidget(<?php echo $data['height']; ?>);
+    var globalWidgetHeight = <?php echo $data['height']; ?>;
+    Mautic.loadGlobalRevenueWidget(globalWidgetHeight);
 </script>
