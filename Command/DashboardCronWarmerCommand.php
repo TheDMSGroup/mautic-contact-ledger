@@ -3,7 +3,7 @@
  * Created by PhpStorm.
  * User: scottshipman
  * Date: 5/2/18
- * Time: 8:56 AM
+ * Time: 8:56 AM.
  */
 
 namespace MauticPlugin\MauticContactLedgerBundle\Command;
@@ -43,37 +43,36 @@ class DashboardCronWarmerCommand extends ModeratedCommand implements ContainerAw
             //return 0;
         }
 
-        $output->writeln("<info>Warming cache for Dashboard widgets...</info>");
+        $output->writeln('<info>Warming cache for Dashboard widgets...</info>');
         $timeStart = microtime(true);
 
-        $cache_dir = $container->getParameter('kernel.cache_dir');
+        $cache_dir    = $container->getParameter('kernel.cache_dir');
         $paramsEST    = $this->getDateParams('America/New_York');
         $paramsUTC    = $this->getDateParams('UTC');
-        $repo      = $container->get('mautic.contactledger.model.ledgerentry')->getRepository();
+        $repo         = $container->get('mautic.contactledger.model.ledgerentry')->getRepository();
 
         // Warm Just Campaign level widget for EST and UTC
-        $output->writeln("<info>    1) Warming Campaign Performance data.</info>");
-        $output->writeln("<info>        Using Params ".$paramsEST['dateFrom']." and ".$paramsEST['dateTo']." America/New_York.</info>");
+        $output->writeln('<info>    1) Warming Campaign Performance data.</info>');
+        $output->writeln('<info>        Using Params '.$paramsEST['dateFrom'].' and '.$paramsEST['dateTo'].' America/New_York.</info>');
         $repo->getDashboardRevenueWidgetData($paramsEST, false, $cache_dir);
-        $output->writeln("<info>        Using Params ".$paramsUTC['dateFrom']." and ".$paramsUTC['dateTo']." UTC.</info>");
+        $output->writeln('<info>        Using Params '.$paramsUTC['dateFrom'].' and '.$paramsUTC['dateTo'].' UTC.</info>');
         $repo->getDashboardRevenueWidgetData($paramsUTC, false, $cache_dir);
 
         // Warm Just Campaign By Source widget data for EST and UTC
-        $output->writeln("<info>    2) Warming Detailed Campaign By Source data.</info>");
-        $output->writeln("<info>        Using Params ".$paramsEST['dateFrom']." and ".$paramsEST['dateTo']." America/New_York.</info>");
+        $output->writeln('<info>    2) Warming Detailed Campaign By Source data.</info>');
+        $output->writeln('<info>        Using Params '.$paramsEST['dateFrom'].' and '.$paramsEST['dateTo'].' America/New_York.</info>');
         $repo->getDashboardRevenueWidgetData($paramsEST, true, $cache_dir);
-        $output->writeln("<info>        Using Params ".$paramsUTC['dateFrom']." and ".$paramsUTC['dateTo']." UTC.</info>");
+        $output->writeln('<info>        Using Params '.$paramsUTC['dateFrom'].' and '.$paramsUTC['dateTo'].' UTC.</info>');
         $repo->getDashboardRevenueWidgetData($paramsUTC, false, $cache_dir);
 
         $this->completeRun();
 
-        $output->writeln("<info>Complete With No Errors.</info>");
+        $output->writeln('<info>Complete With No Errors.</info>');
         $timeEnd     = microtime(true);
         $elapsedTime = $timeEnd - $timeStart;
         $output->writeln("<info>Total Execution Time: $elapsedTime.</info>");
 
         return 0;
-
     }
 
     /**
@@ -87,7 +86,7 @@ class DashboardCronWarmerCommand extends ModeratedCommand implements ContainerAw
     private function getDateParams($timezone)
     {
         $params    =[];
-        $from = new \DateTime('midnight', new \DateTimeZone($timezone));
+        $from      = new \DateTime('midnight', new \DateTimeZone($timezone));
         $from->sub(new \DateInterval('P30D'));
         $to    = new \DateTime('midnight', new \DateTimeZone($timezone));
 
@@ -103,5 +102,4 @@ class DashboardCronWarmerCommand extends ModeratedCommand implements ContainerAw
 
         return $params;
     }
-
 }
