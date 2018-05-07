@@ -156,7 +156,7 @@ class AjaxController extends CommonAjaxController
     }
 
     /**
-     * Get date params from session / or set defaults
+     * Get date params and set defaults
      * and convert User timezone to UTC before sending to Queries.
      *
      * @return array
@@ -170,12 +170,10 @@ class AjaxController extends CommonAjaxController
         $lastMonth->sub(new \DateInterval('P30D'));
         $today    = new \DateTime();
 
-        $from = new \DateTime($this->request->getSession()
-            ->get('mautic.dashboard.date.from', $lastMonth->format('Y-m-d 00:00:00')));
+        $from = new \DateTime($lastMonth->format('Y-m-d 00:00:00'));
         $from->setTimezone(new \DateTimeZone('UTC'));
 
-        $to   = new \DateTime($this->request->getSession()
-            ->get('mautic.dashboard.date.to', $today->format('Y-m-d')));
+        $to   = new \DateTime($today->format('Y-m-d'));
         $to->add(new \DateInterval('P1D'))
             ->sub(new \DateInterval('PT1S'))
             ->setTimezone(new \DateTimeZone('UTC'));
