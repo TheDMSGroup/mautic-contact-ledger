@@ -156,7 +156,7 @@ class AjaxController extends CommonAjaxController
     }
 
     /**
-     * Get date params from session / or set defaults
+     * Get date params and set defaults
      * and convert User timezone to UTC before sending to Queries.
      *
      * @return array
