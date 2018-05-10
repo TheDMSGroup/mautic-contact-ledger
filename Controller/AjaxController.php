@@ -171,11 +171,11 @@ class AjaxController extends CommonAjaxController
         $today    = new \DateTime();
 
         $from = new \DateTime($this->request->getSession()
--            ->get('mautic.dashboard.date.from', $lastMonth->format('Y-m-d 00:00:00')));
+            ->get('mautic.dashboard.date.from', $lastMonth->format('Y-m-d 00:00:00')));
         $from->setTimezone(new \DateTimeZone('UTC'));
 
         $to   = new \DateTime($this->request->getSession()
--            ->get('mautic.dashboard.date.to', $today->format('Y-m-d')));
+            ->get('mautic.dashboard.date.to', $today->format('Y-m-d')));
         $to->add(new \DateInterval('P1D'))
             ->sub(new \DateInterval('PT1S'))
             ->setTimezone(new \DateTimeZone('UTC'));
