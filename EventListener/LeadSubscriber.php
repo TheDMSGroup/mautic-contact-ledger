@@ -84,12 +84,13 @@ class LeadSubscriber extends CommonSubscriber
                 $campaign = $this->context ? $this->context->getCampaign() : null;
                 $actor    = $this->context ? $this->context->getActor() : null;
                 $activity = $this->context ? $this->context->getActivity() : null;
+                $memo     = $this->context ? $this->context->getMemo() : null;
 
                 if ($difference > 0) {
-                    $this->model->addEntry($lead, $campaign, $actor, $activity, null, $difference);
+                    $this->model->addEntry($lead, $campaign, $actor, $activity, null, $difference, $memo);
                 } else {
                     if ($difference < 0) {
-                        $this->model->addEntry($lead, $campaign, $actor, $activity, abs($difference));
+                        $this->model->addEntry($lead, $campaign, $actor, $activity, abs($difference), null, $memo);
                     }
                 }
 
