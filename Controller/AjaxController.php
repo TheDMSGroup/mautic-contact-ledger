@@ -38,9 +38,10 @@ class AjaxController extends CommonAjaxController
         // Get the API payload to test.
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
 
-        $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
-        $ledgerRepo = $entryModel->getRepository();
-        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, false, $cache_dir);
+        $em = $this->dispatcher->getContainer()->get('doctrine.orm.default_entity_manager');
+        $repo   = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats::class);
+
+        $data       = $repo->getDashboardRevenueWidgetData($params, false, $cache_dir);
 
         $headers    = [
             'mautic.contactledger.dashboard.revenue.header.active',
@@ -80,10 +81,10 @@ class AjaxController extends CommonAjaxController
 
         // Get the API payload to test.
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
+        $em = $this->dispatcher->getContainer()->get('doctrine.orm.default_entity_manager');
+        $repo   = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats::class);
 
-        $entryModel = $this->get('mautic.contactledger.model.ledgerentry');
-        $ledgerRepo = $entryModel->getRepository();
-        $data       = $ledgerRepo->getDashboardRevenueWidgetData($params, true, $cache_dir);
+        $data       = $repo->getDashboardRevenueWidgetData($params, true, $cache_dir);
 
         $headers    = [
             'mautic.contactledger.dashboard.source-revenue.header.active',

@@ -70,7 +70,7 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
                 $now->sub(new \DateInterval('PT15M'));
                 if ($now > $nextDate) {
                     //now do final query for results - this may take a while
-                    $data = $repo->getDashboardRevenueWidgetData(
+                    $data = $repo->getCampaignSourceStatsData(
                         $params,
                         true,
                         $cacheDir,

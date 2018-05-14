@@ -61,11 +61,100 @@ class CampaignSourceStatsRepository extends CommonRepository
         $entity = null;
         $result = $this->getMaxId();
 
-        if(isset($result))
-        {
+        if (isset($result)) {
             $entity = $this->getEntity($result);
         }
 
         return $entity;
+    }
+
+    /**
+     * @param $params
+     * @param true $
+     * @param $cache_dir
+     *
+     * @return array
+     */
+    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__)
+    {
+        $results = [];
+        $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
+            ->select(
+                'c.is_published as active,
+                css.campaign_id,
+            c.name as name,
+            SUM(css.received) as received,
+            SUM(css.scrubbed) as scrubbed,
+            SUM(css.declined) as declined,
+            SUM(css.converted) as converted,
+            SUM(css.revenue) as revenue,
+            SUM(css.cost) as cost'
+            )
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats', 'css')
+            ->join('css', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = css.campaign_id')
+            ->join('css', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = css.contact_source_id')
+            ->where('css.date_added BETWEEN :dateFrom AND :dateTo')
+            ->groupBy('css.campaign_id')
+            ->orderBy('c.name', 'ASC');
+
+        if ($bySource) {
+            $query->addSelect(
+                'css.contact_source_id as sourceid,
+            cs.name as sourcename'
+            );
+            $query->addGroupBy('css.contact_source_id');
+        }
+        $query
+            ->setParameter('dateFrom', $params['dateFrom'])
+            ->setParameter('dateTo', $params['dateTo']);
+
+        $financials = $query->execute()->fetchAll();
+        foreach ($financials as $financial) {
+            $financial['revenue']      = number_format(floatval($financial['revenue']), 2, '.', ',');
+            $financial['cost']         = number_format(floatval($financial['cost']), 2, '.', ',');
+            $financial['gross_income'] = number_format(
+                (float) $financial['revenue'] - (float) $financial['cost'],
+                2,
+                '.',
+                ','
+            );
+
+            if ($financial['gross_income'] > 0) {
+                $financial['gross_margin'] = number_format(
+                    100 * $financial['gross_income'] / $financial['revenue'],
+                    0,
+                    '.',
+                    ','
+                );
+                $financial['ecpm']         = number_format((float) $financial['gross_income'] / 1000, 4, '.', ',');
+            } else {
+                $financial['gross_margin'] = 0;
+                $financial['ecpm']         = 0;
+            }
+
+            $result = [
+                $financial['active'],
+                $financial['campaign_id'],
+                $financial['name'],
+            ];
+            if ($bySource) {
+                $result[] = $financial['sourcid'];
+                $result[] = $financial['sourcename'];
+            }
+            $result[] = $financial['received'];
+            $result[] = $financial['scrubbed'];
+            $result[] = $financial['declined'];
+            $result[] = $financial['converted'];
+            $result[] = $financial['revenue'];
+            $result[] = $financial['cost'];
+            $result[] = $financial['gross_income'];
+            $result[] = $financial['gross_margin'];
+            $result[] = $financial['ecpm'];
+
+            $results['rows'][] = $result;
+        }
+
+
+        return $results;
     }
 }

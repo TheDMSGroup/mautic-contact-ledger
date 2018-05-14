@@ -130,7 +130,7 @@ class LedgerEntryRepository extends CommonRepository
      *
      * @return array
      */
-    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__, $realtime = true)
+    public function getCampaignSourceStatsData($params, $bySource = false, $cache_dir = __DIR__, $realtime = true)
     {
         $statBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $statBuilder
