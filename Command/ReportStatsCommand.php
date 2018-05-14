@@ -58,57 +58,74 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
         $params           = [
             'cacheDir' => $container->getParameter('kernel.cache_dir'),
         ];
+        $repeat           = true;
 
         $output->writeln('<info>***** Generating Report Stats *****</info>');
         $timeStart = microtime(true);
 
         if (!$this->checkRunStatus($input, $output)) {
             $output->writeln('<error>Something failed in CheckRunStatus.</error>');
+
             return 0;
         }
 
+        do {
+            // TODO: right now, contexts are hardcoded. need to define a way to register context by bundle
+            foreach (['CampaignSourceStats', 'CampaignSourceBudgets'] as $context) {
 
-        // TODO: right now, contexts are hardcoded. need to define a way to register context by bundle
-        foreach (['CampaignSourceStats', 'CampaignSourceBudgets'] as $context) {
+                $params = $this->getDateParams($params, $context);
 
-            $params = $this->getDateParams($params, $context);
+                $output->writeln(
+                    "<comment>--> Using Parameters:\n \tContext => ".$context.", \n \tDate => ".$params['dateFrom']." and ".$params['dateTo']." UTC,\n \tQuery Cache Directory => ".$params['cacheDir']."</comment>"
+                );
 
-            $output->writeln(
-                "<comment>--> Using Parameters:\n \tContext => ".$context.", \n \tDate => ".$params['dateFrom']." and ".$params['dateTo']." UTC,\n \tQuery Cache Directory => ".$params['cacheDir']."</comment>"
-            );
+                if ($params['dateFrom'] == null) {
+                    // How soon is now? less than 15 mins? Dont run.
+                    $output->writeln(
+                        '<comment>Exiting without Running Context. Report Cron caught up to current time. </comment>'
+                    );
+                } else {
+                    if ($params['dateFrom'] == 'invalid') {
+                        // Class for context does not exist. Fail gracefully.
+                        $output->writeln(
+                            '<error>Exiting without Running Context. No class exists for context: '.$context.'. </error>'
+                        );
+                    } else {
 
-            if($params['dateFrom'] == null) {
-                // How soon is now? less than 15 mins? Dont run.
-                $output->writeln('<comment>Exiting without Running Context. Report Cron caught up to current time. </comment>');
-            }
+                        // Dispatch event to get data from various bundles
+                        $event = new ReportStatsGeneratorEvent($this->em, $params, $context);
+                        $this->dispatcher->dispatch('mautic.contactledger.reportstats.generate', $event);
 
-            else if($params['dateFrom'] == 'invalid') {
-                // Class for context does not exist. Fail gracefully.
-                $output->writeln('<error>Exiting without Running Context. No class exists for context: '.$context.'. </error>');
-            } else {
-
-                // Dispatch event to get data from various bundles
-                $event = new ReportStatsGeneratorEvent($this->em, $params, $context);
-                $this->dispatcher->dispatch('mautic.contactledger.reportstats.generate', $event);
-
-                // save entities to DB
-                $updatedParams = $event->getParams();
-                $dateToLog     = $updatedParams['dateTo'];
-                foreach ($event->getStatsCollection() as $subscriber) {
-                    $output->writeln('<info>--> Pesisting data for '.$context.' using date '.$dateToLog.'.</info>');
-                    if (isset($subscriber[$context]) && !empty($subscriber[$context])) {
-                        foreach ($subscriber[$context] as $stat) {
-                            $entity = $this->mapArrayToEntity($stat, $context, $dateToLog);
-                            $this->em->persist($entity);
+                        // save entities to DB
+                        $updatedParams = $event->getParams();
+                        $dateToLog     = $updatedParams['dateTo'];
+                        foreach ($event->getStatsCollection() as $subscriber) {
+                            $output->writeln(
+                                '<info>--> Pesisting data for '.$context.' using date '.$dateToLog.'.</info>'
+                            );
+                            if (isset($subscriber[$context]) && !empty($subscriber[$context])) {
+                                foreach ($subscriber[$context] as $stat) {
+                                    $entity = $this->mapArrayToEntity($stat, $context, $dateToLog);
+                                    $this->em->persist($entity);
+                                }
+                            }
                         }
+                        $this->em->flush();
+                        $timeContext = microtime(true);
+                        $contextTime = $timeContext - $timeStart;
+                        $output->writeln("<comment>--> Elapsed time so far: ".$contextTime.".</comment>");
                     }
                 }
-                $this->em->flush();
-                $timeContext = microtime(true);
-                $contextTime = $timeContext - $timeStart;
-                $output->writeln("<comment>--> Elapsed time so far: ".$contextTime.".</comment>");
             }
-        }
+            $now      = new \DateTime();
+            $lastPass = new \DateTime($dateToLog);
+            $now->sub(new \DateInterval('PT15M'));
+            if ($now <= $lastPass) {
+                // stop looping
+                $repeat = false;
+            }
+
+        } while ($repeat == true);
 
 
         $this->completeRun();
@@ -133,48 +150,50 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
     private function getDateParams($params, $context)
     {
         // make sure class exists for $context
-       if(class_exists('\MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context)){
-           // first get oldest date from the table implied in context
-           $repo = $this->em->getRepository('MauticContactLedgerBundle:'.$context);
-           if (empty($lastEntity = $repo->getLastEntity())) {
-               // this should only ever happen once, the very first cron run per context
-               $repo       = $this->em->getRepository('MauticContactSourceBundle:Stat');
-               $lastEntity = $repo->findBy([], ['id' => 'ASC'], 1, 0);
-               $lastEntity = $lastEntity[0];
-           }
+        if (class_exists('\MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context)) {
+            // first get oldest date from the table implied in context
+            $repo = $this->em->getRepository('MauticContactLedgerBundle:'.$context);
+            if (empty($lastEntity = $repo->getLastEntity())) {
+                // this should only ever happen once, the very first cron run per context
+                $repo       = $this->em->getRepository('MauticContactSourceBundle:Stat');
+                $lastEntity = $repo->findBy([], ['id' => 'ASC'], 1, 0);
+                $lastEntity = $lastEntity[0];
+            }
 
-           /**
-            * @var $from \DateTime
-            */
-           $from = $lastEntity->getDateAdded();
-           if (get_class($lastEntity) ==  'MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context)
-           {
-               $from->add(new \DateInterval('PT1S'));
-           }
+            /**
+             * @var $from \DateTime
+             */
+            $from = $lastEntity->getDateAdded();
+            $from = is_string($from) ? new \DateTime($from) : $from;
+            if (get_class($lastEntity) == 'MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context) {
+                $from->add(new \DateInterval('PT1S'));
+            }
 
-           // How soon is now? less than 15 mins? Dont run.
-           $wait = clone $from;
-           $wait->add(new \DateInterval('PT15M'));
-           $now = new \DateTime();
-           if($wait > $now) {
-               $params['dateFrom'] = $params['dateTo']= null;
-               return $params;
-           }
-           /**
-            * @var $to \DateTime
-            */
-           $to = clone $from;
-           $to->add(new \DateInterval('PT5M'));
+            // How soon is now? less than 15 mins? Dont run.
+            $wait = clone $from;
+            $wait->add(new \DateInterval('PT15M'));
+            $now = new \DateTime();
+            if ($wait > $now) {
+                $params['dateFrom'] = $params['dateTo'] = null;
 
-           $params['dateFrom'] = $from->format('Y-m-d H:i:s');
+                return $params;
+            }
+            /**
+             * @var $to \DateTime
+             */
+            $to = clone $from;
+            $to->add(new \DateInterval('PT5M'));
 
-           $params['dateTo'] = $to->format('Y-m-d H:i:s');
+            $params['dateFrom'] = $from->format('Y-m-d H:i:s');
 
-           return $params;
-       }
+            $params['dateTo'] = $to->format('Y-m-d H:i:s');
 
-       $params['dateFrom'] = $params['dateTo'] = 'invalid';
-       return $params;
+            return $params;
+        }
+
+        $params['dateFrom'] = $params['dateTo'] = 'invalid';
+
+        return $params;
     }
 
     /**
