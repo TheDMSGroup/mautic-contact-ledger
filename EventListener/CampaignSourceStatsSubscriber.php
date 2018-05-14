@@ -26,11 +26,9 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
         ];
     }
 
-
     public function generateReportStats(ReportStatsGeneratorEvent $event)
     {
-        if ($event->getContext() == 'CampaignSourceStats') {
-
+        if ('CampaignSourceStats' == $event->getContext()) {
             $params   = $event->getParams();
             $cacheDir = $params['cacheDir'];
             $em       = $event->getEntityManager();
@@ -57,7 +55,7 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
                 $dateFrom = new \DateTime($params['dateFrom']);
                 $dateTo   = new \DateTime($params['dateTo']);
 
-                if ($dateFrom->diff($dateTo)->d !== 0) {
+                if (0 !== $dateFrom->diff($dateTo)->d) {
                     $dateTo = clone $dateFrom;
                     $dateTo->format('Y-m-d 23:59:59');
                     $params['dateTo'] = $dateTo;
@@ -75,13 +73,12 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
                         true,
                         $cacheDir,
                         false
-                    );// expects $params['dateFrom'] & $params['dateTo']
+                    ); // expects $params['dateFrom'] & $params['dateTo']
                 }
             }
-
         }
 
-        if ($event->getContext() == 'CampaignSourceBudgets') {
+        if ('CampaignSourceBudgets' == $event->getContext()) {
             return;
         }
 
@@ -90,6 +87,5 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
             $statsCollection[static::class] = [$event->getContext() => $data];
             $event->setStatsCollection($statsCollection);
         }
-
     }
 }

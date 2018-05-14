@@ -12,16 +12,15 @@ namespace MauticPlugin\MauticContactLedgerBundle\Command;
 
 use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Command\ModeratedCommand;
+use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
-use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
 
 class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInterface
 {
-
     /**
      * @var EntityManager
      */
@@ -72,26 +71,24 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
         do {
             // TODO: right now, contexts are hardcoded. need to define a way to register context by bundle
             foreach (['CampaignSourceStats', 'CampaignSourceBudgets'] as $context) {
-
                 $params = $this->getDateParams($params, $context);
 
                 $output->writeln(
-                    "<comment>--> Using Parameters:\n \tContext => ".$context.", \n \tDate => ".$params['dateFrom']." and ".$params['dateTo']." UTC,\n \tQuery Cache Directory => ".$params['cacheDir']."</comment>"
+                    "<comment>--> Using Parameters:\n \tContext => ".$context.", \n \tDate => ".$params['dateFrom'].' and '.$params['dateTo']." UTC,\n \tQuery Cache Directory => ".$params['cacheDir'].'</comment>'
                 );
 
-                if ($params['dateFrom'] == null) {
+                if (null == $params['dateFrom']) {
                     // How soon is now? less than 15 mins? Dont run.
                     $output->writeln(
                         '<comment>Exiting without Running Context. Report Cron caught up to current time. </comment>'
                     );
                 } else {
-                    if ($params['dateFrom'] == 'invalid') {
+                    if ('invalid' == $params['dateFrom']) {
                         // Class for context does not exist. Fail gracefully.
                         $output->writeln(
                             '<error>Exiting without Running Context. No class exists for context: '.$context.'. </error>'
                         );
                     } else {
-
                         // Dispatch event to get data from various bundles
                         $event = new ReportStatsGeneratorEvent($this->em, $params, $context);
                         $this->dispatcher->dispatch('mautic.contactledger.reportstats.generate', $event);
@@ -113,7 +110,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
                         $this->em->flush();
                         $timeContext = microtime(true);
                         $contextTime = $timeContext - $timeStart;
-                        $output->writeln("<comment>--> Elapsed time so far: ".$contextTime.".</comment>");
+                        $output->writeln('<comment>--> Elapsed time so far: '.$contextTime.'.</comment>');
                     }
                 }
             }
@@ -124,9 +121,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
                 // stop looping
                 $repeat = false;
             }
-
-        } while ($repeat == true);
-
+        } while (true == $repeat);
 
         $this->completeRun();
 
@@ -161,7 +156,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
             }
 
             /**
-             * @var $from \DateTime
+             * @var \DateTime
              */
             $from = $lastEntity->getDateAdded();
             $from = is_string($from) ? new \DateTime($from) : $from;
@@ -179,7 +174,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
                 return $params;
             }
             /**
-             * @var $to \DateTime
+             * @var \DateTime
              */
             $to = clone $from;
             $to->add(new \DateInterval('PT5M'));
@@ -219,7 +214,6 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
                 'ecpm'            => 'ecpm',
             ],
             'CampaignSourceBudgets' => [
-
             ],
         ];
 

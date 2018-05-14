@@ -43,7 +43,7 @@ class CampaignSourceStats extends CommonEntity
     protected $campaign;
 
     /**
-     * @var boolean
+     * @var bool
      */
     protected $isPublished;
 
@@ -102,13 +102,11 @@ class CampaignSourceStats extends CommonEntity
      */
     protected $converted;
 
-    public function __set($field,$value)
+    public function __set($field, $value)
     {
-        if (property_exists($this, $field))
-        {
+        if (property_exists($this, $field)) {
             $this->$field = $value;
         }
-
     }
 
     /**
@@ -495,5 +493,4 @@ class CampaignSourceStats extends CommonEntity
 
         return $this;
     }
-
 }

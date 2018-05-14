@@ -14,7 +14,6 @@ namespace MauticPlugin\MauticContactLedgerBundle\Event;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\EventDispatcher\Event;
 
-
 /**
  * Class ReportStatsGeneratorEvent.
  */
@@ -44,7 +43,7 @@ class ReportStatsGeneratorEvent extends Event
      * ReportStatsGeneratorEvent constructor.
      *
      * @param EntityManager
-     * @param array $params
+     * @param array  $params
      * @param string $context
      */
     public function __construct(
@@ -74,8 +73,8 @@ class ReportStatsGeneratorEvent extends Event
     {
         if (is_array($statsCollection)) {
             $this->statsCollection = $statsCollection;
-            return $this;
 
+            return $this;
         } else {
             throw new \InvalidArgumentException(
                 '$statsCollection must be an array.'
@@ -107,9 +106,9 @@ class ReportStatsGeneratorEvent extends Event
     public function setParams($params)
     {
         $this->params = $params;
+
         return $this;
     }
-
 
     /**
      * @return EntityManager

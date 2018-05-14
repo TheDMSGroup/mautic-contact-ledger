@@ -154,7 +154,6 @@ class CampaignSourceStatsRepository extends CommonRepository
             $results['rows'][] = $result;
         }
 
-
         return $results;
     }
 }

@@ -169,7 +169,7 @@ class LedgerEntryRepository extends CommonRepository
                 ->join('ss', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = ss.contactsource_id')
                 ->addGroupBy('ss.contactsource_id');
         }
-            $costBuilder
+        $costBuilder
                 ->addSelect('sc.contactsource_id')
                 ->innerJoin(
                     'lc',
@@ -178,8 +178,8 @@ class LedgerEntryRepository extends CommonRepository
                     'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id AND sc.date_added BETWEEN :dateFrom AND :dateTo'
                 )
                 ->addGroupBy('sc.contactsource_id');
-            $costJoinCond .= ' AND clc.contactsource_id = ss.contactsource_id';
-            $revBuilder
+        $costJoinCond .= ' AND clc.contactsource_id = ss.contactsource_id';
+        $revBuilder
                 ->addSelect('sr.contactsource_id')
                 ->innerJoin(
                     'lr',
@@ -188,7 +188,7 @@ class LedgerEntryRepository extends CommonRepository
                     'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id AND sr.date_added BETWEEN :dateFrom AND :dateTo'
                 )
                 ->addGroupBy('sr.contactsource_id');
-            $revJoinCond .= ' AND clr.contactsource_id = ss.contactsource_id';
+        $revJoinCond .= ' AND clr.contactsource_id = ss.contactsource_id';
 
         $statBuilder
             ->leftJoin('ss', '('.$costBuilder->getSQL().')', 'clc', $costJoinCond)
@@ -199,7 +199,7 @@ class LedgerEntryRepository extends CommonRepository
         if (isset($params['limit']) && (0 < $params['limit'])) {
             $statBuilder->setMaxResults($params['limit']);
         }
-        $results = ['rows' => []];
+        $results         = ['rows' => []];
         $resultsWithKeys = [];
 
         // setup cache
@@ -260,7 +260,7 @@ class LedgerEntryRepository extends CommonRepository
             $resultsWithKeys[] = $financial;
         }
 
-        return $realtime==true ?  $results : $resultsWithKeys;
+        return true == $realtime ? $results : $resultsWithKeys;
     }
 
     public function getEntityGreaterThanDate($params)
@@ -275,8 +275,9 @@ class LedgerEntryRepository extends CommonRepository
             ->setMaxResults(1);
         $builder
             ->setParameter('dateFrom', $params['dateFrom']);
-        $query = $builder->getQuery();
+        $query  = $builder->getQuery();
         $result = $query->getResult();
-        return isset($result[0])? $result[0] : null;
+
+        return isset($result[0]) ? $result[0] : null;
     }
 }
