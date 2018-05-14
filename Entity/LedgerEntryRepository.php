@@ -149,25 +149,26 @@ class LedgerEntryRepository extends CommonRepository
             ->from(MAUTIC_TABLE_PREFIX.'contactsource_stats', 'ss')
             ->join('ss', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = ss.campaign_id')
             ->where('ss.date_added BETWEEN :dateFrom AND :dateTo')
-            ->groupBy('ss.campaign_id, c.is_published, c.name, clc.cost, clr.revenue')
+            ->groupBy('ss.campaign_id')
             ->orderBy('COUNT(ss.campaign_id)', 'ASC');
         $costBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $costBuilder
             ->select('lc.campaign_id', 'SUM(lc.cost) AS cost')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'lc')
             ->groupBy('lc.campaign_id');
-        $costJoinCond = 'clc.campaign_id = ss.campaign_id';
+        $costJoinCond = 'clc.campaign_id = ss.campaign_id AND ss.date_added BETWEEN :dateFrom AND :dateTo';
         $revBuilder   = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $revBuilder
             ->select('lr.campaign_id', 'SUM(lr.revenue) AS revenue')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'lr')
             ->groupBy('lr.campaign_id');
-        $revJoinCond = 'clr.campaign_id = ss.campaign_id';
+        $revJoinCond = 'clr.campaign_id = ss.campaign_id AND ss.date_added BETWEEN :dateFrom AND :dateTo';
         if ($bySource) {
             $statBuilder
                 ->addSelect('ss.contactsource_id', 'cs.name as source')
                 ->join('ss', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = ss.contactsource_id')
-                ->addGroupBy('ss.contactsource_id, cs.name');
+                ->addGroupBy('ss.contactsource_id');
+        }
             $costBuilder
                 ->addSelect('sc.contactsource_id')
                 ->innerJoin(
@@ -188,7 +189,7 @@ class LedgerEntryRepository extends CommonRepository
                 )
                 ->addGroupBy('sr.contactsource_id');
             $revJoinCond .= ' AND clr.contactsource_id = ss.contactsource_id';
-        }
+
         $statBuilder
             ->leftJoin('ss', '('.$costBuilder->getSQL().')', 'clc', $costJoinCond)
             ->leftJoin('ss', '('.$revBuilder->getSQL().')', 'clr', $revJoinCond);
