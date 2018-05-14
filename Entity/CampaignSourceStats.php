@@ -43,6 +43,11 @@ class CampaignSourceStats extends CommonEntity
     protected $campaign;
 
     /**
+     * @var boolean
+     */
+    protected $isPublished;
+
+    /**
      * @var int
      */
     protected $contactSourceId;
@@ -65,7 +70,7 @@ class CampaignSourceStats extends CommonEntity
     /**
      * @var string|float
      */
-    protected $gm;
+    protected $grossIncome;
 
     /**
      * @var string|float
@@ -97,15 +102,14 @@ class CampaignSourceStats extends CommonEntity
      */
     protected $converted;
 
-    /**
-     * @var string|float
-     */
-    protected $dailyCap;
+    public function __set($field,$value)
+    {
+        if (property_exists($this, $field))
+        {
+            $this->$field = $value;
+        }
 
-    /**
-     * @var string|float
-     */
-    protected $monthlyCap;
+    }
 
     /**
      * @param \Doctrine\ORM\Mapping\ClassMetadata $metadata
@@ -144,7 +148,8 @@ class CampaignSourceStats extends CommonEntity
             ->nullable()
             ->build();
 
-        $builder->createField('gm', 'decimal')
+        $builder->createField('grossIncome', 'decimal')
+            ->columnName('gross_income')
             ->precision(19)
             ->scale(4)
             ->nullable()
@@ -182,22 +187,8 @@ class CampaignSourceStats extends CommonEntity
             ->nullable()
             ->build();
 
-        $builder->createField('dailyCap', 'decimal')
-            ->precision(19)
-            ->scale(4)
-            ->columnName('daily_cap')
-            ->nullable()
-            ->build();
-
-        $builder->createField('monthlyCap', 'decimal')
-            ->precision(19)
-            ->scale(4)
-            ->columnName('monthly_cap')
-            ->nullable()
-            ->build();
-
-        $builder->addIndex(['campaign_id', 'source_id'], 'idx_campaigncontact')
-            ->addIndex(['date_added', 'contact_id', 'campaign_id'], 'idx_datecontact');
+        $builder->addIndex(['campaign_id', 'contact_source_id'], 'idx_campaignsource')
+            ->addIndex(['date_added'], 'idx_dateadded');
     }
 
     /**
@@ -368,19 +359,19 @@ class CampaignSourceStats extends CommonEntity
     /**
      * @return string|float|null
      */
-    public function getGm()
+    public function getGrossIncome()
     {
-        return $this->gm;
+        return $this->grossIncome;
     }
 
     /**
-     * @param string|float|null $gm
+     * @param string|float|null $grossIncome
      *
      * @return $this
      */
-    public function setGm($gm)
+    public function setGrossIncome($grossIncome)
     {
-        $this->gm = $gm;
+        $this->grossIncome = $grossIncome;
 
         return $this;
     }
@@ -505,5 +496,4 @@ class CampaignSourceStats extends CommonEntity
         return $this;
     }
 
-    public function getTable
 }

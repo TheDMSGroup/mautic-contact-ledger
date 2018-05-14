@@ -130,12 +130,13 @@ class LedgerEntryRepository extends CommonRepository
      *
      * @return array
      */
-    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__)
+    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__, $realtime = true)
     {
         $statBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $statBuilder
             ->select(
                 'ss.campaign_id',
+                'ss.date_added',
                 'c.is_published',
                 'c.name',
                 'SUM(IF(ss.type IS NULL                     , 0, 1)) AS received',
@@ -173,7 +174,7 @@ class LedgerEntryRepository extends CommonRepository
                     'lc',
                     'contactsource_stats',
                     'sc',
-                    'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id'
+                    'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id AND sc.date_added BETWEEN :dateFrom AND :dateTo'
                 )
                 ->addGroupBy('sc.contactsource_id');
             $costJoinCond .= ' AND clc.contactsource_id = ss.contactsource_id';
@@ -183,7 +184,7 @@ class LedgerEntryRepository extends CommonRepository
                     'lr',
                     'contactsource_stats',
                     'sr',
-                    'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id'
+                    'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id AND sr.date_added BETWEEN :dateFrom AND :dateTo'
                 )
                 ->addGroupBy('sr.contactsource_id');
             $revJoinCond .= ' AND clr.contactsource_id = ss.contactsource_id';
@@ -198,6 +199,7 @@ class LedgerEntryRepository extends CommonRepository
             $statBuilder->setMaxResults($params['limit']);
         }
         $results = ['rows' => []];
+        $resultsWithKeys = [];
 
         // setup cache
         $cache = new FilesystemCache($cache_dir.'/sql');
@@ -254,8 +256,26 @@ class LedgerEntryRepository extends CommonRepository
             $result[] = $financial['ecpm'];
 
             $results['rows'][] = $result;
+            $resultsWithKeys[] = $financial;
         }
 
-        return $results;
+        return $realtime==true ?  $results : $resultsWithKeys;
+    }
+
+    public function getEntityGreaterThanDate($params)
+    {
+        $builder = $this->getEntityManager()->createQueryBuilder();
+        $builder->select('ss')
+            ->from('MauticContactSourceBundle:Stat', 'ss')
+            ->where($builder->expr()->andX(
+                $builder->expr()->gte('ss.dateAdded', ':dateFrom')
+            ))
+            ->orderBy('ss.id', 'ASC')
+            ->setMaxResults(1);
+        $builder
+            ->setParameter('dateFrom', $params['dateFrom']);
+        $query = $builder->getQuery();
+        $result = $query->getResult();
+        return isset($result[0])? $result[0] : null;
     }
 }

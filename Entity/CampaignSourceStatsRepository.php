@@ -11,7 +11,6 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
-use Doctrine\DBAL\Types\Type;
 use Mautic\CoreBundle\Entity\CommonRepository;
 
 /**
@@ -35,5 +34,38 @@ class CampaignSourceStatsRepository extends CommonRepository
     public function getTableAlias()
     {
         return 'css';
+    }
+
+    /**
+     * Gets the ID of the latest ID.
+     *
+     * @return int
+     */
+    public function getMaxId()
+    {
+        $result = $this->getEntityManager()->getConnection()->createQueryBuilder()
+            ->select('max(id) AS id')
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats', 'css')
+            ->execute()->fetchAll();
+
+        return $result[0]['id'];
+    }
+
+    /**
+     * Gets the ID of the latest ID.
+     *
+     * @return int
+     */
+    public function getLastEntity()
+    {
+        $entity = null;
+        $result = $this->getMaxId();
+
+        if(isset($result))
+        {
+            $entity = $this->getEntity($result);
+        }
+
+        return $entity;
     }
 }

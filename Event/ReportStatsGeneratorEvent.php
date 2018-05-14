@@ -11,7 +11,6 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Event;
 
-use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\EventDispatcher\Event;
 
@@ -44,7 +43,8 @@ class ReportStatsGeneratorEvent extends Event
     /**
      * ReportStatsGeneratorEvent constructor.
      *
-     * @param array  $params
+     * @param EntityManager
+     * @param array $params
      * @param string $context
      */
     public function __construct(
@@ -58,17 +58,23 @@ class ReportStatsGeneratorEvent extends Event
     }
 
     /**
-     * @return QueryBuilder
+     * @return array
      */
     public function getStatsCollection()
     {
-        return $this->queryBuilder;
+        return $this->statsCollection;
     }
 
+    /**
+     * @param $statsCollection
+     *
+     * @return $this
+     */
     public function setStatsCollection($statsCollection)
     {
         if (is_array($statsCollection)) {
             $this->statsCollection = $statsCollection;
+            return $this;
 
         } else {
             throw new \InvalidArgumentException(
@@ -91,5 +97,25 @@ class ReportStatsGeneratorEvent extends Event
     public function getParams()
     {
         return $this->params;
+    }
+
+    /**
+     * @param $params
+     *
+     * @return $this
+     */
+    public function setParams($params)
+    {
+        $this->params = $params;
+        return $this;
+    }
+
+
+    /**
+     * @return EntityManager
+     */
+    public function getEntityManager()
+    {
+        return $this->em;
     }
 }
