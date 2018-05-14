@@ -53,11 +53,6 @@ class CampaignSourceStats extends CommonEntity
     protected $contactSourceId;
 
     /**
-     * @var \MauticPlugin\MauticContactSourceBundle\Entity\ContactSource
-     */
-    protected $contactSource;
-
-    /**
      * @var string|float
      */
     protected $cost;
@@ -290,26 +285,6 @@ class CampaignSourceStats extends CommonEntity
     public function setContactSourceId($contactSourceId)
     {
         $this->contactSourceId = $contactSourceId;
-
-        return $this;
-    }
-
-    /**
-     * @return ContactSource
-     */
-    public function getContactSource()
-    {
-        return $this->contactSource;
-    }
-
-    /**
-     * @param \MauticPlugin\MauticContactSourceBundle\Entity\ContactSource
-     *
-     * @return $this
-     */
-    public function setContactSource(ContactSource $contactSource = null)
-    {
-        $this->contactSource = $contactSource;
 
         return $this;
     }
