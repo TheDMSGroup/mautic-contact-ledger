@@ -57,29 +57,29 @@ Mautic.loadGlobalRevenueWidget = function (globalWidgetHeight) {
                                     ],
 
                                     footerCallback: function (row, data, start, end, display) {
-                                        // Add table footer if it doesnt exist
-                                        var container = mQuery('#global-revenue');
-                                        var columns = data[0].length;
-                                        if (mQuery('tr.pageTotal').length == 0) {
-                                            var footer = mQuery('<tfoot></tfoot>');
-                                            var tr = mQuery('<tr class=\'pageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
-                                            var tr2 = mQuery('<tr class=\'grandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
-                                            tr.append(mQuery('<td colspan=\'2\'>Page totals</td>'));
-                                            tr2.append(mQuery('<td colspan=\'2\'>Grand totals</td>'));
-                                            for (var i = 2; i < columns; i++) {
-                                                tr.append(mQuery('<td class=\'td-right\'></td>'));
-                                                tr2.append(mQuery('<td class=\'td-right\'></td>'));
-                                            }
-                                            footer.append(tr);
-                                            footer.append(tr2);
-                                            container.append(footer);
-                                            var tableBody = mQuery('#' + container[0].id + ' tbody');
-                                        }
-
-                                        if (data && data.length === 0) {
+                                        if (data && data.length === 0 || typeof data[0] === 'undefined') {
+                                            mQuery('#global-builder-overlay').hide();
                                             return;
                                         }
                                         try {
+                                            // Add table footer if it doesnt exist
+                                            var container = mQuery('#global-revenue');
+                                            var columns = data[0].length;
+                                            if (mQuery('tr.pageTotal').length === 0) {
+                                                var footer = mQuery('<tfoot></tfoot>');
+                                                var tr = mQuery('<tr class=\'pageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                                var tr2 = mQuery('<tr class=\'grandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                                tr.append(mQuery('<td colspan=\'2\'>Page totals</td>'));
+                                                tr2.append(mQuery('<td colspan=\'2\'>Grand totals</td>'));
+                                                for (var i = 2; i < columns; i++) {
+                                                    tr.append(mQuery('<td class=\'td-right\'></td>'));
+                                                    tr2.append(mQuery('<td class=\'td-right\'></td>'));
+                                                }
+                                                footer.append(tr);
+                                                footer.append(tr2);
+                                                container.append(footer);
+                                            }
+
                                             var api = this.api();
 
                                             // Remove the formatting to get
