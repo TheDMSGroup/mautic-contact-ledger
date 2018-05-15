@@ -170,24 +170,24 @@ class LedgerEntryRepository extends CommonRepository
                 ->addGroupBy('ss.contactsource_id');
         }
         $costBuilder
-                ->addSelect('sc.contactsource_id')
-                ->innerJoin(
-                    'lc',
-                    'contactsource_stats',
-                    'sc',
-                    'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id AND sc.date_added BETWEEN :dateFrom AND :dateTo'
-                )
-                ->addGroupBy('sc.contactsource_id');
+            ->addSelect('sc.contactsource_id')
+            ->innerJoin(
+                'lc',
+                'contactsource_stats',
+                'sc',
+                'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id AND sc.date_added BETWEEN :dateFrom AND :dateTo'
+            )
+            ->addGroupBy('sc.contactsource_id');
         $costJoinCond .= ' AND clc.contactsource_id = ss.contactsource_id';
         $revBuilder
-                ->addSelect('sr.contactsource_id')
-                ->innerJoin(
-                    'lr',
-                    'contactsource_stats',
-                    'sr',
-                    'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id AND sr.date_added BETWEEN :dateFrom AND :dateTo'
-                )
-                ->addGroupBy('sr.contactsource_id');
+            ->addSelect('sr.contactsource_id')
+            ->innerJoin(
+                'lr',
+                'contactsource_stats',
+                'sr',
+                'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id AND sr.date_added BETWEEN :dateFrom AND :dateTo'
+            )
+            ->addGroupBy('sr.contactsource_id');
         $revJoinCond .= ' AND clr.contactsource_id = ss.contactsource_id';
 
         $statBuilder
@@ -269,9 +269,11 @@ class LedgerEntryRepository extends CommonRepository
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select('ss')
             ->from('MauticContactSourceBundle:Stat', 'ss')
-            ->where($builder->expr()->andX(
-                $builder->expr()->gte('ss.dateAdded', ':dateFrom')
-            ))
+            ->where(
+                $builder->expr()->andX(
+                    $builder->expr()->gte('ss.dateAdded', ':dateFrom')
+                )
+            )
             ->orderBy('ss.id', 'ASC')
             ->setMaxResults(1);
         $builder
