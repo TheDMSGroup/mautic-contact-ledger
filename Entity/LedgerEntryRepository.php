@@ -148,7 +148,7 @@ class LedgerEntryRepository extends CommonRepository
             )
             ->from(MAUTIC_TABLE_PREFIX.'contactsource_stats', 'ss')
             ->join('ss', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = ss.campaign_id')
-            ->where('ss.date_added BETWEEN :dateFrom AND :dateTo')
+            ->where('ss.type <> :invalid AND ss.date_added BETWEEN :dateFrom AND :dateTo')
             ->groupBy('ss.campaign_id')
             ->orderBy('COUNT(ss.campaign_id)', 'ASC');
         $costBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
@@ -170,30 +170,31 @@ class LedgerEntryRepository extends CommonRepository
                 ->addGroupBy('ss.contactsource_id');
         }
         $costBuilder
-                ->addSelect('sc.contactsource_id')
-                ->innerJoin(
-                    'lc',
-                    'contactsource_stats',
-                    'sc',
-                    'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id AND sc.date_added BETWEEN :dateFrom AND :dateTo'
-                )
-                ->addGroupBy('sc.contactsource_id');
+            ->addSelect('sc.contactsource_id')
+            ->innerJoin(
+                'lc',
+                'contactsource_stats',
+                'sc',
+                'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id AND sc.date_added BETWEEN :dateFrom AND :dateTo'
+            )
+            ->addGroupBy('sc.contactsource_id');
         $costJoinCond .= ' AND clc.contactsource_id = ss.contactsource_id';
         $revBuilder
-                ->addSelect('sr.contactsource_id')
-                ->innerJoin(
-                    'lr',
-                    'contactsource_stats',
-                    'sr',
-                    'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id AND sr.date_added BETWEEN :dateFrom AND :dateTo'
-                )
-                ->addGroupBy('sr.contactsource_id');
+            ->addSelect('sr.contactsource_id')
+            ->innerJoin(
+                'lr',
+                'contactsource_stats',
+                'sr',
+                'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id AND sr.date_added BETWEEN :dateFrom AND :dateTo'
+            )
+            ->addGroupBy('sr.contactsource_id');
         $revJoinCond .= ' AND clr.contactsource_id = ss.contactsource_id';
 
         $statBuilder
             ->leftJoin('ss', '('.$costBuilder->getSQL().')', 'clc', $costJoinCond)
             ->leftJoin('ss', '('.$revBuilder->getSQL().')', 'clr', $revJoinCond);
         $statBuilder
+            ->setParameter('invalid', 'invalid')
             ->setParameter('dateFrom', $params['dateFrom'])
             ->setParameter('dateTo', $params['dateTo']);
         if (isset($params['limit']) && (0 < $params['limit'])) {
@@ -263,18 +264,30 @@ class LedgerEntryRepository extends CommonRepository
         return true == $realtime ? $results : $resultsWithKeys;
     }
 
-    public function getEntityGreaterThanDate($params)
+    public function getEntityGreaterThanDate($params, $offset = 0)
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select('ss')
             ->from('MauticContactSourceBundle:Stat', 'ss')
-            ->where($builder->expr()->andX(
-                $builder->expr()->gte('ss.dateAdded', ':dateFrom')
-            ))
+            ->where(
+                $builder->expr()->andX(
+                    $builder->expr()->gte('ss.dateAdded', ':dateFrom')
+                )
+            )
+            ->andWhere(
+                $builder->expr()->andX(
+                    $builder->expr()->neq('ss.type', ':invalid')
+                )
+            )
             ->orderBy('ss.id', 'ASC')
             ->setMaxResults(1);
+
+        if ($offset > 0) {
+            $builder->setFirstResult($offset);
+        }
         $builder
-            ->setParameter('dateFrom', $params['dateFrom']);
+            ->setParameter('dateFrom', $params['dateFrom'])
+            ->setParameter('invalid', 'invalid');
         $query  = $builder->getQuery();
         $result = $query->getResult();
 
