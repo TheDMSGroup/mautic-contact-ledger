@@ -130,12 +130,13 @@ class LedgerEntryRepository extends CommonRepository
      *
      * @return array
      */
-    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__)
+    public function getCampaignSourceStatsData($params, $bySource = false, $cache_dir = __DIR__, $realtime = true)
     {
         $statBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $statBuilder
             ->select(
                 'ss.campaign_id',
+                'ss.date_added',
                 'c.is_published',
                 'c.name',
                 'SUM(IF(ss.type IS NULL                     , 0, 1)) AS received',
@@ -148,46 +149,47 @@ class LedgerEntryRepository extends CommonRepository
             ->from(MAUTIC_TABLE_PREFIX.'contactsource_stats', 'ss')
             ->join('ss', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = ss.campaign_id')
             ->where('ss.date_added BETWEEN :dateFrom AND :dateTo')
-            ->groupBy('ss.campaign_id, c.is_published, c.name, clc.cost, clr.revenue')
+            ->groupBy('ss.campaign_id')
             ->orderBy('COUNT(ss.campaign_id)', 'ASC');
         $costBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $costBuilder
             ->select('lc.campaign_id', 'SUM(lc.cost) AS cost')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'lc')
             ->groupBy('lc.campaign_id');
-        $costJoinCond = 'clc.campaign_id = ss.campaign_id';
+        $costJoinCond = 'clc.campaign_id = ss.campaign_id AND ss.date_added BETWEEN :dateFrom AND :dateTo';
         $revBuilder   = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $revBuilder
             ->select('lr.campaign_id', 'SUM(lr.revenue) AS revenue')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'lr')
             ->groupBy('lr.campaign_id');
-        $revJoinCond = 'clr.campaign_id = ss.campaign_id';
+        $revJoinCond = 'clr.campaign_id = ss.campaign_id AND ss.date_added BETWEEN :dateFrom AND :dateTo';
         if ($bySource) {
             $statBuilder
                 ->addSelect('ss.contactsource_id', 'cs.name as source')
                 ->join('ss', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = ss.contactsource_id')
-                ->addGroupBy('ss.contactsource_id, cs.name');
-            $costBuilder
+                ->addGroupBy('ss.contactsource_id');
+        }
+        $costBuilder
                 ->addSelect('sc.contactsource_id')
                 ->innerJoin(
                     'lc',
                     'contactsource_stats',
                     'sc',
-                    'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id'
+                    'lc.campaign_id = sc.campaign_id AND lc.contact_id = sc.contact_id AND sc.date_added BETWEEN :dateFrom AND :dateTo'
                 )
                 ->addGroupBy('sc.contactsource_id');
-            $costJoinCond .= ' AND clc.contactsource_id = ss.contactsource_id';
-            $revBuilder
+        $costJoinCond .= ' AND clc.contactsource_id = ss.contactsource_id';
+        $revBuilder
                 ->addSelect('sr.contactsource_id')
                 ->innerJoin(
                     'lr',
                     'contactsource_stats',
                     'sr',
-                    'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id'
+                    'lr.campaign_id = sr.campaign_id AND lr.contact_id = sr.contact_id AND sr.date_added BETWEEN :dateFrom AND :dateTo'
                 )
                 ->addGroupBy('sr.contactsource_id');
-            $revJoinCond .= ' AND clr.contactsource_id = ss.contactsource_id';
-        }
+        $revJoinCond .= ' AND clr.contactsource_id = ss.contactsource_id';
+
         $statBuilder
             ->leftJoin('ss', '('.$costBuilder->getSQL().')', 'clc', $costJoinCond)
             ->leftJoin('ss', '('.$revBuilder->getSQL().')', 'clr', $revJoinCond);
@@ -197,7 +199,8 @@ class LedgerEntryRepository extends CommonRepository
         if (isset($params['limit']) && (0 < $params['limit'])) {
             $statBuilder->setMaxResults($params['limit']);
         }
-        $results = ['rows' => []];
+        $results         = ['rows' => []];
+        $resultsWithKeys = [];
 
         // setup cache
         $cache = new FilesystemCache($cache_dir.'/sql');
@@ -254,8 +257,27 @@ class LedgerEntryRepository extends CommonRepository
             $result[] = $financial['ecpm'];
 
             $results['rows'][] = $result;
+            $resultsWithKeys[] = $financial;
         }
 
-        return $results;
+        return true == $realtime ? $results : $resultsWithKeys;
+    }
+
+    public function getEntityGreaterThanDate($params)
+    {
+        $builder = $this->getEntityManager()->createQueryBuilder();
+        $builder->select('ss')
+            ->from('MauticContactSourceBundle:Stat', 'ss')
+            ->where($builder->expr()->andX(
+                $builder->expr()->gte('ss.dateAdded', ':dateFrom')
+            ))
+            ->orderBy('ss.id', 'ASC')
+            ->setMaxResults(1);
+        $builder
+            ->setParameter('dateFrom', $params['dateFrom']);
+        $query  = $builder->getQuery();
+        $result = $query->getResult();
+
+        return isset($result[0]) ? $result[0] : null;
     }
 }

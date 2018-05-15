@@ -26,4 +26,9 @@ final class MauticContactLedgerEvents
      * or a compatible event.
      */
     const CONTEXT_CREATE = 'mautic.contactledger.context_create';
+
+    /**
+     * Listen for a reportstats.generate event and add stats if the context matches.
+     */
+    const REPORT_STATS_GENERATE = 'mautic.contactledger.reportstats.generate';
 }
