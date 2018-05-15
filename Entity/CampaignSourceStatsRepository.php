@@ -126,7 +126,7 @@ class CampaignSourceStatsRepository extends CommonRepository
                 $financial['name'],
             ];
             if ($bySource) {
-                $result[] = $financial['sourcid'];
+                $result[] = $financial['sourceid'];
                 $result[] = $financial['sourcename'];
             }
             $result[] = $financial['received'];
