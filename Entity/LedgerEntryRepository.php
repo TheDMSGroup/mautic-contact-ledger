@@ -148,7 +148,7 @@ class LedgerEntryRepository extends CommonRepository
             )
             ->from(MAUTIC_TABLE_PREFIX.'contactsource_stats', 'ss')
             ->join('ss', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = ss.campaign_id')
-            ->where('ss.date_added BETWEEN :dateFrom AND :dateTo')
+            ->where('ss.type <> :invalid AND ss.date_added BETWEEN :dateFrom AND :dateTo')
             ->groupBy('ss.campaign_id')
             ->orderBy('COUNT(ss.campaign_id)', 'ASC');
         $costBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
@@ -194,6 +194,7 @@ class LedgerEntryRepository extends CommonRepository
             ->leftJoin('ss', '('.$costBuilder->getSQL().')', 'clc', $costJoinCond)
             ->leftJoin('ss', '('.$revBuilder->getSQL().')', 'clr', $revJoinCond);
         $statBuilder
+            ->setParameter('invalid', 'invalid')
             ->setParameter('dateFrom', $params['dateFrom'])
             ->setParameter('dateTo', $params['dateTo']);
         if (isset($params['limit']) && (0 < $params['limit'])) {
