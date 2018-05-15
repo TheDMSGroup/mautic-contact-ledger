@@ -54,7 +54,7 @@ class CampaignSourceStatsRepository extends CommonRepository
     /**
      * Gets the ID of the latest ID.
      *
-     * @return int
+     * @return object
      */
     public function getLastEntity()
     {
@@ -134,7 +134,7 @@ class CampaignSourceStatsRepository extends CommonRepository
             $result[] = $financial['declined'];
             $result[] = $financial['converted'];
             $result[] = number_format($financial['revenue'], 2, '.', ',');
-            $result[] = number_format($financial['cost'], 2, '.', ','));
+            $result[] = number_format($financial['cost'], 2, '.', ',');
             $result[] = number_format($financial['gross_income'], 0, '.', ',');
             $result[] = $financial['gross_margin'];
             $result[] = $financial['ecpm'];
