@@ -110,23 +110,11 @@ class CampaignSourceStatsRepository extends CommonRepository
 
         $financials = $query->execute()->fetchAll();
         foreach ($financials as $financial) {
-            $financial['revenue']      = number_format(floatval($financial['revenue']), 2, '.', ',');
-            $financial['cost']         = number_format(floatval($financial['cost']), 2, '.', ',');
-            $financial['gross_income'] = number_format(
-                (float) $financial['revenue'] - (float) $financial['cost'],
-                2,
-                '.',
-                ','
-            );
+            $financial['gross_income'] = $financial['revenue'] - $financial['cost'];
 
             if ($financial['gross_income'] > 0) {
-                $financial['gross_margin'] = number_format(
-                    100 * $financial['gross_income'] / $financial['revenue'],
-                    0,
-                    '.',
-                    ','
-                );
-                $financial['ecpm']         = number_format((float) $financial['gross_income'] / 1000, 4, '.', ',');
+                $financial['gross_margin'] = 100 * $financial['gross_income'] / $financial['revenue'];
+                $financial['ecpm']         = number_format($financial['gross_income'] / 1000, 4, '.', ',');
             } else {
                 $financial['gross_margin'] = 0;
                 $financial['ecpm']         = 0;
@@ -145,9 +133,9 @@ class CampaignSourceStatsRepository extends CommonRepository
             $result[] = $financial['scrubbed'];
             $result[] = $financial['declined'];
             $result[] = $financial['converted'];
-            $result[] = $financial['revenue'];
-            $result[] = $financial['cost'];
-            $result[] = $financial['gross_income'];
+            $result[] = number_format($financial['revenue'], 2, '.', ',');
+            $result[] = number_format($financial['cost'], 2, '.', ','));
+            $result[] = number_format($financial['gross_income'], 0, '.', ',');
             $result[] = $financial['gross_margin'];
             $result[] = $financial['ecpm'];
 
