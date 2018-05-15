@@ -105,6 +105,10 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
                                     $entity = $this->mapArrayToEntity($stat, $context, $dateToLog);
                                     $this->em->persist($entity);
                                 }
+                            } else {
+                                $output->writeln(
+                                    '<comment>--> No data for '.$context.' using date '.$dateToLog.'.</comment>');
+                                $repeat = false;
                             }
                         }
                         $this->em->flush();
@@ -162,15 +166,16 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
              */
             $from = $lastEntity->getDateAdded();
             $from = is_string($from) ? new \DateTime($from) : $from;
-            if (get_class($lastEntity) == 'MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context) {
-                $from->add(new \DateInterval('PT1S'));
-            }
+
+            // round down to 5 minute increment
+            $from->setTime($from->format('H'), floor($from->format('i') / 5) * 5, 0);
+            $from->add(new \DateInterval('PT1S'));
 
             // How soon is now? less than 15 mins? Dont run.
-            $wait = clone $from;
-            $wait->add(new \DateInterval('PT15M'));
             $now = new \DateTime();
-            if ($wait > $now) {
+            $now->sub(new \DateInterval('PT15M'));
+            if ($from > $now) {
+                // within 15 mins
                 $params['dateFrom'] = $params['dateTo'] = null;
 
                 return $params;
@@ -179,7 +184,8 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
              * @var \DateTime
              */
             $to = clone $from;
-            $to->add(new \DateInterval('PT5M'));
+            $to->add(new \DateInterval('PT4M'));
+            $to->add(new \DateInterval('PT59S'));
 
             $params['dateFrom'] = $from->format('Y-m-d H:i:s');
 

@@ -28,6 +28,8 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
 
     public function generateReportStats(ReportStatsGeneratorEvent $event)
     {
+        $data = null;
+
         if ('CampaignSourceStats' == $event->getContext()) {
             $params   = $event->getParams();
             $cacheDir = $params['cacheDir'];
@@ -40,25 +42,17 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
             if (!empty($entity)) {
                 $nextDate = $entity->getDateAdded();
                 $dateTo   = new \DateTime($params['dateTo']);
-                $dateFrom = new \DateTime($params['dateFrom']);
                 if ($nextDate > $dateTo) {
                     // No records within original query range
                     // reset the date range to one that has data.
+                    $nextDate->setTime($nextDate->format('H'), floor($nextDate->format('i') / 5) * 5, 0);
+                    $nextDate->add(new \DateInterval('PT1S'));
                     $dateFrom           = clone $nextDate;
                     $params['dateFrom'] = $dateFrom->format('Y-m-d H:i:s');
                     $dateTo             = clone $nextDate;
-                    $dateTo->add(new \DateInterval('PT5M'));
+                    $dateTo->add(new \DateInterval('PT4M'));
+                    $dateTo->add(new \DateInterval('PT59S'));
                     $params['dateTo'] = $dateTo->format('Y-m-d H:i:s');
-                }
-
-                //dont let date range span multiple calendar days, reformat 'To' to less than 5 mins instead, ending at 1 sec before midnight.
-                $dateFrom = new \DateTime($params['dateFrom']);
-                $dateTo   = new \DateTime($params['dateTo']);
-
-                if (0 !== $dateFrom->diff($dateTo)->d) {
-                    $dateTo = clone $dateFrom;
-                    $dateTo->format('Y-m-d 23:59:59');
-                    $params['dateTo'] = $dateTo;
                 }
 
                 // update the $event with latest params
@@ -82,10 +76,8 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
             return;
         }
 
-        if (!empty($data)) {
-            $statsCollection                = $event->getStatsCollection();
-            $statsCollection[static::class] = [$event->getContext() => $data];
-            $event->setStatsCollection($statsCollection);
-        }
+        $statsCollection                = $event->getStatsCollection();
+        $statsCollection[static::class] = [$event->getContext() => $data];
+        $event->setStatsCollection($statsCollection);
     }
 }
