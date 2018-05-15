@@ -274,10 +274,16 @@ class LedgerEntryRepository extends CommonRepository
                     $builder->expr()->gte('ss.dateAdded', ':dateFrom')
                 )
             )
+            ->andWhere(
+                $builder->expr()->andX(
+                    $builder->expr()->neq('ss.type', ':invalid')
+                )
+            )
             ->orderBy('ss.id', 'ASC')
             ->setMaxResults(1);
         $builder
-            ->setParameter('dateFrom', $params['dateFrom']);
+            ->setParameter('dateFrom', $params['dateFrom'])
+            ->setParameter('invalid', 'invalid');
         $query  = $builder->getQuery();
         $result = $query->getResult();
 
