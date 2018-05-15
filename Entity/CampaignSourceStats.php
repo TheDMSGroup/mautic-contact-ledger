@@ -15,7 +15,6 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
 use Mautic\CoreBundle\Entity\CommonEntity;
-use MauticPlugin\MauticContactSourceBundle\Entity\ContactSource;
 
 /**
  * Class CampaignSourceStats..

@@ -114,10 +114,10 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
                     }
                 }
             }
-            $now      = new \DateTime();
+            $now          = new \DateTime();
             $latestParams = $event->getParams();
-            $dateTo     = $latestParams['dateTo'];
-            $lastPass = new \DateTime($dateTo);
+            $dateTo       = $latestParams['dateTo'];
+            $lastPass     = new \DateTime($dateTo);
             $now->sub(new \DateInterval('PT15M'));
             if ($now <= $lastPass) {
                 // stop looping
