@@ -45,7 +45,7 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
                 if ($nextDate > $dateTo) {
                     // No records within original query range
                     // reset the date range to one that has data.
-                    $nextDate->setTime($nextDate->format('H'),floor($nextDate->format('i') / 5) * 5, 0 );
+                    $nextDate->setTime($nextDate->format('H'), floor($nextDate->format('i') / 5) * 5, 0);
                     $nextDate->add(new \DateInterval('PT1S'));
                     $dateFrom           = clone $nextDate;
                     $params['dateFrom'] = $dateFrom->format('Y-m-d H:i:s');
@@ -76,10 +76,8 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
             return;
         }
 
-
         $statsCollection                = $event->getStatsCollection();
         $statsCollection[static::class] = [$event->getContext() => $data];
         $event->setStatsCollection($statsCollection);
-
     }
 }

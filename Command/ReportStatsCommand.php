@@ -168,7 +168,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
             $from = is_string($from) ? new \DateTime($from) : $from;
 
             // round down to 5 minute increment
-            $from->setTime($from->format('H'),floor($from->format('i') / 5) * 5, 0 );
+            $from->setTime($from->format('H'), floor($from->format('i') / 5) * 5, 0);
             $from->add(new \DateInterval('PT1S'));
 
             // How soon is now? less than 15 mins? Dont run.
