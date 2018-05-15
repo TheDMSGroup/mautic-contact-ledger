@@ -264,7 +264,7 @@ class LedgerEntryRepository extends CommonRepository
         return true == $realtime ? $results : $resultsWithKeys;
     }
 
-    public function getEntityGreaterThanDate($params)
+    public function getEntityGreaterThanDate($params, $offset = 0)
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select('ss')
@@ -281,6 +281,10 @@ class LedgerEntryRepository extends CommonRepository
             )
             ->orderBy('ss.id', 'ASC')
             ->setMaxResults(1);
+
+        if ($offset > 0) {
+            $builder->setFirstResult($offset);
+        }
         $builder
             ->setParameter('dateFrom', $params['dateFrom'])
             ->setParameter('invalid', 'invalid');
