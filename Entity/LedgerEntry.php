@@ -153,7 +153,8 @@ class LedgerEntry extends CommonEntity
             ->build();
 
         $builder->addIndex(['campaign_id', 'contact_id'], 'idx_campaigncontact')
-            ->addIndex(['date_added', 'contact_id', 'campaign_id'], 'idx_datecontact');
+            ->addIndex(['date_added', 'contact_id', 'campaign_id'], 'idx_datecontact')
+            ->addIndex(['campaign_id', 'date_added', 'cost', 'revenue'], 'idx_campaigndatecostrevenue');
     }
 
     /**
