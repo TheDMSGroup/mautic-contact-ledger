@@ -1,13 +1,14 @@
 <?php
 
 /*
- * @copyright   2014 Mautic Contributors. All rights reserved
- * @author      Mautic
+ * @copyright   2018 Mautic Contributors. All rights reserved
+ * @author      Digital Media Solutions, LLC
  *
  * @link        http://mautic.org
  *
  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
+
 ?>
 <script src="/plugins/MauticContactLedgerBundle/Assets/js/global-revenue.js"></script>
 
