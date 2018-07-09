@@ -205,6 +205,9 @@ mQuery.getCssOnce = function (url, callback) {
 };
 
 mQuery(document).ready(function () {
+    if (typeof detailWidgetHeight == 'undefined'){
+        let detailWidgetHeight = '445';
+    }
     Mautic.loadSourceRevenueWidget(detailWidgetHeight);
 });
 

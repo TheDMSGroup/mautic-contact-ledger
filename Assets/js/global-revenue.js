@@ -196,5 +196,8 @@ Mautic.loadGlobalRevenueWidget = function (globalWidgetHeight) {
 
 
 mQuery(document).ready(function () {
+    if (typeof globalWidgetHeight == 'undefined'){
+        let globalWidgetHeight = '445';
+    }
     Mautic.loadGlobalRevenueWidget(globalWidgetHeight);
 });
