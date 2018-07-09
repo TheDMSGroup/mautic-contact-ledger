@@ -1,4 +1,4 @@
-Mautic.loadGlobalRevenueWidget = function (globalWidgetHeight) {
+Mautic.loadGlobalRevenueWidget = function () {
     var $globaltarget = mQuery('#global-revenue');
     if ($globaltarget.length) {
         mQuery('#global-revenue:not(.table-initialized):first').addClass('table-initialized').each(function () {
@@ -15,7 +15,7 @@ Mautic.loadGlobalRevenueWidget = function (globalWidgetHeight) {
                             cache: true,
                             dataType: 'json',
                             success: function (response) {
-                                var rowCount = Math.floor((globalWidgetHeight - 220) / 40);
+                                var rowCount = Math.floor(($globaltarget.data('height') - 220) / 40);
                                 mQuery('#global-revenue').DataTable({
                                     language: {
                                         emptyTable: 'No results found for this date range and filters.'
@@ -193,8 +193,3 @@ Mautic.loadGlobalRevenueWidget = function (globalWidgetHeight) {
         }
         callback();
     };
-
-
-mQuery(document).ready(function () {
-    Mautic.loadGlobalRevenueWidget(globalWidgetHeight);
-});
