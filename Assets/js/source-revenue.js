@@ -1,4 +1,4 @@
-Mautic.loadSourceRevenueWidget = function (detailWidgetHeight) {
+Mautic.loadSourceRevenueWidget = function () {
     var $sourcetarget = mQuery('#source-revenue');
     if($sourcetarget.length) {
         mQuery('#source-revenue:first:not(.table-initialized)').addClass('table-initialized').each(function () {
@@ -15,7 +15,7 @@ Mautic.loadSourceRevenueWidget = function (detailWidgetHeight) {
                             cache: true,
                             dataType: 'json',
                             success: function (response) {
-                                var rowCount = Math.floor((detailWidgetHeight - 220) / 40);
+                                var rowCount = Math.floor(($sourcetarget.data('height') - 220) / 40);
                                 mQuery('#source-revenue').DataTable({
                                     language: {
                                         emptyTable: "No results found for this date range and filters."
@@ -203,12 +203,5 @@ mQuery.getCssOnce = function (url, callback) {
     }
     callback();
 };
-
-mQuery(document).ready(function () {
-    if (typeof detailWidgetHeight == 'undefined'){
-        let detailWidgetHeight = '445';
-    }
-    Mautic.loadSourceRevenueWidget(detailWidgetHeight);
-});
 
 
