@@ -26,6 +26,11 @@ Mautic.loadSourceRevenueWidget = function () {
                                     order: [[2, 'asc'], [4, 'asc']],
                                     bLengthChange: false,
                                     lengthMenu: [[rowCount]],
+                                    dom: '<<lBf>rtip>',
+                                    buttons: [
+                                        'excelHtml5',
+                                        'csvHtml5'
+                                    ],
                                     columnDefs: [
                                         {
                                             render: function (data, type, row) {
