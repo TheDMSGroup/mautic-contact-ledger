@@ -72,6 +72,7 @@ Mautic.loadCampaignRevenueWidget = function (params) {
                                 }
                             } // FooterCallback
                         }); // datatable
+                        mQuery('#campaign-revenue-table_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
                     }); //getScriptsCachedOnce - fonteawesome css
                 });//getScriptsCachedOnce - datatables css
             });  //getScriptsCachedOnce - datatables js

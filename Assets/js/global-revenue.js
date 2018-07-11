@@ -121,6 +121,8 @@ Mautic.loadGlobalRevenueWidget = function () {
                                         }
                                     } // FooterCallback
                                 }); //.DataTables
+                                mQuery('#global-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
+
                             } //success
                         }); //ajax
                     }); //getScriptsCachedOnce - fonteawesome css
