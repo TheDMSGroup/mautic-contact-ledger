@@ -12,8 +12,6 @@
 ?>
 
 <?php
-echo $view['assets']->includeScript('plugins/MauticContactLedgerBundle/Assets/js/global-revenue.js', 'loadGlobalRevenueWidget');
-
 $params = $data['params'];
 ?>
 
@@ -30,3 +28,7 @@ $params = $data['params'];
         </div>
     </div>
 </div>
+
+<?php
+    echo $view['assets']->includeScript('plugins/MauticContactLedgerBundle/Assets/js/global-revenue.js', 'loadGlobalRevenueWidget', 'loadGlobalRevenueWidget');
+?>
