@@ -58,7 +58,8 @@ Mautic.loadSourceRevenueWidget = function () {
                                         },
                                         {
                                             render: function (data, type, row) {
-                                                return data + '%';
+                                                //return 'foo';
+                                                return renderMarginPercentage(row);
                                             },
                                             targets: 12
                                         },
@@ -153,6 +154,13 @@ function renderPublishToggle (id, active) {
 
 function renderCampaignName (row) {
     return '<a href="./campaigns/view/'+ row[1] +'" class="campaign-name-link" title="'+ row[2] + '">'+ row[2] + '</a>';
+}
+
+function renderMarginPercentage (row) {
+    if (Number(row[12]) != parseInt(Number(row[12]))){
+        return Number(row[12]).toFixed(2) + '%';
+    }
+    return row[12] + '%';
 }
 
 function renderSourceName (row) {

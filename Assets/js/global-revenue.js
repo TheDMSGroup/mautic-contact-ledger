@@ -52,7 +52,7 @@ Mautic.loadGlobalRevenueWidget = function () {
                                         },
                                         {
                                             render: function (data, type, row) {
-                                                return data + '%';
+                                                return renderPercentage(row);
                                             },
                                             targets: 10
                                         },
@@ -147,6 +147,13 @@ Mautic.loadGlobalRevenueWidget = function () {
 
     function renderCampaignName (row) {
         return '<a href="./campaigns/view/' + row[1] + '" class="campaign-name-link" title="' + row[2] + '">' + row[2] + '</a>';
+    }
+
+    function renderPercentage (row) {
+        if (Number(row[10]) != parseInt(Number(row[10]))){
+            return Number(row[10]).toFixed(2) + '%';
+        }
+        return row[10] + '%';
     }
 
     function FormatFooter (column, value, index) {
