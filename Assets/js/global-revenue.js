@@ -129,7 +129,6 @@ Mautic.loadGlobalRevenueWidget = function () {
             });  //getScriptsCachedOnce - datatables js
         });
     }
-}; //loadGlobalRevenueWidget
 
     function renderPublishToggle (id, active) {
         if (active == 1) {
@@ -171,38 +170,41 @@ Mautic.loadGlobalRevenueWidget = function () {
         }
         return numFormat(value);
     }
+}; //loadGlobalRevenueWidget
 
 // getScriptCachedOnce for faster page loads in the backend.
-    mQuery.getScriptCachedOnce = function (url, callback) {
-        if (
-            typeof window.getScriptCachedOnce !== 'undefined'
-            && window.getScriptCachedOnce.indexOf(url) !== -1
-        ) {
-            callback();
-            return mQuery(this);
-        }
-        else {
-            return mQuery.ajax({
-                url: url,
-                dataType: 'script',
-                cache: true
-            }).done(function () {
-                if (typeof window.getScriptCachedOnce === 'undefined') {
-                    window.getScriptCachedOnce = [];
-                }
-                window.getScriptCachedOnce.push('url');
-                callback();
-            });
-        }
-    };
-
-// getScriptCachedOnce for faster page loads in the backend.
-    mQuery.getCssOnce = function (url, callback) {
-        if (document.createStyleSheet) {
-            document.createStyleSheet(url);
-        }
-        else {
-            mQuery('head').append(mQuery('<link rel=\'stylesheet\' href=\'' + url + '\' type=\'text/css\' />'));
-        }
+mQuery.getScriptCachedOnce = function (url, callback) {
+    if (
+        typeof window.getScriptCachedOnce !== 'undefined'
+        && window.getScriptCachedOnce.indexOf(url) !== -1
+    ) {
         callback();
-    };
+        return mQuery(this);
+    }
+    else {
+        return mQuery.ajax({
+            url: url,
+            dataType: 'script',
+            cache: true
+        }).done(function () {
+            if (typeof window.getScriptCachedOnce === 'undefined') {
+                window.getScriptCachedOnce = [];
+            }
+            window.getScriptCachedOnce.push('url');
+            callback();
+        });
+    }
+};
+
+// getScriptCachedOnce for faster page loads in the backend.
+mQuery.getCssOnce = function (url, callback) {
+    if (document.createStyleSheet) {
+        document.createStyleSheet(url);
+    }
+    else {
+        mQuery('head').append(mQuery('<link rel=\'stylesheet\' href=\'' + url + '\' type=\'text/css\' />'));
+    }
+    callback();
+};
+
+
