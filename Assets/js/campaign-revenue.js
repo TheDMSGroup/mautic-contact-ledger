@@ -26,6 +26,11 @@ Mautic.loadCampaignRevenueWidget = function (params) {
                             ],
                             'aaSorting': [],
                             'autoFill': true,
+                            dom: '<<lBf>rtip>',
+                            buttons: [
+                                'excelHtml5',
+                                'csvHtml5'
+                            ],
                             'footerCallback': function (row, data, start, end, display) {
                                 // Add table footer if it doesnt exist
                                 var container = mQuery('#campaign-revenue-table');
@@ -67,6 +72,7 @@ Mautic.loadCampaignRevenueWidget = function (params) {
                                 }
                             } // FooterCallback
                         }); // datatable
+                        mQuery('#campaign-revenue-table_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
                     }); //getScriptsCachedOnce - fonteawesome css
                 });//getScriptsCachedOnce - datatables css
             });  //getScriptsCachedOnce - datatables js

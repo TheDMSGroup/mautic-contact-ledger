@@ -26,6 +26,11 @@ Mautic.loadSourceRevenueWidget = function () {
                                     order: [[2, 'asc'], [4, 'asc']],
                                     bLengthChange: false,
                                     lengthMenu: [[rowCount]],
+                                    dom: '<<lBf>rtip>',
+                                    buttons: [
+                                        'excelHtml5',
+                                        'csvHtml5'
+                                    ],
                                     columnDefs: [
                                         {
                                             render: function (data, type, row) {
@@ -53,7 +58,8 @@ Mautic.loadSourceRevenueWidget = function () {
                                         },
                                         {
                                             render: function (data, type, row) {
-                                                return data + '%';
+                                                //return 'foo';
+                                                return renderMarginPercentage(row);
                                             },
                                             targets: 12
                                         },
@@ -122,7 +128,12 @@ Mautic.loadSourceRevenueWidget = function () {
                                             console.log(e);
                                         }
                                     } // FooterCallback
+
+
+
+
                                 }); //.DataTables
+                                mQuery('#source-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
                             } //success
                         });//ajax
                     }); //getScriptsCachedOnce - fonteawesome css
@@ -130,45 +141,53 @@ Mautic.loadSourceRevenueWidget = function () {
             });  //getScriptsCachedOnce - datatables js
         });
     }
+
+    function renderPublishToggle (id, active) {
+        if (active == 1) {
+            var icon = 'fa-toggle-on';
+            var status = 'published';
+        }
+        else {
+            var icon = 'fa-toggle-off';
+            var status = 'unpublished';
+        }
+        var UpperStatus = status.charAt(0).toUpperCase() + status.substring(1);
+        return '<a data-toggle="ajax"><i title="' + UpperStatus + '"class="fa fa-fw fa-lg ' + icon + ' text-success has-click-event campaign-publish-icon' + id + '" data-toggle="tooltip" data-container="body" data-placement="right" data-status="' + status + '" onclick="Mautic.togglePublishStatus(event, \'.campaign-publish-icon' + id + '\', \'campaign\', ' + id + ', \'\', false);" data-original-title="' + UpperStatus + '"></i></a>';
+    }
+
+    function renderCampaignName (row) {
+        return '<a href="./campaigns/view/'+ row[1] +'" class="campaign-name-link" title="'+ row[2] + '">'+ row[2] + '</a>';
+    }
+
+    function renderMarginPercentage (row) {
+        if (Number(row[12]) != parseInt(Number(row[12]))){
+            return Number(row[12]).toFixed(2) + '%';
+        }
+        return row[12] + '%';
+    }
+
+    function renderSourceName (row) {
+        return '<a href="./contactsource/view/'+ row[3] +'" class="campaign-name-link" title="'+ row[4] + '">'+ row[4] + '</a>';
+    }
+
+    function FormatFooter (column, value, index) {
+        column = column.trim();
+        var numFormat = mQuery.fn.dataTable.render.number(',', '.', 0).display;
+        var curFormat = mQuery.fn.dataTable.render.number(',', '.', 2, '$').display;
+        var curPreciseFormat = mQuery.fn.dataTable.render.number(',', '.', 4, '$').display;
+        if (column === 'Margin') {
+            return ' - ';
+        }
+        if (column === 'Revenue' || column === 'Cost' || column === 'GM') {
+            return curFormat(value);
+        }
+        if (column === 'eCPM') {
+            return curPreciseFormat(value);
+        }
+        return numFormat(value);
+    }
 }; //loadSourceRevenueWidget
 
-function renderPublishToggle (id, active) {
-    if (active == 1) {
-        var icon = 'fa-toggle-on';
-        var status = 'published';
-    }
-    else {
-        var icon = 'fa-toggle-off';
-        var status = 'unpublished';
-    }
-    var UpperStatus = status.charAt(0).toUpperCase() + status.substring(1);
-    return '<a data-toggle="ajax"><i title="' + UpperStatus + '"class="fa fa-fw fa-lg ' + icon + ' text-success has-click-event campaign-publish-icon' + id + '" data-toggle="tooltip" data-container="body" data-placement="right" data-status="' + status + '" onclick="Mautic.togglePublishStatus(event, \'.campaign-publish-icon' + id + '\', \'campaign\', ' + id + ', \'\', false);" data-original-title="' + UpperStatus + '"></i></a>';
-}
-
-function renderCampaignName (row) {
-    return '<a href="./campaigns/view/'+ row[1] +'" class="campaign-name-link" title="'+ row[2] + '">'+ row[2] + '</a>';
-}
-
-function renderSourceName (row) {
-    return '<a href="./contactsource/view/'+ row[3] +'" class="campaign-name-link" title="'+ row[4] + '">'+ row[4] + '</a>';
-}
-
-function FormatFooter (column, value, index) {
-    column = column.trim();
-    var numFormat = mQuery.fn.dataTable.render.number(',', '.', 0).display;
-    var curFormat = mQuery.fn.dataTable.render.number(',', '.', 2, '$').display;
-    var curPreciseFormat = mQuery.fn.dataTable.render.number(',', '.', 4, '$').display;
-    if (column === 'Margin') {
-        return ' - ';
-    }
-    if (column === 'Revenue' || column === 'Cost' || column === 'GM') {
-        return curFormat(value);
-    }
-    if (column === 'eCPM') {
-        return curPreciseFormat(value);
-    }
-    return numFormat(value);
-}
 
 // getScriptCachedOnce for faster page loads in the backend.
 mQuery.getScriptCachedOnce = function (url, callback) {
@@ -203,5 +222,7 @@ mQuery.getCssOnce = function (url, callback) {
     }
     callback();
 };
+
+
 
 

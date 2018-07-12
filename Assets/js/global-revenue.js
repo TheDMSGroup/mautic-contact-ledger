@@ -26,6 +26,11 @@ Mautic.loadGlobalRevenueWidget = function () {
                                     order: [[2, 'asc']],
                                     bLengthChange: false,
                                     lengthMenu: [[rowCount]],
+                                    dom: '<<lBf>rtip>',
+                                    buttons: [
+                                        'excelHtml5',
+                                        'csvHtml5'
+                                    ],
                                     columnDefs: [
                                         {
                                             render: function (data, type, row) {
@@ -47,7 +52,7 @@ Mautic.loadGlobalRevenueWidget = function () {
                                         },
                                         {
                                             render: function (data, type, row) {
-                                                return data + '%';
+                                                return renderPercentage(row);
                                             },
                                             targets: 10
                                         },
@@ -116,6 +121,7 @@ Mautic.loadGlobalRevenueWidget = function () {
                                         }
                                     } // FooterCallback
                                 }); //.DataTables
+                                mQuery('#global-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
                             } //success
                         }); //ajax
                     }); //getScriptsCachedOnce - fonteawesome css
@@ -123,7 +129,6 @@ Mautic.loadGlobalRevenueWidget = function () {
             });  //getScriptsCachedOnce - datatables js
         });
     }
-}; //loadGlobalRevenueWidget
 
     function renderPublishToggle (id, active) {
         if (active == 1) {
@@ -142,6 +147,13 @@ Mautic.loadGlobalRevenueWidget = function () {
         return '<a href="./campaigns/view/' + row[1] + '" class="campaign-name-link" title="' + row[2] + '">' + row[2] + '</a>';
     }
 
+    function renderPercentage (row) {
+        if (Number(row[10]) != parseInt(Number(row[10]))){
+            return Number(row[10]).toFixed(2) + '%';
+        }
+        return row[10] + '%';
+    }
+
     function FormatFooter (column, value, index) {
         column = column.trim();
         var numFormat = mQuery.fn.dataTable.render.number(',', '.', 0).display;
@@ -158,38 +170,41 @@ Mautic.loadGlobalRevenueWidget = function () {
         }
         return numFormat(value);
     }
+}; //loadGlobalRevenueWidget
 
 // getScriptCachedOnce for faster page loads in the backend.
-    mQuery.getScriptCachedOnce = function (url, callback) {
-        if (
-            typeof window.getScriptCachedOnce !== 'undefined'
-            && window.getScriptCachedOnce.indexOf(url) !== -1
-        ) {
-            callback();
-            return mQuery(this);
-        }
-        else {
-            return mQuery.ajax({
-                url: url,
-                dataType: 'script',
-                cache: true
-            }).done(function () {
-                if (typeof window.getScriptCachedOnce === 'undefined') {
-                    window.getScriptCachedOnce = [];
-                }
-                window.getScriptCachedOnce.push('url');
-                callback();
-            });
-        }
-    };
-
-// getScriptCachedOnce for faster page loads in the backend.
-    mQuery.getCssOnce = function (url, callback) {
-        if (document.createStyleSheet) {
-            document.createStyleSheet(url);
-        }
-        else {
-            mQuery('head').append(mQuery('<link rel=\'stylesheet\' href=\'' + url + '\' type=\'text/css\' />'));
-        }
+mQuery.getScriptCachedOnce = function (url, callback) {
+    if (
+        typeof window.getScriptCachedOnce !== 'undefined'
+        && window.getScriptCachedOnce.indexOf(url) !== -1
+    ) {
         callback();
-    };
+        return mQuery(this);
+    }
+    else {
+        return mQuery.ajax({
+            url: url,
+            dataType: 'script',
+            cache: true
+        }).done(function () {
+            if (typeof window.getScriptCachedOnce === 'undefined') {
+                window.getScriptCachedOnce = [];
+            }
+            window.getScriptCachedOnce.push('url');
+            callback();
+        });
+    }
+};
+
+// getScriptCachedOnce for faster page loads in the backend.
+mQuery.getCssOnce = function (url, callback) {
+    if (document.createStyleSheet) {
+        document.createStyleSheet(url);
+    }
+    else {
+        mQuery('head').append(mQuery('<link rel=\'stylesheet\' href=\'' + url + '\' type=\'text/css\' />'));
+    }
+    callback();
+};
+
+
