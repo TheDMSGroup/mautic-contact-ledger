@@ -65,8 +65,8 @@ Mautic.loadSourceRevenueWidget = function () {
                                         },
                                         {visible: false, targets: [1, 3]},
                                         {width: '5%', targets: [0]},
-                                        {width: '20%', targets: [2]},
-                                        {width: '15%', targets: [4]}
+                                        {width: '15%', targets: [2]},
+                                        {width: '12%', targets: [4]}
                                     ],
 
                                     footerCallback: function (row, data, start, end, display) {
@@ -132,7 +132,7 @@ Mautic.loadSourceRevenueWidget = function () {
 
 
 
-                                }); //.DataTables
+                                }).columns.adjust().responsive.recalc(); //.DataTables
                                 mQuery('#source-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
                             } //success
                         });//ajax

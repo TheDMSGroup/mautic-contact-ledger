@@ -22,6 +22,7 @@ Mautic.loadGlobalRevenueWidget = function () {
                                     },
                                     data: response.rows,
                                     autoFill: true,
+                                    autoWidth: true,
                                     columns: response.columns,
                                     order: [[2, 'asc']],
                                     bLengthChange: false,
@@ -57,8 +58,8 @@ Mautic.loadGlobalRevenueWidget = function () {
                                             targets: 10
                                         },
                                         {visible: false, targets: [1]},
-                                        {width: '5%', targets: [0]},
-                                        {width: '20%', targets: [2]}
+                                        // {width: '5%', targets: [0]},
+                                        // {width: '20%', targets: [2]}
                                     ],
 
                                     footerCallback: function (row, data, start, end, display) {
@@ -120,7 +121,7 @@ Mautic.loadGlobalRevenueWidget = function () {
                                             console.log(e);
                                         }
                                     } // FooterCallback
-                                }); //.DataTables
+                                }).columns.adjust().responsive.recalc(); //.DataTables
                                 mQuery('#global-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
                             } //success
                         }); //ajax
