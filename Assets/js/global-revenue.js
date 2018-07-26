@@ -1,5 +1,6 @@
 Mautic.loadGlobalRevenueWidget = function () {
     var $globaltarget = mQuery('#global-revenue');
+    var $globalwrapper = mQuery('#global-revenue_wrapper');
     if ($globaltarget.length) {
         mQuery('#global-revenue:not(.table-initialized):first').addClass('table-initialized').each(function () {
             mQuery.getScriptCachedOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
@@ -123,6 +124,9 @@ Mautic.loadGlobalRevenueWidget = function () {
                                     } // FooterCallback
                                 }).columns.adjust().responsive.recalc(); //.DataTables
                                 mQuery('#global-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
+                                mQuery('#global-revenue').css('width', 'auto');
+                                mQuery('#global-revenue').css("font-size", ".8em")
+                                mQuery('#global-revenue_wrapper').css('overflow-x', 'scroll');
                             } //success
                         }); //ajax
                     }); //getScriptsCachedOnce - fonteawesome css

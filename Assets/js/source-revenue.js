@@ -84,7 +84,7 @@ Mautic.loadSourceRevenueWidget = function () {
                                                 var tr2 = mQuery('<tr class=\'detailGrandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
                                                 tr.append(mQuery('<td colspan=\'3\'>Page totals</td>'));
                                                 tr2.append(mQuery('<td colspan=\'3\'>Grand totals</td>'));
-                                                for (var i = 2; i < columns; i++) {
+                                                for (var i = 5; i < columns; i++) {
                                                     tr.append(mQuery('<td class=\'td-right\'></td>'));
                                                     tr2.append(mQuery('<td class=\'td-right\'></td>'));
                                                 }
@@ -132,8 +132,11 @@ Mautic.loadSourceRevenueWidget = function () {
 
 
 
-                                }).columns.adjust().responsive.recalc(); //.DataTables
+                                }); //.DataTables
                                 mQuery('#source-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
+                                mQuery('#source-revenue').css("width", "auto");
+                                mQuery('#source-revenue').css("font-size", ".8em")
+                                mQuery('#source-revenue_wrapper').css("overflow-x", "scroll");
                             } //success
                         });//ajax
                     }); //getScriptsCachedOnce - fonteawesome css
