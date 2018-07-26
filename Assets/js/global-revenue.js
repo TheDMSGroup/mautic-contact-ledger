@@ -122,7 +122,7 @@ Mautic.loadGlobalRevenueWidget = function () {
                                             console.log(e);
                                         }
                                     } // FooterCallback
-                                }).columns.adjust().responsive.recalc(); //.DataTables
+                                }); //.DataTables
                                 mQuery('#global-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
                                 mQuery('#global-revenue').css('width', 'auto');
                                 mQuery('#global-revenue').css("font-size", ".8em")
