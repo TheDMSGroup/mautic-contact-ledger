@@ -1,5 +1,6 @@
 Mautic.loadGlobalRevenueWidget = function () {
     var $globaltarget = mQuery('#global-revenue');
+    var $globalwrapper = mQuery('#global-revenue_wrapper');
     if ($globaltarget.length) {
         mQuery('#global-revenue:not(.table-initialized):first').addClass('table-initialized').each(function () {
             mQuery.getScriptCachedOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
@@ -22,6 +23,7 @@ Mautic.loadGlobalRevenueWidget = function () {
                                     },
                                     data: response.rows,
                                     autoFill: true,
+                                    autoWidth: true,
                                     columns: response.columns,
                                     order: [[2, 'asc']],
                                     bLengthChange: false,
@@ -57,8 +59,8 @@ Mautic.loadGlobalRevenueWidget = function () {
                                             targets: 10
                                         },
                                         {visible: false, targets: [1]},
-                                        {width: '5%', targets: [0]},
-                                        {width: '20%', targets: [2]}
+                                        // {width: '5%', targets: [0]},
+                                        // {width: '20%', targets: [2]}
                                     ],
 
                                     footerCallback: function (row, data, start, end, display) {
@@ -122,6 +124,9 @@ Mautic.loadGlobalRevenueWidget = function () {
                                     } // FooterCallback
                                 }); //.DataTables
                                 mQuery('#global-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
+                                mQuery('#global-revenue').css('width', 'auto');
+                                mQuery('#global-revenue').css("font-size", ".8em")
+                                mQuery('#global-revenue_wrapper').css('overflow-x', 'scroll');
                             } //success
                         }); //ajax
                     }); //getScriptsCachedOnce - fonteawesome css

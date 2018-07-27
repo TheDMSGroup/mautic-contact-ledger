@@ -65,8 +65,8 @@ Mautic.loadSourceRevenueWidget = function () {
                                         },
                                         {visible: false, targets: [1, 3]},
                                         {width: '5%', targets: [0]},
-                                        {width: '20%', targets: [2]},
-                                        {width: '15%', targets: [4]}
+                                        {width: '15%', targets: [2]},
+                                        {width: '12%', targets: [4]}
                                     ],
 
                                     footerCallback: function (row, data, start, end, display) {
@@ -84,7 +84,7 @@ Mautic.loadSourceRevenueWidget = function () {
                                                 var tr2 = mQuery('<tr class=\'detailGrandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
                                                 tr.append(mQuery('<td colspan=\'3\'>Page totals</td>'));
                                                 tr2.append(mQuery('<td colspan=\'3\'>Grand totals</td>'));
-                                                for (var i = 2; i < columns; i++) {
+                                                for (var i = 5; i < columns; i++) {
                                                     tr.append(mQuery('<td class=\'td-right\'></td>'));
                                                     tr2.append(mQuery('<td class=\'td-right\'></td>'));
                                                 }
@@ -134,6 +134,9 @@ Mautic.loadSourceRevenueWidget = function () {
 
                                 }); //.DataTables
                                 mQuery('#source-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
+                                mQuery('#source-revenue').css("width", "auto");
+                                mQuery('#source-revenue').css("font-size", ".8em")
+                                mQuery('#source-revenue_wrapper').css("overflow-x", "scroll");
                             } //success
                         });//ajax
                     }); //getScriptsCachedOnce - fonteawesome css
