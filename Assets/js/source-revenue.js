@@ -54,14 +54,14 @@ Mautic.loadSourceRevenueWidget = function () {
                                             render: function (data, type, row) {
                                                 return '$' + data;
                                             },
-                                            targets: [9, 10, 11, 13]
+                                            targets: [10, 11, 13, 14]
                                         },
                                         {
                                             render: function (data, type, row) {
                                                 //return 'foo';
                                                 return renderMarginPercentage(row);
                                             },
-                                            targets: 12
+                                            targets: 13
                                         },
                                         {visible: false, targets: [1, 3]},
                                         {width: '5%', targets: [0]},
