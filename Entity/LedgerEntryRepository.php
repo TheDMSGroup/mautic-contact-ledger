@@ -16,7 +16,8 @@ use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Doctrine\DBAL\Types\Type;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
-
+use Doctrine\ORM\Internal\Hydration\AbstractHydrator, PDO;
+use Doctrine\DBAL\Connection;
 /**
  * Class LedgerEntryRepository.
  */
@@ -217,7 +218,7 @@ class LedgerEntryRepository extends CommonRepository
 
         // get utm_source data for leads with NO Contact Source Stat record (direct API, manually created, imports etc)
         $otherFinancials = $this->getAlternateCampaignSourceData($params, $bySource, $cache_dir, $realtime);
-
+        $financials = array_merge($financials, $otherFinancials);
         foreach ($financials as $financial) {
             // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
             $financial['revenue']      = number_format(floatval($financial['revenue']), 2, '.', ',');
@@ -308,15 +309,15 @@ class LedgerEntryRepository extends CommonRepository
                 'l1.id'
             )
             ->from(MAUTIC_TABLE_PREFIX.'leads', 'l1')
-            ->leftJoin('cl', MAUTIC_TABLE_PREFIX.'contactsource_stats', 'cs', 'cl.contact_id = s.contact_id')
-            ->where('s.contact_id IS NULL')
+            ->leftJoin('l1', MAUTIC_TABLE_PREFIX.'contactsource_stats', 'cs', 'l1.id = cs.contact_id')
+            ->where('cs.contact_id IS NULL')
             ->andWhere('l1.date_added BETWEEN :dateFrom AND :dateTo');
         $leadBuilder
             // ->setParameter('dateFrom', $params['dateFrom'])
             // ->setParameter('dateTo', $params['dateTo']);
             ->setParameter('dateFrom', '2018-08-03 00:00:00')
             ->setParameter('dateTo', '2018-08-03 23:59:59');
-        $leads = $leadBuilder->getQuery()->getResult();
+        $leads = $leadBuilder->execute()->fetchAll(PDO::FETCH_COLUMN);
 
         // Main Query
         $ledgerBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
@@ -327,30 +328,37 @@ class LedgerEntryRepository extends CommonRepository
 	            'SUM(cl.`cost`) AS cost',
 	            'SUM(cl.`revenue`) AS revenue',
 	            'cl.campaign_id',
-	            'lu.utm_source as utmsource_tags'
+                'c.name',
+                'c.is_published',
+                '0 as scrubbed',
+                '0 as rejected',
+                'NULL as contactsource_id',
+                'NULL as source',
+                'cc.date_added'
             )
-            ->from($leadBuilder->getQuery(), 'l');
+            ->from('('.$leadBuilder->getSQL().')', 'l');
 
         // cost and revenue expression
         $costRevenueBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $costRevenueBuilder
             ->select('SUM(clss.cost) as cost', 'SUM(clss.revenue) as revenue', 'clss.campaign_id', 'clss.contact_id')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger' ,'clss')
-            ->where("clss.contact_id IN ($leads)")
-            ->andWhere('AND clss.class_name = "ContactClient"')
+            ->where("clss.contact_id IN (:leads)")
+            //->andWhere('AND clss.class_name = "ContactClient"')
             ->groupBy('clss.contact_id', 'clss.campaign_id');
 
         // converted expression
         $convertedBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $convertedBuilder
-            ->select('ccss.type', 'ccss.contact_id')
+            ->select('ccss.type', 'ccss.contact_id', 'ccss.date_added')
             ->from(MAUTIC_TABLE_PREFIX.'contactclient_stats' ,'ccss')
-            ->where("clss.contact_id IN ($leads)")
+            ->where("ccss.contact_id IN (:leads)")
             ->groupBy('ccss.contact_id');
 
         $ledgerBuilder
             ->leftJoin('l', '('.$costRevenueBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id')
-            ->leftJoin('l', '('.$convertedBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id');
+            ->leftJoin('l', '('.$convertedBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id')
+            ->leftJoin('cl', 'campaigns', 'c', 'cl.campaign_id = c.id');
 
         $ledgerBuilder
             ->groupBy('cl.campaign_id');
@@ -358,67 +366,17 @@ class LedgerEntryRepository extends CommonRepository
         if ($bySource) {
             $ledgerBuilder
                 ->addSelect('lu.utm_source')
-                ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_utmTags', 'lu', 'l.id = lu.lead_id')
+                ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_utmtags', 'lu', 'l.id = lu.lead_id')
                 ->addGroupBy('lu.utm_source');
         }
+        $ledgerBuilder
+            ->setParameter('leads', $leads, Connection::PARAM_STR_ARRAY)
+            // ->setParameter('dateFrom', $params['dateFrom'])
+            // ->setParameter('dateTo', $params['dateTo']);
+            ->setParameter('dateFrom', '2018-08-03 00:00:00')
+            ->setParameter('dateTo', '2018-08-03 23:59:59');
 
-        $ledger = $ledgerBuilder->getQuery()->getResult();
+        $ledger = $ledgerBuilder->execute()->fetchAll();
         return $ledger;
     }
 }
-
-/**
- * #EXPLAIN
-SELECT
-COUNT(l.id) AS received,
-SUM(IF(cc.type = 'converted', 1, 0)) AS converted,
-SUM(cl.`cost`) AS cost,
-SUM(cl.`revenue`) AS revenue,
-cl.campaign_id,
-lu.utm_source as utmsource_tags
-
-
-# this return 1539 rows
-FROM (SELECT ld.id, ld.date_added FROM leads ld
-LEFT JOIN contactsource_stats s
-ON ld.id = s.contact_id
-WHERE s.contact_id IS NULL
-AND ld.date_added >= '2018-08-03' AND ld.date_added <= '2018-08-04'
-) as l
-
-LEFT JOIN lead_utmtags lu
-on l.id = lu.lead_id
-
-LEFT JOIN
-(
-SELECT SUM(clss.cost) as cost, SUM(clss.revenue) as revenue, clss.campaign_id, clss.contact_id
-FROM contact_ledger clss
-WHERE clss.contact_id IN (
-SELECT l2.id FROM leads l2
-LEFT JOIN contactsource_stats s2
-ON l2.id = s2.contact_id
-WHERE s2.contact_id IS NULL
-AND l2.date_added >= '2018-08-03' AND l2.date_added <= '2018-08-04'
-)
-AND clss.class_name = "ContactClient"
-GROUP BY clss.contact_id, clss.campaign_id
-) cl
-ON l.id = cl.contact_id
-
-LEFT JOIN (
-SELECT ccss.type, ccss.contact_id
-FROM contactclient_stats ccss
-WHERE ccss.contact_id IN (
-SELECT l3.id FROM leads l3
-LEFT JOIN contactsource_stats s3
-ON l3.id = s3.contact_id
-WHERE s3.contact_id IS NULL
-AND l3.date_added >= '2018-08-03' AND l3.date_added <= '2018-08-04'
-)
-GROUP BY ccss.contact_id
-) cc
-ON l.id = cc.contact_id
-
-GROUP BY cl.campaign_id, lu.utm_source
-;
- */
