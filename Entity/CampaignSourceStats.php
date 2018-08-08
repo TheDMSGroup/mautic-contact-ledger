@@ -102,7 +102,7 @@ class CampaignSourceStats extends CommonEntity
     protected $utmSource;
 
     /**
-     * @var boolean
+     * @var bool
      */
     protected $reprocessFlag;
 
@@ -507,7 +507,7 @@ class CampaignSourceStats extends CommonEntity
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function getReProcessFlag()
     {
@@ -515,7 +515,7 @@ class CampaignSourceStats extends CommonEntity
     }
 
     /**
-     * @param boolean $reprocessFlag
+     * @param bool $reprocessFlag
      *
      * @return $this
      */

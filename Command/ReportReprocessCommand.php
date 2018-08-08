@@ -69,8 +69,8 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
 
         do {
             // 1) Get MAX(date_added) records where reprocess_flag = 1
-            $batchStart = microtime(true);;
-            $params = $this->getDateParams($params);
+            $batchStart = microtime(true);
+            $params     = $this->getDateParams($params);
 
             if ('invalid' == $params['dateFrom']) {
                 $output->writeln(
@@ -79,7 +79,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
                 $batchCount = $batchLimit;
             } else {
                 $output->writeln(
-                    "<comment>Batch Index: ".(int) $batchCount."  --> Using Parameters:\n \tDate => ".$params['dateFrom'].' and '.$params['dateTo']." UTC,\n \tQuery Cache Directory => ".$params['cacheDir'].'</comment>'
+                    '<comment>Batch Index: '.(int) $batchCount."  --> Using Parameters:\n \tDate => ".$params['dateFrom'].' and '.$params['dateTo']." UTC,\n \tQuery Cache Directory => ".$params['cacheDir'].'</comment>'
                 );
 
                 // 2) Get entities that match date_added
@@ -105,15 +105,13 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
                 $contextTime = $timeContext - $timeStart;
                 $batchRun    = $timeContext - $batchStart;
                 $output->writeln(
-                    "<comment>\t⌛ Batch Run Time: ".$batchRun."  --> Total Elapsed time so far: ".$contextTime.".</comment>"
+                    "<comment>\t⌛ Batch Run Time: ".$batchRun.'  --> Total Elapsed time so far: '.$contextTime.'.</comment>'
                 );
             }
-            $batchCount++;
-
+            ++$batchCount;
         } while ($batchCount < $batchLimit);
 
         $this->completeRun();
-
 
         $output->writeln('<info>Complete With No Errors.</info>');
         $timeEnd     = microtime(true);
@@ -156,10 +154,8 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
             $params['dateFrom'] = $from->format('Y-m-d H:i:s');
 
             $params['dateTo'] = $to->format('Y-m-d H:i:s');
-
         } else {
             $params['dateFrom'] = $params['dateTo'] = 'invalid';
-
         }
 
         return $params;
@@ -210,7 +206,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
         $entity = new CampaignSourceStats();
         foreach ($fieldsMap as $entityParam => $statKey) {
             if (null == $stat[$statKey]) {
-                $stat[$statKey] = "";
+                $stat[$statKey] = '';
             }
             $entity->__set($entityParam, $stat[$statKey]);
         }

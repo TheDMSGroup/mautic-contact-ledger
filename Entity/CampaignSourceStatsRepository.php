@@ -147,9 +147,8 @@ class CampaignSourceStatsRepository extends CommonRepository
         return $results;
     }
 
-
     /**
-     * Gets MAX(date_added) Entity where reprocessFlag = 1
+     * Gets MAX(date_added) Entity where reprocessFlag = 1.
      *
      * @return object
      */
@@ -173,6 +172,7 @@ class CampaignSourceStatsRepository extends CommonRepository
         $criteria = ['dateAdded'=>$params['dateTo'], 'reprocessFlag' => true];
 
         $entities = $this->findBy($criteria);
+
         return $entities;
     }
 }
