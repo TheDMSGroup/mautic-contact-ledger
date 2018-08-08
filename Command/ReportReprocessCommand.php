@@ -50,7 +50,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $batchLimit = 300; // change this as needed.
+        $batchLimit = 50; // change this as needed.
         $batchCount = 0;
         $container  = $this->getContainer();
         $this->em   = $container->get('doctrine.orm.entity_manager');
