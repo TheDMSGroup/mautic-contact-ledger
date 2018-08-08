@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Command\ModeratedCommand;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -40,6 +41,13 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
         $this->setName('mautic:ledger:report:reprocess')
             ->setDescription(
                 'Reprocess stats in contact_ledger_campaign_source_stats table because logic/schema has changed. You must run a migration to set column \'reprocess_flag\' to 1 before this works.'
+            )
+            ->addOption(
+                '--batch-limit',
+                '-b',
+                InputOption::VALUE_OPTIONAL,
+                'Batch Limit Size - how many cycles to run per cron. Default = 50.',
+                null
             );
 
         parent::configure();
@@ -50,7 +58,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $batchLimit = 50; // change this as needed.
+        $batchLimit = empty($input->getOption('batch-limit')) ? 50 : $input->getOption('batch-limit'); // change this as needed.
         $batchCount = 0;
         $container  = $this->getContainer();
         $this->em   = $container->get('doctrine.orm.entity_manager');
