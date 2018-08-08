@@ -221,7 +221,6 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
                 'margin'          => 'gross_margin',
                 'ecpm'            => 'ecpm',
                 'utmSource'       => 'utm_source',
-                'reprocessFlag'   => 'reprocess_flag',
             ],
             'CampaignSourceBudgets' => [
             ],
@@ -232,9 +231,13 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
         $class  = '\MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context;
         $entity = new $class();
         foreach ($fieldsMap[$context] as $entityParam => $statKey) {
+            if (null == $stat[$statKey]) {
+                $stat[$statKey] = '';
+            }
             $entity->__set($entityParam, $stat[$statKey]);
         }
         $entity->setDateAdded($dateTo);
+        $entity->setReprocessFlag(false);
 
         return $entity;
     }
