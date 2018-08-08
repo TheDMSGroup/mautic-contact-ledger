@@ -13,11 +13,12 @@ namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
 use Doctrine\Common\Cache\FilesystemCache;
 use Doctrine\DBAL\Cache\QueryCacheProfile;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
-use Doctrine\ORM\Internal\Hydration\AbstractHydrator, PDO;
-use Doctrine\DBAL\Connection;
+use PDO;
+
 /**
  * Class LedgerEntryRepository.
  */
@@ -218,7 +219,7 @@ class LedgerEntryRepository extends CommonRepository
 
         // get utm_source data for leads with NO Contact Source Stat record (direct API, manually created, imports etc)
         $otherFinancials = $this->getAlternateCampaignSourceData($params, $bySource, $cache_dir, $realtime);
-        $financials = array_merge($financials, $otherFinancials);
+        $financials      = array_merge($financials, $otherFinancials);
         foreach ($financials as $financial) {
             // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
             $financial['revenue']      = number_format(floatval($financial['revenue']), 2, '.', ',');
@@ -324,10 +325,10 @@ class LedgerEntryRepository extends CommonRepository
         $ledgerBuilder
             ->select(
                 'COUNT(l.id) AS received',
-	            'SUM(IF(cc.type = "converted", 1, 0)) AS converted',
-	            'SUM(cl.`cost`) AS cost',
-	            'SUM(cl.`revenue`) AS revenue',
-	            'cl.campaign_id',
+                'SUM(IF(cc.type = "converted", 1, 0)) AS converted',
+                'SUM(cl.`cost`) AS cost',
+                'SUM(cl.`revenue`) AS revenue',
+                'cl.campaign_id',
                 'c.name',
                 'c.is_published',
                 '0 as scrubbed',
@@ -342,8 +343,8 @@ class LedgerEntryRepository extends CommonRepository
         $costRevenueBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $costRevenueBuilder
             ->select('SUM(clss.cost) as cost', 'SUM(clss.revenue) as revenue', 'clss.campaign_id', 'clss.contact_id')
-            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger' ,'clss')
-            ->where("clss.contact_id IN (:leads)")
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'clss')
+            ->where('clss.contact_id IN (:leads)')
             //->andWhere('AND clss.class_name = "ContactClient"')
             ->groupBy('clss.contact_id', 'clss.campaign_id');
 
@@ -351,8 +352,8 @@ class LedgerEntryRepository extends CommonRepository
         $convertedBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $convertedBuilder
             ->select('ccss.type', 'ccss.contact_id', 'ccss.date_added')
-            ->from(MAUTIC_TABLE_PREFIX.'contactclient_stats' ,'ccss')
-            ->where("ccss.contact_id IN (:leads)")
+            ->from(MAUTIC_TABLE_PREFIX.'contactclient_stats', 'ccss')
+            ->where('ccss.contact_id IN (:leads)')
             ->groupBy('ccss.contact_id');
 
         $ledgerBuilder
@@ -377,6 +378,7 @@ class LedgerEntryRepository extends CommonRepository
             ->setParameter('dateTo', '2018-08-03 23:59:59');
 
         $ledger = $ledgerBuilder->execute()->fetchAll();
+
         return $ledger;
     }
 }

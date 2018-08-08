@@ -220,7 +220,8 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
                 'grossIncome'     => 'gross_income',
                 'margin'          => 'gross_margin',
                 'ecpm'            => 'ecpm',
-                'utmSource'      => 'utm_source',
+                'utmSource'       => 'utm_source',
+                'reprocessFlag'   => 'reprocess_flag'
             ],
             'CampaignSourceBudgets' => [
             ],

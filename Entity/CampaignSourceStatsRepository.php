@@ -124,12 +124,12 @@ class CampaignSourceStatsRepository extends CommonRepository
                 $financial['active'],
                 $financial['campaign_id'],
             ];
-            $result[] = empty($financial['name']) ? "-" : $financial['name'];
+            $result[] = empty($financial['name']) ? '-' : $financial['name'];
 
             if ($bySource) {
                 $result[] = $financial['sourceid'];
-                $result[] = empty($financial['sourcename']) ? "-" : $financial['sourcename'];
-                $result[] = empty($financial['utm_source']) ? "-" : $financial['utm_source'];
+                $result[] = empty($financial['sourcename']) ? '-' : $financial['sourcename'];
+                $result[] = empty($financial['utm_source']) ? '-' : $financial['utm_source'];
             }
             $result[] = $financial['received'];
             $result[] = $financial['scrubbed'];

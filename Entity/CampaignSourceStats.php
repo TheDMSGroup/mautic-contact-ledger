@@ -101,6 +101,11 @@ class CampaignSourceStats extends CommonEntity
      */
     protected $utmSource;
 
+    /**
+     * @var boolean
+     */
+    protected $reprocessFlag;
+
     public function __set($field, $value)
     {
         if (property_exists($this, $field)) {
@@ -186,7 +191,10 @@ class CampaignSourceStats extends CommonEntity
 
         $builder->createField('utmSource', 'string')
             ->columnName('utm_source')
-            ->nullable()
+            ->build();
+
+        $builder->createField('reprocessFlag', 'boolean')
+            ->columnName('reprocess_flag')
             ->build();
 
         $builder->addIndex(['campaign_id', 'contact_source_id', 'utm_source'], 'idx_campaignsource')
@@ -494,6 +502,26 @@ class CampaignSourceStats extends CommonEntity
     public function setUtmSource($utmSource)
     {
         $this->utmSource = $utmSource;
+
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getReProcessFlag()
+    {
+        return $this->reprocessFlag;
+    }
+
+    /**
+     * @param boolean $reprocessFlag
+     *
+     * @return $this
+     */
+    public function setReprocessFlag($reprocessFlag)
+    {
+        $this->reprocessFlag = $reprocessFlag;
 
         return $this;
     }
