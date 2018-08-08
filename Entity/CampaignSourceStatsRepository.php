@@ -92,7 +92,7 @@ class CampaignSourceStatsRepository extends CommonRepository
             )
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats', 'css')
             ->join('css', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = css.campaign_id')
-            ->join('css', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = css.contact_source_id')
+            ->leftJoin('css', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = css.contact_source_id')
             ->where('css.date_added BETWEEN :dateFrom AND :dateTo')
             ->groupBy('css.campaign_id')
             ->orderBy('c.name', 'ASC');
@@ -100,9 +100,9 @@ class CampaignSourceStatsRepository extends CommonRepository
         if ($bySource) {
             $query->addSelect(
                 'css.contact_source_id as sourceid,
-            cs.name as sourcename'
+            cs.name as sourcename, css.utm_source as utm_source'
             );
-            $query->addGroupBy('css.contact_source_id');
+            $query->addGroupBy('css.contact_source_id', 'css.utm_source');
         }
         $query
             ->setParameter('dateFrom', $params['dateFrom'])
@@ -120,14 +120,16 @@ class CampaignSourceStatsRepository extends CommonRepository
                 $financial['ecpm']         = 0;
             }
 
-            $result = [
+            $result   = [
                 $financial['active'],
                 $financial['campaign_id'],
-                $financial['name'],
             ];
+            $result[] = empty($financial['name']) ? "-" : $financial['name'];
+
             if ($bySource) {
                 $result[] = $financial['sourceid'];
-                $result[] = $financial['sourcename'];
+                $result[] = empty($financial['sourcename']) ? "-" : $financial['sourcename'];
+                $result[] = empty($financial['utm_source']) ? "-" : $financial['utm_source'];
             }
             $result[] = $financial['received'];
             $result[] = $financial['scrubbed'];

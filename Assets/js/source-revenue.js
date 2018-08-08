@@ -23,7 +23,7 @@ Mautic.loadSourceRevenueWidget = function () {
                                     data: response.rows,
                                     autoFill: true,
                                     columns: response.columns,
-                                    order: [[2, 'asc'], [4, 'asc']],
+                                    order: [[2, 'asc'], [4, 'asc'], [5, 'asc']],
                                     bLengthChange: false,
                                     lengthMenu: [[rowCount]],
                                     dom: '<<lBf>rtip>',
@@ -54,7 +54,7 @@ Mautic.loadSourceRevenueWidget = function () {
                                             render: function (data, type, row) {
                                                 return '$' + data;
                                             },
-                                            targets: [10, 11, 13, 14]
+                                            targets: [10, 11, 12, 14]
                                         },
                                         {
                                             render: function (data, type, row) {
@@ -82,9 +82,9 @@ Mautic.loadSourceRevenueWidget = function () {
                                                 var footer = mQuery('<tfoot></tfoot>');
                                                 var tr = mQuery('<tr class=\'detailPageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
                                                 var tr2 = mQuery('<tr class=\'detailGrandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
-                                                tr.append(mQuery('<td colspan=\'3\'>Page totals</td>'));
-                                                tr2.append(mQuery('<td colspan=\'3\'>Grand totals</td>'));
-                                                for (var i = 5; i < columns; i++) {
+                                                tr.append(mQuery('<td colspan=\'4\'>Page totals</td>'));
+                                                tr2.append(mQuery('<td colspan=\'4\'>Grand totals</td>'));
+                                                for (var i = 6; i < columns; i++) {
                                                     tr.append(mQuery('<td class=\'td-right\'></td>'));
                                                     tr2.append(mQuery('<td class=\'td-right\'></td>'));
                                                 }
@@ -104,20 +104,20 @@ Mautic.loadSourceRevenueWidget = function () {
                                             var total = mQuery('#' + container[0].id + ' thead th').length;
                                             var footer1 = mQuery(container).find('tfoot tr:nth-child(1)');
                                             var footer2 = mQuery(container).find('tfoot tr:nth-child(2)');
-                                            for (var i = 2; i < total - 1; i++) {
+                                            for (var i = 2; i < total -2; i++) {
                                                 var pageSum = api
-                                                    .column(i + 3, {page: 'current'})
+                                                    .column(i + 4, {page: 'current'})
                                                     .data()
                                                     .reduce(function (a, b) {
                                                         return intVal(a) + intVal(b);
                                                     }, 0);
                                                 var sum = api
-                                                    .column(i + 3)
+                                                    .column(i + 4)
                                                     .data()
                                                     .reduce(function (a, b) {
                                                         return intVal(a) + intVal(b);
                                                     }, 0);
-                                                var title = mQuery(container).find('thead th:nth-child(' + (i + 2) + ')').text();
+                                                var title = mQuery(container).find('thead th:nth-child(' + (i + 3) + ')').text();
                                                 footer1.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, pageSum, i));
                                                 footer2.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, sum, i));
                                             }
@@ -150,16 +150,23 @@ Mautic.loadSourceRevenueWidget = function () {
             var icon = 'fa-toggle-on';
             var status = 'published';
         }
-        else {
+        else if (active = 0) {
             var icon = 'fa-toggle-off';
             var status = 'unpublished';
+        }
+        else {
+            // no campaign, so leave empty.
+            return "N/A";
         }
         var UpperStatus = status.charAt(0).toUpperCase() + status.substring(1);
         return '<a data-toggle="ajax"><i title="' + UpperStatus + '"class="fa fa-fw fa-lg ' + icon + ' text-success has-click-event campaign-publish-icon' + id + '" data-toggle="tooltip" data-container="body" data-placement="right" data-status="' + status + '" onclick="Mautic.togglePublishStatus(event, \'.campaign-publish-icon' + id + '\', \'campaign\', ' + id + ', \'\', false);" data-original-title="' + UpperStatus + '"></i></a>';
     }
 
     function renderCampaignName (row) {
-        return '<a href="./campaigns/view/'+ row[1] +'" class="campaign-name-link" title="'+ row[2] + '">'+ row[2] + '</a>';
+        if (row[1] !== ""){
+            return '<a href="./campaigns/view/'+ row[1] +'" class="campaign-name-link" title="'+ row[2] + '">'+ row[2] + '</a>';
+        }
+        return row[2];
     }
 
     function renderMarginPercentage (row) {
@@ -170,7 +177,10 @@ Mautic.loadSourceRevenueWidget = function () {
     }
 
     function renderSourceName (row) {
-        return '<a href="./contactsource/view/'+ row[3] +'" class="campaign-name-link" title="'+ row[4] + '">'+ row[4] + '</a>';
+        if (row[3] !== "") {
+            return '<a href="./contactsource/view/'+ row[3] +'" class="campaign-name-link" title="'+ row[4] + '">'+ row[4] + '</a>';
+        }
+        return row[4];
     }
 
     function FormatFooter (column, value, index) {
