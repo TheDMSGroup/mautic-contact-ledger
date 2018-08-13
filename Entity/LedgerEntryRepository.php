@@ -13,9 +13,11 @@ namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
 use Doctrine\Common\Cache\FilesystemCache;
 use Doctrine\DBAL\Cache\QueryCacheProfile;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
+use PDO;
 
 /**
  * Class LedgerEntryRepository.
@@ -165,9 +167,9 @@ class LedgerEntryRepository extends CommonRepository
         $revJoinCond = 'clr.campaign_id = ss.campaign_id AND ss.date_added BETWEEN :dateFrom AND :dateTo';
         if ($bySource) {
             $statBuilder
-                ->addSelect('ss.contactsource_id', 'cs.name as source')
+                ->addSelect('ss.contactsource_id', 'cs.name as source', 'cs.utm_source as utm_source')
                 ->join('ss', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = ss.contactsource_id')
-                ->addGroupBy('ss.contactsource_id');
+                ->addGroupBy('ss.contactsource_id, cs.utm_source');
         }
         $costBuilder
             ->addSelect('sc.contactsource_id')
@@ -214,6 +216,10 @@ class LedgerEntryRepository extends CommonRepository
         );
         $financials = $stmt->fetchAll();
         $stmt->closeCursor();
+
+        // get utm_source data for leads with NO Contact Source Stat record (direct API, manually created, imports etc)
+        $otherFinancials = $this->getAlternateCampaignSourceData($params, $bySource, $cache_dir, $realtime);
+        $financials      = array_merge($financials, $otherFinancials);
         foreach ($financials as $financial) {
             // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
             $financial['revenue']      = number_format(floatval($financial['revenue']), 2, '.', ',');
@@ -246,6 +252,7 @@ class LedgerEntryRepository extends CommonRepository
             if ($bySource) {
                 $result[] = $financial['contactsource_id'];
                 $result[] = $financial['source'];
+                $result[] = $financial['utm_source'];
             }
             $result[] = $financial['received'];
             $result[] = $financial['scrubbed'];
@@ -292,5 +299,86 @@ class LedgerEntryRepository extends CommonRepository
         $result = $query->getResult();
 
         return isset($result[0]) ? $result[0] : null;
+    }
+
+    public function getAlternateCampaignSourceData($params, $bySource = false, $cache_dir = __DIR__, $realtime = true)
+    {
+        // get array of leads first.
+        $leadBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $leadBuilder
+            ->select(
+                'l1.id'
+            )
+            ->from(MAUTIC_TABLE_PREFIX.'leads', 'l1')
+            ->leftJoin('l1', MAUTIC_TABLE_PREFIX.'contactsource_stats', 'cs', 'l1.id = cs.contact_id')
+            ->where('cs.contact_id IS NULL')
+            ->andWhere('l1.date_added BETWEEN :dateFrom AND :dateTo');
+        $leadBuilder
+            // ->setParameter('dateFrom', $params['dateFrom'])
+            // ->setParameter('dateTo', $params['dateTo']);
+            ->setParameter('dateFrom', '2018-08-03 00:00:00')
+            ->setParameter('dateTo', '2018-08-03 23:59:59');
+        $leads = $leadBuilder->execute()->fetchAll(PDO::FETCH_COLUMN);
+
+        // Main Query
+        $ledgerBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $ledgerBuilder
+            ->select(
+                'COUNT(l.id) AS received',
+                'SUM(IF(cc.type = "converted", 1, 0)) AS converted',
+                'SUM(cl.`cost`) AS cost',
+                'SUM(cl.`revenue`) AS revenue',
+                'cl.campaign_id',
+                'c.name',
+                'c.is_published',
+                '0 as scrubbed',
+                '0 as rejected',
+                'NULL as contactsource_id',
+                'NULL as source',
+                'cc.date_added'
+            )
+            ->from('('.$leadBuilder->getSQL().')', 'l');
+
+        // cost and revenue expression
+        $costRevenueBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $costRevenueBuilder
+            ->select('SUM(clss.cost) as cost', 'SUM(clss.revenue) as revenue', 'clss.campaign_id', 'clss.contact_id')
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'clss')
+            ->where('clss.contact_id IN (:leads)')
+            //->andWhere('AND clss.class_name = "ContactClient"')
+            ->groupBy('clss.contact_id', 'clss.campaign_id');
+
+        // converted expression
+        $convertedBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $convertedBuilder
+            ->select('ccss.type', 'ccss.contact_id', 'ccss.date_added')
+            ->from(MAUTIC_TABLE_PREFIX.'contactclient_stats', 'ccss')
+            ->where('ccss.contact_id IN (:leads)')
+            ->groupBy('ccss.contact_id');
+
+        $ledgerBuilder
+            ->leftJoin('l', '('.$costRevenueBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id')
+            ->leftJoin('l', '('.$convertedBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id')
+            ->leftJoin('cl', 'campaigns', 'c', 'cl.campaign_id = c.id');
+
+        $ledgerBuilder
+            ->groupBy('cl.campaign_id');
+
+        if ($bySource) {
+            $ledgerBuilder
+                ->addSelect('lu.utm_source')
+                ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_utmtags', 'lu', 'l.id = lu.lead_id')
+                ->addGroupBy('lu.utm_source');
+        }
+        $ledgerBuilder
+            ->setParameter('leads', $leads, Connection::PARAM_STR_ARRAY)
+            // ->setParameter('dateFrom', $params['dateFrom'])
+            // ->setParameter('dateTo', $params['dateTo']);
+            ->setParameter('dateFrom', '2018-08-03 00:00:00')
+            ->setParameter('dateTo', '2018-08-03 23:59:59');
+
+        $ledger = $ledgerBuilder->execute()->fetchAll();
+
+        return $ledger;
     }
 }

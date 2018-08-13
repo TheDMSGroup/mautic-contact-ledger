@@ -92,6 +92,7 @@ class AjaxController extends CommonAjaxController
             'mautic.contactledger.dashboard.source-revenue.header.name',
             'mautic.contactledger.dashboard.source-revenue.header.sourceid',
             'mautic.contactledger.dashboard.source-revenue.header.sourcename',
+            'mautic.contactledger.dashboard.source-revenue.header.utmsource',
             'mautic.contactledger.dashboard.source-revenue.header.received',
             'mautic.contactledger.dashboard.source-revenue.header.scrubbed',
             'mautic.contactledger.dashboard.source-revenue.header.declined',

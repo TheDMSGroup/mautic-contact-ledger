@@ -74,7 +74,7 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
                     }
                 }
                 if (empty($data) && !empty($entity)) {
-                    // add 5 jins to params['from'] and try again
+                    // add 5 mins to params['from'] and try again
                     $newFrom = new \DateTime($params['dateFrom']);
                     $newFrom->add(new \DateInterval('PT5M'));
                     $newTo = new \DateTime($params['dateTo']);

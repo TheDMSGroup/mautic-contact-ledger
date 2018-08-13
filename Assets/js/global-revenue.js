@@ -78,7 +78,7 @@ Mautic.loadGlobalRevenueWidget = function () {
                                                 var tr2 = mQuery('<tr class=\'grandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
                                                 tr.append(mQuery('<td colspan=\'2\'>Page totals</td>'));
                                                 tr2.append(mQuery('<td colspan=\'2\'>Grand totals</td>'));
-                                                for (var i = 2; i < columns; i++) {
+                                                for (var i = 3; i < columns; i++) {
                                                     tr.append(mQuery('<td class=\'td-right\'></td>'));
                                                     tr2.append(mQuery('<td class=\'td-right\'></td>'));
                                                 }
