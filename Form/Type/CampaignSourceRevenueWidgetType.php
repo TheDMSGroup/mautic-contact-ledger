@@ -17,7 +17,6 @@ use Symfony\Component\Form\FormBuilderInterface;
 /**
  * Class CampaignSourceRevenueWidgetType.
  */
-
 class CampaignSourceRevenueWidgetType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
@@ -29,7 +28,7 @@ class CampaignSourceRevenueWidgetType extends AbstractType
                 'label'      => 'Group By Granularity',
                 'choices'    => [
                     'Source Name'                           => 'mautic.contactledger.dashboard.source-revenue.header.sourcename',
-                    'Source Category'                     => 'mautic.contactledger.dashboard.source-revenue.header.category',
+                    'Source Category'                       => 'mautic.contactledger.dashboard.source-revenue.header.category',
                 ],
                 'label_attr' => ['class' => 'control-label'],
                 'attr'       => ['class' => 'form-control'],
@@ -37,7 +36,6 @@ class CampaignSourceRevenueWidgetType extends AbstractType
             ]
         );
     }
-
 
     /**
      * @return string

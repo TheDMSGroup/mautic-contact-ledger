@@ -81,9 +81,9 @@ class AjaxController extends CommonAjaxController
 
         // Get the API payload to test.
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
-        $em     = $this->dispatcher->getContainer()->get('doctrine.orm.default_entity_manager');
-        $repo   = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats::class);
-        $groupBy = $request->request->get('groupby', "Source Name");
+        $em      = $this->dispatcher->getContainer()->get('doctrine.orm.default_entity_manager');
+        $repo    = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats::class);
+        $groupBy = $request->request->get('groupby', 'Source Name');
 
         $data       = $repo->getDashboardRevenueWidgetData($params, true, $cache_dir, $groupBy);
 
@@ -92,14 +92,12 @@ class AjaxController extends CommonAjaxController
             'mautic.contactledger.dashboard.source-revenue.header.id',
             'mautic.contactledger.dashboard.source-revenue.header.name',
             ];
-        if ($groupBy =="Source Category")
-        {
+        if ('Source Category' == $groupBy) {
             $headers[] = 'mautic.contactledger.dashboard.source-revenue.header.category';
         } else { // groupBy = Source Name
             $headers[] = 'mautic.contactledger.dashboard.source-revenue.header.sourceid';
             $headers[] = 'mautic.contactledger.dashboard.source-revenue.header.sourcename';
             $headers[] = 'mautic.contactledger.dashboard.source-revenue.header.utmsource';
-
         }
 
         $headers = array_merge($headers, [

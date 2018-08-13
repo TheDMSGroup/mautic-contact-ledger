@@ -75,7 +75,7 @@ class CampaignSourceStatsRepository extends CommonRepository
      *
      * @return array
      */
-    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__, $groupBy = "Source Name")
+    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__, $groupBy = 'Source Name')
     {
         $results = [];
         $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
@@ -98,8 +98,7 @@ class CampaignSourceStatsRepository extends CommonRepository
             ->orderBy('c.name', 'ASC');
 
         if ($bySource) {
-
-            if($groupBy == "Source Category") {
+            if ('Source Category' == $groupBy) {
                 $query->addSelect(
                     'cat.title as category'
                 );
@@ -137,8 +136,8 @@ class CampaignSourceStatsRepository extends CommonRepository
             $result[] = empty($financial['name']) ? '-' : $financial['name'];
 
             if ($bySource) {
-                if($groupBy == "Source Category") {
-                    $result[] = ($financial['category']==null) ? '-' : $financial['category'];
+                if ('Source Category' == $groupBy) {
+                    $result[] = (null == $financial['category']) ? '-' : $financial['category'];
                 } else {
                     $result[] = $financial['sourceid'];
                     $result[] = empty($financial['sourcename']) ? '-' : $financial['sourcename'];
