@@ -75,7 +75,7 @@ class CampaignSourceStatsRepository extends CommonRepository
      *
      * @return array
      */
-    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__)
+    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__, $groupBy = "Source Name")
     {
         $results = [];
         $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
@@ -98,11 +98,21 @@ class CampaignSourceStatsRepository extends CommonRepository
             ->orderBy('c.name', 'ASC');
 
         if ($bySource) {
-            $query->addSelect(
+
+            if($groupBy == "Source Category") {
+                $query->addSelect(
+                    'cat.title as category'
+                );
+                $query->leftJoin('cs', MAUTIC_TABLE_PREFIX.'categories', 'cat', 'cs.category_id = cat.id');
+                $query->addGroupBy('cat.title');
+            } else {
+                $query->addSelect(
                 'css.contact_source_id as sourceid,
-            cs.name as sourcename, css.utm_source as utm_source'
-            );
-            $query->addGroupBy('css.contact_source_id', 'css.utm_source');
+                cs.name as sourcename, 
+                css.utm_source as utm_source'
+                );
+                $query->addGroupBy('css.contact_source_id', 'css.utm_source');
+            }
         }
         $query
             ->setParameter('dateFrom', $params['dateFrom'])
@@ -127,9 +137,13 @@ class CampaignSourceStatsRepository extends CommonRepository
             $result[] = empty($financial['name']) ? '-' : $financial['name'];
 
             if ($bySource) {
-                $result[] = $financial['sourceid'];
-                $result[] = empty($financial['sourcename']) ? '-' : $financial['sourcename'];
-                $result[] = empty($financial['utm_source']) ? '-' : $financial['utm_source'];
+                if($groupBy == "Source Category") {
+                    $result[] = ($financial['category']==null) ? '-' : $financial['category'];
+                } else {
+                    $result[] = $financial['sourceid'];
+                    $result[] = empty($financial['sourcename']) ? '-' : $financial['sourcename'];
+                    $result[] = empty($financial['utm_source']) ? '-' : $financial['utm_source'];
+                }
             }
             $result[] = $financial['received'];
             $result[] = $financial['scrubbed'];
@@ -137,7 +151,7 @@ class CampaignSourceStatsRepository extends CommonRepository
             $result[] = $financial['converted'];
             $result[] = number_format($financial['revenue'], 2, '.', ',');
             $result[] = number_format($financial['cost'], 2, '.', ',');
-            $result[] = number_format($financial['gross_income'], 0, '.', ',');
+            $result[] = number_format($financial['gross_income'], 2, '.', ',');
             $result[] = $financial['gross_margin'];
             $result[] = $financial['ecpm'];
 

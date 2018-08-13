@@ -1,6 +1,6 @@
 Mautic.loadSourceRevenueWidget = function () {
     var $sourcetarget = mQuery('#source-revenue');
-    if($sourcetarget.length) {
+    if ($sourcetarget.length) {
         mQuery('#source-revenue:first:not(.table-initialized)').addClass('table-initialized').each(function () {
             mQuery.getScriptCachedOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
                 mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css', function () {
@@ -11,19 +11,30 @@ Mautic.loadSourceRevenueWidget = function () {
                             type: 'POST',
                             data: {
                                 action: 'plugin:mauticContactLedger:sourceRevenue',
+                                groupby: $sourcetarget.data('groupby'),
                             },
                             cache: true,
                             dataType: 'json',
                             success: function (response) {
                                 var rowCount = Math.floor(($sourcetarget.data('height') - 220) / 40);
+                                var colAdjust = $sourcetarget.data('groupby') == 'Source Category' ? 4 : 6;
+                                var order = $sourcetarget.data('groupby') == 'Source Category' ? [[2, 'asc'], [3, 'asc']] : [[2, 'asc'], [4, 'asc'], [5, 'asc']];
+                                var hideCols = $sourcetarget.data('groupby') == 'Source Category' ? [1] : [1, 3];
+                                var hiddenCount = $sourcetarget.data('groupby') == 'Source Category' ? 1 : 3;
+                                var margin = $sourcetarget.data('groupby') == 'Source Category' ? 1 : 2;
+                                var footerAdjust = $sourcetarget.data('groupby') == 'Source Category' ? 2 : 4;
+                                var colSpan = $sourcetarget.data('groupby') == 'Source Category' ? 3 : 4;
+                                var headerAdjust = $sourcetarget.data('groupby') == 'Source Category' ? 1 : 2;
+                                var titleAdjust = $sourcetarget.data('groupby') == 'Source Category' ? 0 : 1;
+
                                 mQuery('#source-revenue').DataTable({
                                     language: {
-                                        emptyTable: "No results found for this date range and filters."
+                                        emptyTable: 'No results found for this date range and filters.'
                                     },
                                     data: response.rows,
                                     autoFill: true,
                                     columns: response.columns,
-                                    order: [[2, 'asc'], [4, 'asc'], [5, 'asc']],
+                                    order: order,
                                     bLengthChange: false,
                                     lengthMenu: [[rowCount]],
                                     dom: '<<lBf>rtip>',
@@ -54,19 +65,16 @@ Mautic.loadSourceRevenueWidget = function () {
                                             render: function (data, type, row) {
                                                 return '$' + data;
                                             },
-                                            targets: [10, 11, 12, 14]
+                                            targets: [Number(7) + Number(hiddenCount), Number(8) + Number(hiddenCount), Number(9) + Number(hiddenCount), Number(11) + Number(hiddenCount)]
                                         },
                                         {
                                             render: function (data, type, row) {
-                                                //return 'foo';
-                                                return renderMarginPercentage(row);
+                                                return renderMarginPercentage(data);
                                             },
-                                            targets: 13
+                                            targets: [Number(11) + Number(margin)]
                                         },
-                                        {visible: false, targets: [1, 3]},
+                                        {visible: false, targets: hideCols},
                                         {width: '5%', targets: [0]},
-                                        {width: '15%', targets: [2]},
-                                        {width: '12%', targets: [4]}
                                     ],
 
                                     footerCallback: function (row, data, start, end, display) {
@@ -75,16 +83,17 @@ Mautic.loadSourceRevenueWidget = function () {
                                             return;
                                         }
                                         try {
-                                            // Add table footer if it doesnt exist
+                                            // Add table footer if it doesnt
+                                            // exist
                                             var container = mQuery('#source-revenue');
                                             var columns = data[0].length;
                                             if (mQuery('tr.detailPageTotal').length === 0) {
                                                 var footer = mQuery('<tfoot></tfoot>');
                                                 var tr = mQuery('<tr class=\'detailPageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
                                                 var tr2 = mQuery('<tr class=\'detailGrandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
-                                                tr.append(mQuery('<td colspan=\'4\'>Page totals</td>'));
-                                                tr2.append(mQuery('<td colspan=\'4\'>Grand totals</td>'));
-                                                for (var i = 6; i < columns; i++) {
+                                                tr.append(mQuery('<td colspan="'+colSpan+'">Page totals</td>'));
+                                                tr2.append(mQuery('<td colspan="'+colSpan+'">Grand totals</td>'));
+                                                for (var i = colAdjust; i < columns; i++) {
                                                     tr.append(mQuery('<td class=\'td-right\'></td>'));
                                                     tr2.append(mQuery('<td class=\'td-right\'></td>'));
                                                 }
@@ -95,8 +104,8 @@ Mautic.loadSourceRevenueWidget = function () {
 
                                             var api = this.api();
 
-                                            // Remove the formatting to get integer data for
-                                            // summation
+                                            // Remove the formatting to get
+                                            // integer data for summation
                                             var intVal = function (i) {
                                                 return typeof i === 'string' ? i.replace(/[\$,]/g, '') * 1 : typeof i === 'number' ? i : 0;
                                             };
@@ -104,41 +113,41 @@ Mautic.loadSourceRevenueWidget = function () {
                                             var total = mQuery('#' + container[0].id + ' thead th').length;
                                             var footer1 = mQuery(container).find('tfoot tr:nth-child(1)');
                                             var footer2 = mQuery(container).find('tfoot tr:nth-child(2)');
-                                            for (var i = 2; i < total -2; i++) {
+                                            for (var i = colAdjust; i < total + headerAdjust; i++) { // i = non summed columns to skip: 4 or 6 (includes hidden cols), add # of
+  // hidden cols to total
                                                 var pageSum = api
-                                                    .column(i + 4, {page: 'current'})
+                                                    .column(i, {page: 'current'})
                                                     .data()
                                                     .reduce(function (a, b) {
                                                         return intVal(a) + intVal(b);
                                                     }, 0);
                                                 var sum = api
-                                                    .column(i + 4)
+                                                    .column(i)
                                                     .data()
                                                     .reduce(function (a, b) {
                                                         return intVal(a) + intVal(b);
                                                     }, 0);
-                                                var title = mQuery(container).find('thead th:nth-child(' + (i + 3) + ')').text();
-                                                footer1.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, pageSum, i));
-                                                footer2.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, sum, i));
+                                                var title = mQuery(container).find('thead th:nth-child(' + (i-titleAdjust) + ')').text();
+                                                footer1.find('td:nth-child(' + (i - footerAdjust) + ')').html(FormatFooter(title, pageSum, i)); // nth child minus 2 or 4
+                                                footer2.find('td:nth-child(' + (i - footerAdjust) + ')').html(FormatFooter(title, sum, i)); // nth child minus 2 or 4
                                             }
                                             mQuery('#source-builder-overlay').hide();
-
                                         }
                                         catch (e) {
                                             console.log(e);
                                         }
                                     } // FooterCallback
-
-
-
-
                                 }); //.DataTables
-                                mQuery('#source-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
-                                mQuery('#source-revenue').css("width", "auto");
-                                mQuery('#source-revenue').css("font-size", ".8em")
-                                mQuery('#source-revenue_wrapper').css("overflow-x", "scroll");
+                                mQuery('#source-revenue_wrapper .dt-buttons').css({
+                                    float: 'right',
+                                    marginLeft: '10px'
+                                });
+                                mQuery('#source-revenue').css('width', 'auto');
+                                mQuery('#source-revenue').css('font-size', '.8em');
+                                mQuery('#source-revenue_wrapper').css('overflow-x', 'scroll');
                             } //success
                         });//ajax
+
                     }); //getScriptsCachedOnce - fonteawesome css
                 });//getScriptsCachedOnce - datatables css
             });  //getScriptsCachedOnce - datatables js
@@ -156,30 +165,34 @@ Mautic.loadSourceRevenueWidget = function () {
         }
         else {
             // no campaign, so leave empty.
-            return "N/A";
+            return 'N/A';
         }
         var UpperStatus = status.charAt(0).toUpperCase() + status.substring(1);
         return '<a data-toggle="ajax"><i title="' + UpperStatus + '"class="fa fa-fw fa-lg ' + icon + ' text-success has-click-event campaign-publish-icon' + id + '" data-toggle="tooltip" data-container="body" data-placement="right" data-status="' + status + '" onclick="Mautic.togglePublishStatus(event, \'.campaign-publish-icon' + id + '\', \'campaign\', ' + id + ', \'\', false);" data-original-title="' + UpperStatus + '"></i></a>';
     }
 
     function renderCampaignName (row) {
-        if (row[1] !== ""){
-            return '<a href="./campaigns/view/'+ row[1] +'" class="campaign-name-link" title="'+ row[2] + '">'+ row[2] + '</a>';
+        if (row[1] !== '') {
+            return '<a href="./campaigns/view/' + row[1] + '" class="campaign-name-link" title="' + row[2] + '">' + row[2] + '</a>';
         }
         return row[2];
     }
 
-    function renderMarginPercentage (row) {
-        if (Number(row[12]) != parseInt(Number(row[12]))){
-            return Number(row[12]).toFixed(2) + '%';
+    function renderMarginPercentage (data) {
+        if (Number(data) != parseInt(Number(data))) {
+            return Number(data).toFixed(2) + '%';
         }
-        return row[12] + '%';
+        return data + '%';
     }
 
     function renderSourceName (row) {
-        if (row[3] !== "") {
-            return '<a href="./contactsource/view/'+ row[3] +'" class="campaign-name-link" title="'+ row[4] + '">'+ row[4] + '</a>';
+        if ($sourcetarget.data('groupby') == 'Source Name') {
+            if (row[3] !== '') {
+                return '<a href="./contactsource/view/' + row[3] + '" class="campaign-name-link" title="' + row[4] + '">' + row[4] + '</a>';
+            }
+            return row[3];
         }
+
         return row[4];
     }
 
@@ -201,7 +214,6 @@ Mautic.loadSourceRevenueWidget = function () {
     }
 }; //loadSourceRevenueWidget
 
-
 // getScriptCachedOnce for faster page loads in the backend.
 mQuery.getScriptCachedOnce = function (url, callback) {
     if (
@@ -210,7 +222,8 @@ mQuery.getScriptCachedOnce = function (url, callback) {
     ) {
         callback();
         return mQuery(this);
-    } else {
+    }
+    else {
         return mQuery.ajax({
             url: url,
             dataType: 'script',
@@ -227,11 +240,11 @@ mQuery.getScriptCachedOnce = function (url, callback) {
 
 // getScriptCachedOnce for faster page loads in the backend.
 mQuery.getCssOnce = function (url, callback) {
-    if (document.createStyleSheet){
+    if (document.createStyleSheet) {
         document.createStyleSheet(url);
     }
     else {
-        mQuery("head").append(mQuery("<link rel='stylesheet' href='" + url + "' type='text/css' />"));
+        mQuery('head').append(mQuery('<link rel=\'stylesheet\' href=\'' + url + '\' type=\'text/css\' />'));
     }
     callback();
 };

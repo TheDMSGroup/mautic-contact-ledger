@@ -58,5 +58,11 @@ return [
                 'class' => 'MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel',
             ],
         ],
+        'forms' => [
+            'mautic.contactledger.form.type.campaign_source_revenue_widget' => [
+                'class'     => 'MauticPlugin\MauticContactLedgerBundle\Form\Type\CampaignSourceRevenueWidgetType',
+                'alias'     => 'campaign_source_revenue_widget',
+            ],
+        ],
     ],
 ];

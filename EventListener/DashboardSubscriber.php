@@ -34,7 +34,9 @@ class DashboardSubscriber extends MainDashboardSubscriber
      */
     protected $types = [
         'campaign.revenue'        => [],
-        'campaign.source.revenue' => [],
+        'campaign.source.revenue' => [
+            'formAlias' => 'campaign_source_revenue_widget',
+        ],
     ];
 
     /**
