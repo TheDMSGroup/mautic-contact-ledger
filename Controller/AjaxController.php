@@ -81,18 +81,26 @@ class AjaxController extends CommonAjaxController
 
         // Get the API payload to test.
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
-        $em     = $this->dispatcher->getContainer()->get('doctrine.orm.default_entity_manager');
-        $repo   = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats::class);
+        $em      = $this->dispatcher->getContainer()->get('doctrine.orm.default_entity_manager');
+        $repo    = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats::class);
+        $groupBy = $request->request->get('groupby', 'Source Name');
 
-        $data       = $repo->getDashboardRevenueWidgetData($params, true, $cache_dir);
+        $data       = $repo->getDashboardRevenueWidgetData($params, true, $cache_dir, $groupBy);
 
         $headers    = [
             'mautic.contactledger.dashboard.source-revenue.header.active',
             'mautic.contactledger.dashboard.source-revenue.header.id',
             'mautic.contactledger.dashboard.source-revenue.header.name',
-            'mautic.contactledger.dashboard.source-revenue.header.sourceid',
-            'mautic.contactledger.dashboard.source-revenue.header.sourcename',
-            'mautic.contactledger.dashboard.source-revenue.header.utmsource',
+            ];
+        if ('Source Category' == $groupBy) {
+            $headers[] = 'mautic.contactledger.dashboard.source-revenue.header.category';
+        } else { // groupBy = Source Name
+            $headers[] = 'mautic.contactledger.dashboard.source-revenue.header.sourceid';
+            $headers[] = 'mautic.contactledger.dashboard.source-revenue.header.sourcename';
+            $headers[] = 'mautic.contactledger.dashboard.source-revenue.header.utmsource';
+        }
+
+        $headers = array_merge($headers, [
             'mautic.contactledger.dashboard.source-revenue.header.received',
             'mautic.contactledger.dashboard.source-revenue.header.scrubbed',
             'mautic.contactledger.dashboard.source-revenue.header.declined',
@@ -102,7 +110,7 @@ class AjaxController extends CommonAjaxController
             'mautic.contactledger.dashboard.source-revenue.header.gm',
             'mautic.contactledger.dashboard.source-revenue.header.margin',
             'mautic.contactledger.dashboard.source-revenue.header.ecpm',
-        ];
+        ]);
         foreach ($headers as $header) {
             $data['columns'][] = [
                 'title' => $this->translator->trans($header),

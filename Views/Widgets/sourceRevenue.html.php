@@ -24,7 +24,7 @@ $params = $data['params'];
                         <i class="fa fa-spinner fa-spin fa-4x"></i>
                     </div>
                 </div>
-                <table id="source-revenue" class="table table-striped table-bordered" width="100%" data-height="<?php echo $data['height']; ?>">
+                <table id="source-revenue" class="table table-striped table-bordered" width="100%" data-height="<?php echo $data['height']; ?>" data-groupby="<?php echo $params['groupby']; ?>">
                 </table>
             </div>
             <!--/ Revenue By Campaign + Source -->
