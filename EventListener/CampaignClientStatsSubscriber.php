@@ -11,7 +11,6 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
-use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class CampaignClientStatsSubscriber implements EventSubscriberInterface

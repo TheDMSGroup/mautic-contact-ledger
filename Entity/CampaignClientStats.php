@@ -17,7 +17,7 @@ use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
 use Mautic\CoreBundle\Entity\CommonEntity;
 
 /**
- * Class CampaignClientStats
+ * Class CampaignClientStats.
  */
 class CampaignClientStats extends CommonEntity
 {

@@ -71,52 +71,52 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
         do {
             // TODO: right now, contexts are hardcoded. need to define a way to register context by bundle
             $context = 'CampaignClientStats';
-                $params = $this->getDateParams($params, $context);
+            $params  = $this->getDateParams($params, $context);
 
-                $output->writeln(
+            $output->writeln(
                     "<comment>--> Using Parameters:\n \tContext => ".$context.", \n \tDate => ".$params['dateFrom'].' and '.$params['dateTo']." UTC,\n \tQuery Cache Directory => ".$params['cacheDir'].'</comment>'
                 );
 
-                if (null == $params['dateFrom']) {
-                    // How soon is now? less than 15 mins? Dont run.
-                    $output->writeln(
+            if (null == $params['dateFrom']) {
+                // How soon is now? less than 15 mins? Dont run.
+                $output->writeln(
                         '<comment>Exiting without Running Context. Report Cron caught up to current time. </comment>'
                     );
-                } else {
-                    if ('invalid' == $params['dateFrom']) {
-                        // Class for context does not exist. Fail gracefully.
-                        $output->writeln(
+            } else {
+                if ('invalid' == $params['dateFrom']) {
+                    // Class for context does not exist. Fail gracefully.
+                    $output->writeln(
                             '<error>Exiting without Running Context. No class exists for context: '.$context.'. </error>'
                         );
-                    } else {
-                        // Dispatch event to get data from various bundles
-                        $event = new ReportStatsGeneratorEvent($this->em, $params, $context);
-                        $this->dispatcher->dispatch('mautic.contactledger.clientstats.generate', $event);
+                } else {
+                    // Dispatch event to get data from various bundles
+                    $event = new ReportStatsGeneratorEvent($this->em, $params, $context);
+                    $this->dispatcher->dispatch('mautic.contactledger.clientstats.generate', $event);
 
-                        // save entities to DB
-                        $updatedParams = $event->getParams();
-                        $dateToLog     = $updatedParams['dateTo'];
-                        foreach ($event->getStatsCollection() as $subscriber) {
-                            $output->writeln(
+                    // save entities to DB
+                    $updatedParams = $event->getParams();
+                    $dateToLog     = $updatedParams['dateTo'];
+                    foreach ($event->getStatsCollection() as $subscriber) {
+                        $output->writeln(
                                 '<info>--> Pesisting data for '.$context.' using date '.$dateToLog.'.</info>'
                             );
-                            if (isset($subscriber[$context]) && !empty($subscriber[$context])) {
-                                foreach ($subscriber[$context] as $stat) {
-                                    $entity = $this->mapArrayToEntity($stat, $context, $dateToLog);
-                                    $this->em->persist($entity);
-                                }
-                            } else {
-                                $output->writeln(
-                                    '<comment>--> No data for '.$context.' using date '.$dateToLog.'.</comment>');
-                                $repeat = false;
+                        if (isset($subscriber[$context]) && !empty($subscriber[$context])) {
+                            foreach ($subscriber[$context] as $stat) {
+                                $entity = $this->mapArrayToEntity($stat, $context, $dateToLog);
+                                $this->em->persist($entity);
                             }
+                        } else {
+                            $output->writeln(
+                                    '<comment>--> No data for '.$context.' using date '.$dateToLog.'.</comment>');
+                            $repeat = false;
                         }
-                        $this->em->flush();
-                        $timeContext = microtime(true);
-                        $contextTime = $timeContext - $timeStart;
-                        $output->writeln('<comment>--> Elapsed time so far: '.$contextTime.'.</comment>');
                     }
+                    $this->em->flush();
+                    $timeContext = microtime(true);
+                    $contextTime = $timeContext - $timeStart;
+                    $output->writeln('<comment>--> Elapsed time so far: '.$contextTime.'.</comment>');
                 }
+            }
 
             $now          = new \DateTime();
             $latestParams = $event->getParams();

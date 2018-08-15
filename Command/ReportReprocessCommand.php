@@ -67,7 +67,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $batchLimit = empty($input->getOption('batch-limit')) ? 50 : $input->getOption('batch-limit'); // change this as needed.
-        $type = empty($input->getOption('stat-type')) ? 'all' : $input->getOption('stat-type');
+        $type       = empty($input->getOption('stat-type')) ? 'all' : $input->getOption('stat-type');
 
         $batchCount = 0;
         $container  = $this->getContainer();
@@ -76,7 +76,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
             'cacheDir' => $container->getParameter('kernel.cache_dir'),
         ];
 
-        $output->writeln('<info>***** Reprocessing ' . ucfirst($type) . ' Report Stats Types *****</info>');
+        $output->writeln('<info>***** Reprocessing '.ucfirst($type).' Report Stats Types *****</info>');
 
         if (!$this->checkRunStatus($input, $output)) {
             $output->writeln('<error>Something failed in CheckRunStatus.</error>');
@@ -90,13 +90,11 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
             return 0;
         }
 
-        if(strtolower($type) =="source" || strtolower($type) =="all")
-        {
+        if ('source' == strtolower($type) || 'all' == strtolower($type)) {
             $this->doSourceReprocess($batchLimit, $batchCount, $params, $output);
         }
 
-        if (strtolower($type) =="client" || strtolower($type) =="all")
-        {
+        if ('client' == strtolower($type) || 'all' == strtolower($type)) {
             $this->doClientReprocess($batchLimit, $batchCount, $params, $output);
         }
 
@@ -108,6 +106,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
      * @param $repoName
      *
      * @return mixed
+     *
      * @throws \Exception
      */
     private function getDateParams($params, $repoName)
@@ -204,7 +203,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
             'ecpm'            => 'ecpm',
             'utmSource'       => 'utm_source',
         ];
-        
+
         $entity = new CampaignSourceStats();
         foreach ($fieldsMap as $entityParam => $statKey) {
             if (null == $stat[$statKey]) {
@@ -263,7 +262,6 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
     {
         $timeStart = microtime(true);
 
-
         do {
             // 1) Get MAX(date_added) records where reprocess_flag = 1
             $batchStart = microtime(true);
@@ -314,7 +312,6 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
         $timeEnd     = microtime(true);
         $elapsedTime = $timeEnd - $timeStart;
         $output->writeln("<info>Total Execution Time: $elapsedTime.</info>");
-
     }
 
     /**
@@ -328,7 +325,6 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
     private function doClientReprocess($batchLimit, $batchCount, $params, $output)
     {
         $timeStart = microtime(true);
-
 
         do {
             // 1) Get MAX(date_added) records where reprocess_flag = 1
@@ -380,6 +376,5 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
         $timeEnd     = microtime(true);
         $elapsedTime = $timeEnd - $timeStart;
         $output->writeln("<info>Total Execution Time: $elapsedTime.</info>");
-
     }
 }
