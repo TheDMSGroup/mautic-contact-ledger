@@ -91,7 +91,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
                     } else {
                         // Dispatch event to get data from various bundles
                         $event = new ReportStatsGeneratorEvent($this->em, $params, $context);
-                        $this->dispatcher->dispatch('mautic.contactledger.reportstats.generate', $event);
+                        $this->dispatcher->dispatch('mautic.contactledger.sourcestats.generate', $event);
 
                         // save entities to DB
                         $updatedParams = $event->getParams();

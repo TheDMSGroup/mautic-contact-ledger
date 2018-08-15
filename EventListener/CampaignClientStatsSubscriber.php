@@ -14,7 +14,7 @@ namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class CampaignSourceStatsSubscriber implements EventSubscriberInterface
+class CampaignClientStatsSubscriber implements EventSubscriberInterface
 {
     /**
      * @return array
@@ -22,11 +22,11 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            'mautic.contactledger.sourcestats.generate' => ['generateReportStats', 0],
+            'mautic.contactledger.clientstats.generate' => ['generateReportStats', 0],
         ];
     }
 
-    public function generateReportStats(ReportStatsGeneratorEvent $event)
+    public function generateReportStats(ClientStatsGeneratorEvent $event)
     {
         $data = null;
 
