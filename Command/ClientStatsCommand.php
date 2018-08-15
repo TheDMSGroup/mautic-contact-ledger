@@ -19,7 +19,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
-class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInterface
+class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInterface
 {
     /**
      * @var EntityManager
@@ -38,7 +38,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
      */
     protected function configure()
     {
-        $this->setName('mautic:ledger:report:stats')
+        $this->setName('mautic:ledger:client:stats')
             ->setDescription(
                 'generate stats in distinct table for reporting purposes'
             );
@@ -59,7 +59,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
         ];
         $repeat           = true;
 
-        $output->writeln('<info>***** Generating Report Stats *****</info>');
+        $output->writeln('<info>***** Generating Report Client Stats *****</info>');
         $timeStart = microtime(true);
 
         if (!$this->checkRunStatus($input, $output)) {
@@ -70,7 +70,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
 
         do {
             // TODO: right now, contexts are hardcoded. need to define a way to register context by bundle
-            foreach (['CampaignSourceStats', 'CampaignSourceBudgets'] as $context) {
+            $context = 'CampaignClientStats';
                 $params = $this->getDateParams($params, $context);
 
                 $output->writeln(
@@ -91,7 +91,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
                     } else {
                         // Dispatch event to get data from various bundles
                         $event = new ReportStatsGeneratorEvent($this->em, $params, $context);
-                        $this->dispatcher->dispatch('mautic.contactledger.sourcestats.generate', $event);
+                        $this->dispatcher->dispatch('mautic.contactledger.clientstats.generate', $event);
 
                         // save entities to DB
                         $updatedParams = $event->getParams();
@@ -117,7 +117,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
                         $output->writeln('<comment>--> Elapsed time so far: '.$contextTime.'.</comment>');
                     }
                 }
-            }
+
             $now          = new \DateTime();
             $latestParams = $event->getParams();
             $dateTo       = $latestParams['dateTo'];
@@ -156,7 +156,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
             $repo = $this->em->getRepository('MauticContactLedgerBundle:'.$context);
             if (empty($lastEntity = $repo->getLastEntity())) {
                 // this should only ever happen once, the very first cron run per context
-                $repo       = $this->em->getRepository('MauticContactSourceBundle:Stat');
+                $repo       = $this->em->getRepository('MauticContactClientBundle:Stat');
                 $lastEntity = $repo->findBy([], ['id' => 'ASC'], 1, 0);
                 $lastEntity = $lastEntity[0];
             }
@@ -208,29 +208,22 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
     private function mapArrayToEntity($stat, $context, $dateTo)
     {
         $fieldsMap = [
-            'CampaignSourceStats'   => [
                 'campaignId'      => 'campaign_id',
                 'received'        => 'received',
                 'declined'        => 'rejected',
                 'converted'       => 'converted',
-                'scrubbed'        => 'scrubbed',
                 'cost'            => 'cost',
                 'revenue'         => 'revenue',
-                'contactSourceId' => 'contactsource_id',
+                'contactClientId' => 'contactclient_id',
                 'grossIncome'     => 'gross_income',
                 'margin'          => 'gross_margin',
                 'ecpm'            => 'ecpm',
                 'utmSource'       => 'utm_source',
-            ],
-            'CampaignSourceBudgets' => [
-            ],
         ];
-
-        //TODO: contexts are hardcoded and so is namespace for dynamic class creation. Need to register context objects
 
         $class  = '\MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context;
         $entity = new $class();
-        foreach ($fieldsMap[$context] as $entityParam => $statKey) {
+        foreach ($fieldsMap as $entityParam => $statKey) {
             if (null == $stat[$statKey]) {
                 $stat[$statKey] = '';
             }

@@ -381,4 +381,15 @@ class LedgerEntryRepository extends CommonRepository
 
         return $ledger;
     }
+
+    /**
+     * @param      $params
+     * @param bool $bySource
+     *
+     * @return array
+     */
+    public function getCampaignClientStatsData($params, $bySource = false, $cache_dir = __DIR__, $realtime = true)
+    {
+        // build and execute a query and return the results
+    }
 }
