@@ -271,11 +271,11 @@ class LedgerEntryRepository extends CommonRepository
         return true == $realtime ? $results : $resultsWithKeys;
     }
 
-    public function getEntityGreaterThanDate($params, $offset = 0)
+    public function getEntityGreaterThanDate($params, $offset = 0, $table)
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select('ss')
-            ->from('MauticContactSourceBundle:Stat', 'ss')
+            ->from($table, 'ss')
             ->where(
                 $builder->expr()->andX(
                     $builder->expr()->gte('ss.dateAdded', ':dateFrom')
@@ -314,10 +314,8 @@ class LedgerEntryRepository extends CommonRepository
             ->where('cs.contact_id IS NULL')
             ->andWhere('l1.date_added BETWEEN :dateFrom AND :dateTo');
         $leadBuilder
-            // ->setParameter('dateFrom', $params['dateFrom'])
-            // ->setParameter('dateTo', $params['dateTo']);
-            ->setParameter('dateFrom', '2018-08-03 00:00:00')
-            ->setParameter('dateTo', '2018-08-03 23:59:59');
+            ->setParameter('dateFrom', $params['dateFrom'])
+            ->setParameter('dateTo', $params['dateTo']);
         $leads = $leadBuilder->execute()->fetchAll(PDO::FETCH_COLUMN);
 
         // Main Query
@@ -372,10 +370,8 @@ class LedgerEntryRepository extends CommonRepository
         }
         $ledgerBuilder
             ->setParameter('leads', $leads, Connection::PARAM_STR_ARRAY)
-            // ->setParameter('dateFrom', $params['dateFrom'])
-            // ->setParameter('dateTo', $params['dateTo']);
-            ->setParameter('dateFrom', '2018-08-03 00:00:00')
-            ->setParameter('dateTo', '2018-08-03 23:59:59');
+            ->setParameter('dateFrom', $params['dateFrom'])
+            ->setParameter('dateTo', $params['dateTo']);
 
         $ledger = $ledgerBuilder->execute()->fetchAll();
 
@@ -388,8 +384,129 @@ class LedgerEntryRepository extends CommonRepository
      *
      * @return array
      */
-    public function getCampaignClientStatsData($params, $bySource = false, $cache_dir = __DIR__, $realtime = true)
+    public function getCampaignClientStatsData($params, $cache_dir = __DIR__, $realtime = true)
     {
-        // build and execute a query and return the results
+        // get array of leads first.
+        $leadBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $leadBuilder
+            ->select(
+                'l1.id'
+            )
+            ->from(MAUTIC_TABLE_PREFIX.'leads', 'l1')
+            ->andWhere('l1.date_added BETWEEN :dateFrom AND :dateTo');
+        $leadBuilder
+            ->setParameter('dateFrom', $params['dateFrom'])
+            ->setParameter('dateTo', $params['dateTo']);
+
+        $leads = $leadBuilder->execute()->fetchAll(PDO::FETCH_COLUMN);
+
+        //ledger subselect expression
+        $ledgerBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $ledgerBuilder
+            ->select('SUM(clss.cost) as cost', 'SUM(clss.revenue) as revenue', 'clss.campaign_id', 'clss.contact_id')
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'clss')
+            ->where('clss.contact_id IN (:leads)')
+            ->groupBy('clss.contact_id', 'clss.campaign_id');
+
+        //client_stats subselect expression
+        $clientstatBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $clientstatBuilder
+            ->select('ccss.type', 'ccss.contact_id', 'ccss.contactclient_id')
+            ->from(MAUTIC_TABLE_PREFIX.'contactclient_stats', 'ccss')
+            ->where('ccss.contact_id IN (:leads)')
+            ->groupBy('ccss.contact_id');
+
+        // Main Query
+        $statBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $statBuilder
+            ->select(
+                'COUNT(l.id) AS received',
+                "SUM(IF(cc.type = 'rejected', 1, 0)) AS rejected",
+                "SUM(IF(cc.type = 'accepted', 1, 0)) AS converted",
+                'SUM(cl.revenue) AS revenue',
+                'cl.campaign_id',
+                'lu.utm_source AS utm_source',
+                'c.is_published',
+                'c.name as campaign_name',
+                'cc.contact_id as contactclient_id',
+                '0 as cost'
+            )
+            ->from(MAUTIC_TABLE_PREFIX.'leads', 'l')
+            ->join('cs', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = cs.campaign_id')
+            ->where('l.date_added BETWEEN :dateFrom AND :dateTo')
+            ->andWhere('bx.lead_field_id = 336')
+            ->andWhere('bx.value = 1')
+            ->groupBy('cl.campaign_id', 'cc.contactclient_id', 'lu.utm_source')
+            ->setParameter('leads', $leads, Connection::PARAM_STR_ARRAY)
+            ->setParameter('dateFrom', $params['dateFrom'])
+            ->setParameter('dateTo', $params['dateTo']);
+        $statBuilder
+            ->leftJoin('l', '('.$ledgerBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id')
+            ->leftJoin('l', '('.$clientstatBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id')
+            ->leftJoin('l', 'lead_utmtags', 'lu', 'l.id = lu.lead_id')
+            ->leftJoin('l', 'campaigns', 'c', 'cl.campaign_id = c.id')
+            ->leftJoin('l', 'lead_fields_leads_boolean_xref', 'bx', 'bx.lead_id = l.id');
+
+        if (isset($params['limit']) && (0 < $params['limit'])) {
+            $statBuilder->setMaxResults($params['limit']);
+        }
+        $results         = ['rows' => []];
+        $resultsWithKeys = [];
+
+        // setup cache
+        $cache = new FilesystemCache($cache_dir.'/sql');
+        $statBuilder->getConnection()->getConfiguration()->setResultCacheImpl($cache);
+        $stmt       = $statBuilder->getConnection()->executeCacheQuery(
+            $statBuilder->getSQL(),
+            $statBuilder->getParameters(),
+            $statBuilder->getParameterTypes(),
+            new QueryCacheProfile(900, 'dashboard-revenue-queries', $cache)
+        );
+        $financials = $stmt->fetchAll();
+        $stmt->closeCursor();
+
+        foreach ($financials as $financial) {
+            $financial['revenue']      = number_format(floatval($financial['revenue']), 2, '.', ',');
+            $financial['gross_income'] = number_format(
+                (float) $financial['revenue'] - (float) $financial['cost'],
+                2,
+                '.',
+                ','
+            );
+
+            if ($financial['gross_income'] > 0) {
+                $financial['gross_margin'] = number_format(
+                    100 * $financial['gross_income'] / $financial['revenue'],
+                    0,
+                    '.',
+                    ','
+                );
+                $financial['ecpm']         = number_format((float) $financial['gross_income'] / 1000, 4, '.', ',');
+            } else {
+                $financial['gross_margin'] = 0;
+                $financial['ecpm']         = 0;
+            }
+
+            $result = [
+                $financial['is_published'],
+                $financial['campaign_id'],
+                $financial['campaign_name'],
+                $financial['contactclient_id'],
+                $financial['utm_source'],
+                $financial['received'],
+                $financial['rejected'],
+                $financial['converted'],
+                $financial['revenue'],
+                $financial['cost'],
+                $financial['gross_income'],
+                $financial['gross_margin'],
+                $financial['ecpm'],
+            ];
+
+            $results['rows'][] = $result;
+            $resultsWithKeys[] = $financial;
+        }
+
+        return true == $realtime ? $results : $resultsWithKeys;
     }
 }

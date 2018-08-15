@@ -40,7 +40,7 @@ class CampaignClientStatsSubscriber implements EventSubscriberInterface
             $repo = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry::class);
 
             do {
-                $entity = $repo->getEntityGreaterThanDate($params);
+                $entity = $repo->getEntityGreaterThanDate($params, 0, 'MauticContactClientBundle:Stat');
                 if (!empty($entity)) {
                     $nextDate = $entity->getDateAdded();
                     $dateTo   = new \DateTime($params['dateTo']);
@@ -64,9 +64,8 @@ class CampaignClientStatsSubscriber implements EventSubscriberInterface
                     $now->sub(new \DateInterval('PT15M'));
                     if ($now > $nextDate) {
                         //now do final query for results - this may take a while
-                        $data = $repo->getCampaignSourceStatsData(
+                        $data = $repo->getCampaignClienttatsData(
                             $params,
-                            true,
                             $cacheDir,
                             false
                         ); // expects $params['dateFrom'] & $params['dateTo']
@@ -85,10 +84,6 @@ class CampaignClientStatsSubscriber implements EventSubscriberInterface
                 }
                 echo '.';
             } while (true);
-        }
-
-        if ('CampaignSourceBudgets' == $event->getContext()) {
-            return;
         }
 
         $statsCollection                = $event->getStatsCollection();

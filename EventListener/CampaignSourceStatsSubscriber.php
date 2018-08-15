@@ -41,7 +41,7 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
             $repo = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry::class);
 
             do {
-                $entity = $repo->getEntityGreaterThanDate($params);
+                $entity = $repo->getEntityGreaterThanDate($params, 0, 'MauticContactSourceBundle:Stat');
                 if (!empty($entity)) {
                     $nextDate = $entity->getDateAdded();
                     $dateTo   = new \DateTime($params['dateTo']);
