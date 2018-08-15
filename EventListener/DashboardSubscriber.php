@@ -67,6 +67,9 @@ class DashboardSubscriber extends MainDashboardSubscriber
                 $widget->setHeight(330);
             }
             $params = $widget->getParams();
+            if (!isset($params['groupby']) || empty($params['groupby'])) {
+                $params['groupby'] = 'Source Name';
+            }
             // check date params and set defaults if not exist
             if (!isset($params['dateTo']) || !$params['dateTo'] instanceof \DateTime) {
                 $params['dateTo'] = new \DateTime();
