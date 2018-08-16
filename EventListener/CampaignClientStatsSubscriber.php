@@ -11,6 +11,7 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
+use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class CampaignClientStatsSubscriber implements EventSubscriberInterface
@@ -25,11 +26,16 @@ class CampaignClientStatsSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function generateReportStats(ClientStatsGeneratorEvent $event)
+    /**
+     * @param ReportStatsGeneratorEvent $event
+     *
+     * @throws \Exception
+     */
+    public function generateReportStats(ReportStatsGeneratorEvent $event)
     {
         $data = null;
 
-        if ('CampaignSourceStats' == $event->getContext()) {
+        if ('CampaignClientStats' == $event->getContext()) {
             $params   = $event->getParams();
             $cacheDir = $params['cacheDir'];
             $em       = $event->getEntityManager();
@@ -64,7 +70,7 @@ class CampaignClientStatsSubscriber implements EventSubscriberInterface
                     $now->sub(new \DateInterval('PT15M'));
                     if ($now > $nextDate) {
                         //now do final query for results - this may take a while
-                        $data = $repo->getCampaignClienttatsData(
+                        $data = $repo->getCampaignClientStatsData(
                             $params,
                             $cacheDir,
                             false

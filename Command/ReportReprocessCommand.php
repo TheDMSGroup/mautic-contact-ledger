@@ -52,7 +52,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
             )
             ->addOption(
                 '--stat-type',
-                '-t',
+                null,
                 InputOption::VALUE_OPTIONAL,
                 'Which Stat Type to reprocess? Source or Client or All (default = All).',
                 null

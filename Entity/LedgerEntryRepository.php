@@ -422,7 +422,7 @@ class LedgerEntryRepository extends CommonRepository
             ->select(
                 'COUNT(l.id) AS received',
                 "SUM(IF(cc.type = 'rejected', 1, 0)) AS rejected",
-                "SUM(IF(cc.type = 'accepted', 1, 0)) AS converted",
+                "SUM(IF(cc.type = 'converted', 1, 0)) AS converted",
                 'SUM(cl.revenue) AS revenue',
                 'cl.campaign_id',
                 'lu.utm_source AS utm_source',
@@ -432,7 +432,6 @@ class LedgerEntryRepository extends CommonRepository
                 '0 as cost'
             )
             ->from(MAUTIC_TABLE_PREFIX.'leads', 'l')
-            ->join('cs', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = cs.campaign_id')
             ->where('l.date_added BETWEEN :dateFrom AND :dateTo')
             ->andWhere('bx.lead_field_id = 336')
             ->andWhere('bx.value = 1')
@@ -443,9 +442,9 @@ class LedgerEntryRepository extends CommonRepository
         $statBuilder
             ->leftJoin('l', '('.$ledgerBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id')
             ->leftJoin('l', '('.$clientstatBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id')
-            ->leftJoin('l', 'lead_utmtags', 'lu', 'l.id = lu.lead_id')
-            ->leftJoin('l', 'campaigns', 'c', 'cl.campaign_id = c.id')
-            ->leftJoin('l', 'lead_fields_leads_boolean_xref', 'bx', 'bx.lead_id = l.id');
+            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_utmtags', 'lu', 'l.id = lu.lead_id')
+            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'cl.campaign_id = c.id')
+            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_fields_leads_boolean_xref', 'bx', 'bx.lead_id = l.id');
 
         if (isset($params['limit']) && (0 < $params['limit'])) {
             $statBuilder->setMaxResults($params['limit']);
