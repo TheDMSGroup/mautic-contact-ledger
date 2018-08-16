@@ -37,6 +37,9 @@ class DashboardSubscriber extends MainDashboardSubscriber
         'campaign.source.revenue' => [
             'formAlias' => 'campaign_source_revenue_widget',
         ],
+        'campaign.client.revenue' => [
+            'formAlias' => 'campaign_client_revenue_widget',
+        ],
     ];
 
     /**
@@ -89,6 +92,10 @@ class DashboardSubscriber extends MainDashboardSubscriber
 
         if ('campaign.source.revenue' == $event->getType()) {
             $event->setTemplate('MauticContactLedgerBundle:Widgets:sourceRevenue.html.php');
+        }
+
+        if ('campaign.client.revenue' == $event->getType()) {
+            $event->setTemplate('MauticContactLedgerBundle:Widgets:clientRevenue.html.php');
         }
 
         $event->stopPropagation();

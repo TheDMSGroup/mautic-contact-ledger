@@ -75,7 +75,7 @@ class CampaignClientStatsRepository extends CommonRepository
      *
      * @return array
      */
-    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__, $groupBy = 'Client Name')
+    public function getDashboardClientWidgetData($params, $cache_dir = __DIR__, $groupBy = 'Client Name')
     {
         $results = [];
         $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
@@ -96,21 +96,19 @@ class CampaignClientStatsRepository extends CommonRepository
             ->groupBy('ccs.campaign_id')
             ->orderBy('c.name', 'ASC');
 
-        if ($bySource) {
-            if ('Source Category' == $groupBy) {
-                $query->addSelect(
+        if ('Client Category' == $groupBy) {
+            $query->addSelect(
                     'cat.title as category'
                 );
-                $query->leftJoin('cs', MAUTIC_TABLE_PREFIX.'categories', 'cat', 'cs.category_id = cat.id');
-                $query->addGroupBy('cat.title');
-            } else {
-                $query->addSelect(
+            $query->leftJoin('cs', MAUTIC_TABLE_PREFIX.'categories', 'cat', 'cc.category_id = cat.id');
+            $query->addGroupBy('cat.title');
+        } else {
+            $query->addSelect(
                 'ccs.contact_client_id as clientid,
                 cc.name as clientname, 
                 ccs.utm_source as utm_source'
                 );
-                $query->addGroupBy('ccs.contact_client_id', 'ccs.utm_source');
-            }
+            $query->addGroupBy('ccs.contact_client_id', 'ccs.utm_source');
         }
         $query
             ->setParameter('dateFrom', $params['dateFrom'])
@@ -134,14 +132,12 @@ class CampaignClientStatsRepository extends CommonRepository
             ];
             $result[] = empty($financial['name']) ? '-' : $financial['name'];
 
-            if ($bySource) {
-                if ('Source Category' == $groupBy) {
-                    $result[] = (null == $financial['category']) ? '-' : $financial['category'];
-                } else {
-                    $result[] = $financial['clientid'];
-                    $result[] = empty($financial['clientname']) ? '-' : $financial['clientname'];
-                    $result[] = empty($financial['utm_source']) ? '-' : $financial['utm_source'];
-                }
+            if ('Client Category' == $groupBy) {
+                $result[] = (null == $financial['category']) ? '-' : $financial['category'];
+            } else {
+                $result[] = $financial['clientid'];
+                $result[] = empty($financial['clientname']) ? '-' : $financial['clientname'];
+                $result[] = empty($financial['utm_source']) ? '-' : $financial['utm_source'];
             }
             $result[] = $financial['received'];
             $result[] = $financial['declined'];

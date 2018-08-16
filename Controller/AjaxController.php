@@ -122,6 +122,59 @@ class AjaxController extends CommonAjaxController
     }
 
     /**
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     *
+     * @throws \Exception
+     */
+    protected function clientRevenueAction(Request $request)
+    {
+        $params    = $this->getDateParams();
+        $cache_dir = $this->container->getParameter('kernel.cache_dir');
+
+        // Get the API payload to test.
+        //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
+        $em      = $this->dispatcher->getContainer()->get('doctrine.orm.default_entity_manager');
+        $repo    = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStats::class);
+        $groupBy = $request->request->get('groupby', 'Client Name');
+
+        $data       = $repo->getDashboardClientWidgetData($params, $cache_dir, $groupBy);
+
+        $headers    = [
+            'mautic.contactledger.dashboard.client-revenue.header.active',
+            'mautic.contactledger.dashboard.client-revenue.header.id',
+            'mautic.contactledger.dashboard.client-revenue.header.name',
+        ];
+        if ('Source Category' == $groupBy) {
+            $headers[] = 'mautic.contactledger.dashboard.client-revenue.header.category';
+        } else { // groupBy = Source Name
+            $headers[] = 'mautic.contactledger.dashboard.client-revenue.header.clientid';
+            $headers[] = 'mautic.contactledger.dashboard.client-revenue.header.clientame';
+            $headers[] = 'mautic.contactledger.dashboard.client-revenue.header.utmsource';
+        }
+
+        $headers = array_merge($headers, [
+            'mautic.contactledger.dashboard.client-revenue.header.received',
+            'mautic.contactledger.dashboard.client-revenue.header.declined',
+            'mautic.contactledger.dashboard.client-revenue.header.converted',
+            'mautic.contactledger.dashboard.client-revenue.header.revenue',
+            'mautic.contactledger.dashboard.client-revenue.header.cost',
+            'mautic.contactledger.dashboard.client-revenue.header.gm',
+            'mautic.contactledger.dashboard.client-revenue.header.margin',
+            'mautic.contactledger.dashboard.client-revenue.header.ecpm',
+        ]);
+        foreach ($headers as $header) {
+            $data['columns'][] = [
+                'title' => $this->translator->trans($header),
+            ];
+        }
+        $data = UTF8Helper::fixUTF8($data);
+
+        return $this->sendJsonResponse($data);
+    }
+
+    /**
      * @param mixed $value
      *
      * @return string
