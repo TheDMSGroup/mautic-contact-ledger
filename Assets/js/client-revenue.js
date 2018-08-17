@@ -209,7 +209,7 @@ Mautic.loadClientRevenueWidget = function () {
         if (column === 'Revenue' || column === 'Cost' || column === 'GM') {
             return curFormat(value);
         }
-        if (column === 'eCPM') {
+        if (column === 'RPM') {
             return curPreciseFormat(value);
         }
         return numFormat(value);

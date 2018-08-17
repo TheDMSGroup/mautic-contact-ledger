@@ -441,7 +441,7 @@ class LedgerEntryRepository extends CommonRepository
             ->setParameter('dateTo', $params['dateTo']);
         $statBuilder
             ->leftJoin('l', '('.$ledgerBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id')
-            ->leftJoin('l', '('.$clientstatBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id')
+            ->innerJoin('l', '('.$clientstatBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id')
             ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_utmtags', 'lu', 'l.id = lu.lead_id')
             ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'cl.campaign_id = c.id')
             ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_fields_leads_boolean_xref', 'bx', 'bx.lead_id = l.id');
