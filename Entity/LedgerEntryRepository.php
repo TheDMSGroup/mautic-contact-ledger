@@ -428,7 +428,7 @@ class LedgerEntryRepository extends CommonRepository
                 'lu.utm_source AS utm_source',
                 'c.is_published',
                 'c.name as campaign_name',
-                'cc.contact_id as contactclient_id',
+                'cc.contactclient_id as contactclient_id',
                 '0 as cost'
             )
             ->from(MAUTIC_TABLE_PREFIX.'leads', 'l')

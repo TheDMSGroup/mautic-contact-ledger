@@ -11,12 +11,12 @@ Mautic.loadClientRevenueWidget = function () {
                             type: 'POST',
                             data: {
                                 action: 'plugin:mauticContactLedger:clientRevenue',
-                                groupby: $sourcetarget.data('groupby'),
+                                groupby: $clienttarget.data('groupby'),
                             },
                             cache: true,
                             dataType: 'json',
                             success: function (response) {
-                                var rowCount = Math.floor(($sourcetarget.data('height') - 220) / 40);
+                                var rowCount = Math.floor(($clienttarget.data('height') - 220) / 40);
                                 var colAdjust = $clienttarget.data('groupby') == 'Client Category' ? 4 : 6;
                                 var order = $clienttarget.data('groupby') == 'Client Category' ? [[2, 'asc'], [3, 'asc']] : [[2, 'asc'], [4, 'asc'], [5, 'asc']];
                                 var hideCols = $clienttarget.data('groupby') == 'Client Category' ? [1] : [1, 3];
@@ -27,7 +27,7 @@ Mautic.loadClientRevenueWidget = function () {
                                 var headerAdjust = $clienttarget.data('groupby') == 'Client Category' ? 1 : 2;
                                 var titleAdjust = $clienttarget.data('groupby') == 'Client Category' ? 0 : 1;
 
-                                mQuery('#sclient-revenue').DataTable({
+                                mQuery('#client-revenue').DataTable({
                                     language: {
                                         emptyTable: 'No results found for this date range and filters.'
                                     },
@@ -57,7 +57,7 @@ Mautic.loadClientRevenueWidget = function () {
                                         },
                                         {
                                             render: function (data, type, row) {
-                                                return renderSourceName(row);
+                                                return renderClientName(row);
                                             },
                                             targets: 4
                                         },
@@ -65,14 +65,16 @@ Mautic.loadClientRevenueWidget = function () {
                                             render: function (data, type, row) {
                                                 return '$' + data;
                                             },
-                                            targets: [Number(7) + Number(hiddenCount), Number(8) + Number(hiddenCount), Number(9) + Number(hiddenCount), Number(11) + Number(hiddenCount)]
+                                            targets: [Number(6) + Number(hiddenCount), Number(7) + Number(hiddenCount)]
+                                            // use this one when cost is processed correctly
+                                            //targets: [Number(7) + Number(hiddenCount), Number(8) + Number(hiddenCount), Number(10) + Number(hiddenCount)]
                                         },
-                                        {
-                                            render: function (data, type, row) {
-                                                return renderMarginPercentage(data);
-                                            },
-                                            targets: [Number(11) + Number(margin)]
-                                        },
+                                        // { // hidden until cost is porocessed correctly
+                                        //     render: function (data, type, row) {
+                                        //         return renderMarginPercentage(data);
+                                        //     },
+                                        //     targets: [Number(9) + Number(margin)]
+                                        // },
                                         {visible: false, targets: hideCols},
                                         {width: '5%', targets: [0]},
                                     ],
@@ -87,10 +89,10 @@ Mautic.loadClientRevenueWidget = function () {
                                             // exist
                                             var container = mQuery('#client-revenue');
                                             var columns = data[0].length;
-                                            if (mQuery('tr.detailPageTotal').length === 0) {
+                                            if (mQuery('tr.clientPageTotal').length === 0) {
                                                 var footer = mQuery('<tfoot></tfoot>');
-                                                var tr = mQuery('<tr class=\'detailPageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
-                                                var tr2 = mQuery('<tr class=\'detailGrandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                                var tr = mQuery('<tr class=\'clientPageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                                var tr2 = mQuery('<tr class=\'clientGrandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
                                                 tr.append(mQuery('<td colspan="'+colSpan+'">Page totals</td>'));
                                                 tr2.append(mQuery('<td colspan="'+colSpan+'">Grand totals</td>'));
                                                 for (var i = colAdjust; i < columns; i++) {
@@ -185,10 +187,10 @@ Mautic.loadClientRevenueWidget = function () {
         return data + '%';
     }
 
-    function renderSourceName (row) {
-        if ($sourcetarget.data('groupby') == 'Source Name') {
+    function renderClientName (row) {
+        if ($clienttarget.data('groupby') == 'Client Name') {
             if (row[3] !== '') {
-                return '<a href="./contactsource/view/' + row[3] + '" class="campaign-name-link" title="' + row[4] + '">' + row[4] + '</a>';
+                return '<a href="./contactclient/view/' + row[3] + '" class="campaign-name-link" title="' + row[4] + '">' + row[4] + '</a>';
             }
             return row[3];
         }
@@ -212,7 +214,7 @@ Mautic.loadClientRevenueWidget = function () {
         }
         return numFormat(value);
     }
-}; //loadSourceRevenueWidget
+}; //loadClientRevenueWidget
 
 // getScriptCachedOnce for faster page loads in the backend.
 mQuery.getScriptCachedOnce = function (url, callback) {

@@ -91,7 +91,7 @@ class CampaignClientStatsRepository extends CommonRepository
             )
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats', 'ccs')
             ->join('ccs', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = ccs.campaign_id')
-            ->leftJoin('ccs', MAUTIC_TABLE_PREFIX.'contactclient', 'cc', 'cc.id = ccs.contact_source_id')
+            ->leftJoin('ccs', MAUTIC_TABLE_PREFIX.'contactclient', 'cc', 'cc.id = ccs.contact_client_id')
             ->where('ccs.date_added BETWEEN :dateFrom AND :dateTo')
             ->groupBy('ccs.campaign_id')
             ->orderBy('c.name', 'ASC');
@@ -100,7 +100,7 @@ class CampaignClientStatsRepository extends CommonRepository
             $query->addSelect(
                     'cat.title as category'
                 );
-            $query->leftJoin('cs', MAUTIC_TABLE_PREFIX.'categories', 'cat', 'cc.category_id = cat.id');
+            $query->leftJoin('ccs', MAUTIC_TABLE_PREFIX.'categories', 'cat', 'cc.category_id = cat.id');
             $query->addGroupBy('cat.title');
         } else {
             $query->addSelect(
@@ -143,9 +143,10 @@ class CampaignClientStatsRepository extends CommonRepository
             $result[] = $financial['declined'];
             $result[] = $financial['converted'];
             $result[] = number_format($financial['revenue'], 2, '.', ',');
-            $result[] = number_format($financial['cost'], 2, '.', ',');
-            $result[] = number_format($financial['gross_income'], 2, '.', ',');
-            $result[] = $financial['gross_margin'];
+            // hide the next 3 columns until cost is processed correctly
+            // $result[] = number_format($financial['cost'], 2, '.', ',');
+            // $result[] = number_format($financial['gross_income'], 2, '.', ',');
+            // $result[] = $financial['gross_margin'];
             $result[] = $financial['ecpm'];
 
             $results['rows'][] = $result;

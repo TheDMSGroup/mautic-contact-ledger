@@ -27,7 +27,7 @@ class CampaignClientRevenueWidgetType extends AbstractType
             [
                 'label'      => 'Group By Granularity',
                 'choices'    => [
-                    'Client Name'                           => 'mautic.contactledger.dashboard.client-revenue.header.sourcename',
+                    'Client Name'                           => 'mautic.contactledger.dashboard.client-revenue.header.clientname',
                     'Client Category'                       => 'mautic.contactledger.dashboard.client-revenue.header.category',
                 ],
                 'label_attr' => ['class' => 'control-label'],

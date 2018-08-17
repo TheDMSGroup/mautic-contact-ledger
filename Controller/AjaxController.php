@@ -146,11 +146,11 @@ class AjaxController extends CommonAjaxController
             'mautic.contactledger.dashboard.client-revenue.header.id',
             'mautic.contactledger.dashboard.client-revenue.header.name',
         ];
-        if ('Source Category' == $groupBy) {
+        if ('Client Category' == $groupBy) {
             $headers[] = 'mautic.contactledger.dashboard.client-revenue.header.category';
         } else { // groupBy = Source Name
             $headers[] = 'mautic.contactledger.dashboard.client-revenue.header.clientid';
-            $headers[] = 'mautic.contactledger.dashboard.client-revenue.header.clientame';
+            $headers[] = 'mautic.contactledger.dashboard.client-revenue.header.clientname';
             $headers[] = 'mautic.contactledger.dashboard.client-revenue.header.utmsource';
         }
 
@@ -159,9 +159,10 @@ class AjaxController extends CommonAjaxController
             'mautic.contactledger.dashboard.client-revenue.header.declined',
             'mautic.contactledger.dashboard.client-revenue.header.converted',
             'mautic.contactledger.dashboard.client-revenue.header.revenue',
-            'mautic.contactledger.dashboard.client-revenue.header.cost',
-            'mautic.contactledger.dashboard.client-revenue.header.gm',
-            'mautic.contactledger.dashboard.client-revenue.header.margin',
+            // hide the nexxt 3 columns until cost is processed correctly
+            // 'mautic.contactledger.dashboard.client-revenue.header.cost',
+            // 'mautic.contactledger.dashboard.client-revenue.header.gm',
+            // 'mautic.contactledger.dashboard.client-revenue.header.margin',
             'mautic.contactledger.dashboard.client-revenue.header.ecpm',
         ]);
         foreach ($headers as $header) {

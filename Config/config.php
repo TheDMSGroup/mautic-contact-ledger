@@ -68,6 +68,10 @@ return [
                 'class'     => 'MauticPlugin\MauticContactLedgerBundle\Form\Type\CampaignSourceRevenueWidgetType',
                 'alias'     => 'campaign_source_revenue_widget',
             ],
+            'mautic.contactledger.form.type.campaign_client_revenue_widget' => [
+                'class'     => 'MauticPlugin\MauticContactLedgerBundle\Form\Type\CampaignClientRevenueWidgetType',
+                'alias'     => 'campaign_client_revenue_widget',
+            ],
         ],
     ],
 ];
