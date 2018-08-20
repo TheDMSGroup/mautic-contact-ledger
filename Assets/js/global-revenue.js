@@ -16,8 +16,15 @@ Mautic.loadGlobalRevenueWidget = function () {
                             cache: true,
                             dataType: 'json',
                             success: function (response) {
-                                var rowCount = Math.floor(($globaltarget.data('height') - 235) / 40);
-                                mQuery('#global-revenue').DataTable({
+                                if(mQuery(window).width() < 415){
+                                    var gpaginate = 60;
+                                    var gpageStyle = 'full';
+                                } else {
+                                    var gpaginate = 0;
+                                    var gpageStyle = 'simple_numbers';
+                                }
+
+                                var rowCount = Math.floor(($sourcetarget.data('height') - (235 + gpaginate)) / 40);                                mQuery('#global-revenue').DataTable({
                                     language: {
                                         emptyTable: 'No results found for this date range and filters.'
                                     },
@@ -33,6 +40,8 @@ Mautic.loadGlobalRevenueWidget = function () {
                                         'excelHtml5',
                                         'csvHtml5'
                                     ],
+                                    pagingType: gpageStyle,
+
                                     columnDefs: [
                                         {
                                             render: function (data, type, row) {
@@ -127,7 +136,19 @@ Mautic.loadGlobalRevenueWidget = function () {
                                 mQuery('#global-revenue').css('width', 'auto');
                                 mQuery('#global-revenue').css('display', 'block');
                                 mQuery('#global-revenue').css('overflow-x', 'scroll');
+                                if(mQuery(window).width() < 415)
+                                {
+                                    mQuery("#global-revenue_filter").css("float","left");
+                                    mQuery("#global-revenue_filter").css("max-width","40%");
+                                    mQuery('.dt-buttons.btn-group').css("max-width", "35%");
+                                    mQuery('#global-revenue_paginate').css({
+                                        fontSize: '.7em',
+                                        marginLeft: '-10%'
+                                    });
+                                } else {
                                 mQuery('#global-revenue_paginate').css('margin-top', '-32px');
+
+                    }
 
                             } //success
                         }); //ajax

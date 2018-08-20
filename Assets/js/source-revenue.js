@@ -16,7 +16,15 @@ Mautic.loadSourceRevenueWidget = function () {
                             cache: true,
                             dataType: 'json',
                             success: function (response) {
-                                var rowCount = Math.floor(($sourcetarget.data('height') - 235) / 40);
+                                if(mQuery(window).width() < 415){
+                                    var spaginate = 60;
+                                    var spageStyle = 'full';
+                                } else {
+                                    var spaginate = 0;
+                                    var spageStyle = 'simple_numbers';
+                                }
+
+                                var rowCount = Math.floor(($sourcetarget.data('height') - (235 + spaginate)) / 40);
                                 var colAdjust = $sourcetarget.data('groupby') == 'Source Category' ? 4 : 6;
                                 var order = $sourcetarget.data('groupby') == 'Source Category' ? [[2, 'asc'], [3, 'asc']] : [[2, 'asc'], [4, 'asc'], [5, 'asc']];
                                 var hideCols = $sourcetarget.data('groupby') == 'Source Category' ? [1] : [1, 3];
@@ -42,6 +50,8 @@ Mautic.loadSourceRevenueWidget = function () {
                                         'excelHtml5',
                                         'csvHtml5'
                                     ],
+                                    pagingType: spageStyle,
+
                                     columnDefs: [
                                         {
                                             render: function (data, type, row) {
@@ -145,7 +155,20 @@ Mautic.loadSourceRevenueWidget = function () {
                                 mQuery('#source-revenue').css('width', 'auto');
                                 mQuery('#source-revenue').css('display', 'block');
                                 mQuery('#source-revenue').css('overflow-x', 'scroll');
-                                mQuery('#source-revenue_paginate').css('margin-top', '-32px');
+                                if(mQuery(window).width() < 415)
+                                {
+                                    mQuery("#source-revenue_filter").css("float","left");
+                                    mQuery("#source-revenue_filter").css("max-width","40%");
+                                    mQuery('.dt-buttons.btn-group').css("max-width", "35%");
+                                    mQuery('#source-revenue_paginate').css({
+                                        fontSize: '.7em',
+                                        marginLeft: '-10%'
+                                    });
+
+                                } else {
+                                    mQuery('#source-revenue_paginate').css('margin-top', '-32px');
+                                }
+
 
                             } //success
                         });//ajax

@@ -16,8 +16,15 @@ Mautic.loadClientRevenueWidget = function () {
                             cache: true,
                             dataType: 'json',
                             success: function (response) {
-                                var rowCount = Math.floor(($clienttarget.data('height') - 235) / 40);
-                                var colAdjust = $clienttarget.data('groupby') == 'Client Category' ? 4 : 6;
+                                if(mQuery(window).width() < 415){
+                                    var cpaginate = 60;
+                                    var cpageStyle = 'full';
+                                } else {
+                                    var cpaginate = 0;
+                                    var cpageStyle = 'simple_numbers';
+                                }
+
+                                var rowCount = Math.floor(($clienttarget.data('height') - (235 + cpaginate)) / 40);                                var colAdjust = $clienttarget.data('groupby') == 'Client Category' ? 4 : 6;
                                 var order = $clienttarget.data('groupby') == 'Client Category' ? [[2, 'asc'], [3, 'asc']] : [[2, 'asc'], [4, 'asc'], [5, 'asc']];
                                 var hideCols = $clienttarget.data('groupby') == 'Client Category' ? [1] : [1, 3];
                                 var hiddenCount = $clienttarget.data('groupby') == 'Client Category' ? 1 : 3;
@@ -42,6 +49,7 @@ Mautic.loadClientRevenueWidget = function () {
                                         'excelHtml5',
                                         'csvHtml5'
                                     ],
+                                    pagingType: cpageStyle,
                                     columnDefs: [
                                         {
                                             render: function (data, type, row) {
@@ -147,7 +155,19 @@ Mautic.loadClientRevenueWidget = function () {
                                 mQuery('#client-revenue').css('width', 'auto');
                                 mQuery('#client-revenue').css('display', 'block');
                                 mQuery('#client-revenue').css('overflow-x', 'scroll');
+                                if(mQuery(window).width() < 415)
+                                {
+                                    mQuery("#client-revenue_filter").css("float","left");
+                                    mQuery("#client-revenue_filter").css("max-width","40%");
+                                    mQuery('.dt-buttons.btn-group').css("max-width", "35%");
+                                    mQuery('#client-revenue_paginate').css({
+                                        fontSize: '.7em',
+                                        marginLeft: '-10%'
+                                    });
+                                }  else {
                                 mQuery('#client-revenue_paginate').css('margin-top', '-32px');
+
+                    }
 
                             } //success
                         });//ajax
