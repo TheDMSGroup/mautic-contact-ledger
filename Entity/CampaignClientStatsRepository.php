@@ -125,7 +125,7 @@ class CampaignClientStatsRepository extends CommonRepository
             } else {
                 $financial['gross_margin'] = 0;
                 $financial['ecpm']         = 0;
-                $financial['rpu']         = 0;
+                $financial['rpu']          = 0;
             }
 
             $result   = [
