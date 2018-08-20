@@ -16,7 +16,7 @@ Mautic.loadGlobalRevenueWidget = function () {
                             cache: true,
                             dataType: 'json',
                             success: function (response) {
-                                var rowCount = Math.floor(($globaltarget.data('height') - 220) / 40);
+                                var rowCount = Math.floor(($globaltarget.data('height') - 235) / 40);
                                 mQuery('#global-revenue').DataTable({
                                     language: {
                                         emptyTable: 'No results found for this date range and filters.'
@@ -125,8 +125,10 @@ Mautic.loadGlobalRevenueWidget = function () {
                                 }); //.DataTables
                                 mQuery('#global-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
                                 mQuery('#global-revenue').css('width', 'auto');
-                                mQuery('#global-revenue').css("font-size", ".8em")
-                                mQuery('#global-revenue_wrapper').css('overflow-x', 'scroll');
+                                mQuery('#global-revenue').css('display', 'block');
+                                mQuery('#global-revenue').css('overflow-x', 'scroll');
+                                mQuery('#global-revenue_paginate').css('margin-top', '-32px');
+
                             } //success
                         }); //ajax
                     }); //getScriptsCachedOnce - fonteawesome css

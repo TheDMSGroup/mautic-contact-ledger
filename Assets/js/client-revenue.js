@@ -16,7 +16,7 @@ Mautic.loadClientRevenueWidget = function () {
                             cache: true,
                             dataType: 'json',
                             success: function (response) {
-                                var rowCount = Math.floor(($clienttarget.data('height') - 220) / 40);
+                                var rowCount = Math.floor(($clienttarget.data('height') - 235) / 40);
                                 var colAdjust = $clienttarget.data('groupby') == 'Client Category' ? 4 : 6;
                                 var order = $clienttarget.data('groupby') == 'Client Category' ? [[2, 'asc'], [3, 'asc']] : [[2, 'asc'], [4, 'asc'], [5, 'asc']];
                                 var hideCols = $clienttarget.data('groupby') == 'Client Category' ? [1] : [1, 3];
@@ -65,9 +65,9 @@ Mautic.loadClientRevenueWidget = function () {
                                             render: function (data, type, row) {
                                                 return '$' + data;
                                             },
-                                            targets: [Number(6) + Number(hiddenCount), Number(7) + Number(hiddenCount)]
+                                            targets: [Number(6) + Number(hiddenCount), Number(7) + Number(hiddenCount), Number(8) + Number(hiddenCount)]
                                             // use this one when cost is processed correctly
-                                            //targets: [Number(7) + Number(hiddenCount), Number(8) + Number(hiddenCount), Number(10) + Number(hiddenCount)]
+                                            //targets: [Number(7) + Number(hiddenCount), Number(8) + Number(hiddenCount), Number(10) + Number(hiddenCount), , Number(11) + Number(hiddenCount)]
                                         },
                                         // { // hidden until cost is porocessed correctly
                                         //     render: function (data, type, row) {
@@ -145,8 +145,10 @@ Mautic.loadClientRevenueWidget = function () {
                                     marginLeft: '10px'
                                 });
                                 mQuery('#client-revenue').css('width', 'auto');
-                                mQuery('#client-revenue').css('font-size', '.8em');
-                                mQuery('#client-revenue_wrapper').css('overflow-x', 'scroll');
+                                mQuery('#client-revenue').css('display', 'block');
+                                mQuery('#client-revenue').css('overflow-x', 'scroll');
+                                mQuery('#client-revenue_paginate').css('margin-top', '-32px');
+
                             } //success
                         });//ajax
 

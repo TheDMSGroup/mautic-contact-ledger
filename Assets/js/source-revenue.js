@@ -16,7 +16,7 @@ Mautic.loadSourceRevenueWidget = function () {
                             cache: true,
                             dataType: 'json',
                             success: function (response) {
-                                var rowCount = Math.floor(($sourcetarget.data('height') - 220) / 40);
+                                var rowCount = Math.floor(($sourcetarget.data('height') - 235) / 40);
                                 var colAdjust = $sourcetarget.data('groupby') == 'Source Category' ? 4 : 6;
                                 var order = $sourcetarget.data('groupby') == 'Source Category' ? [[2, 'asc'], [3, 'asc']] : [[2, 'asc'], [4, 'asc'], [5, 'asc']];
                                 var hideCols = $sourcetarget.data('groupby') == 'Source Category' ? [1] : [1, 3];
@@ -143,8 +143,10 @@ Mautic.loadSourceRevenueWidget = function () {
                                     marginLeft: '10px'
                                 });
                                 mQuery('#source-revenue').css('width', 'auto');
-                                mQuery('#source-revenue').css('font-size', '.8em');
-                                mQuery('#source-revenue_wrapper').css('overflow-x', 'scroll');
+                                mQuery('#source-revenue').css('display', 'block');
+                                mQuery('#source-revenue').css('overflow-x', 'scroll');
+                                mQuery('#source-revenue_paginate').css('margin-top', '-32px');
+
                             } //success
                         });//ajax
 

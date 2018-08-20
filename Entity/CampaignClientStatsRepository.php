@@ -121,9 +121,11 @@ class CampaignClientStatsRepository extends CommonRepository
             if ($financial['gross_income'] > 0) {
                 $financial['gross_margin'] = 100 * $financial['gross_income'] / $financial['revenue'];
                 $financial['ecpm']         = number_format($financial['gross_income'] / 1000, 4, '.', ',');
+                $financial['rpu']          = number_format($financial['gross_income'] / $financial['received'], 4, '.', ',');
             } else {
                 $financial['gross_margin'] = 0;
                 $financial['ecpm']         = 0;
+                $financial['rpu']         = 0;
             }
 
             $result   = [
@@ -148,6 +150,7 @@ class CampaignClientStatsRepository extends CommonRepository
             // $result[] = number_format($financial['gross_income'], 2, '.', ',');
             // $result[] = $financial['gross_margin'];
             $result[] = $financial['ecpm'];
+            $result[] = $financial['rpu'];
 
             $results['rows'][] = $result;
         }

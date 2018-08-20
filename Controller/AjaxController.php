@@ -164,6 +164,7 @@ class AjaxController extends CommonAjaxController
             // 'mautic.contactledger.dashboard.client-revenue.header.gm',
             // 'mautic.contactledger.dashboard.client-revenue.header.margin',
             'mautic.contactledger.dashboard.client-revenue.header.ecpm',
+            'mautic.contactledger.dashboard.client-revenue.header.rpu',
         ]);
         foreach ($headers as $header) {
             $data['columns'][] = [
