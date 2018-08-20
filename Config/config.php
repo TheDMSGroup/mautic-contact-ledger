@@ -47,8 +47,13 @@ return [
                     'mautic.contactledger.model.ledgerentry',
                 ],
             ],
-            'mautic.contactledger.reportstats.generate'       => [
+            'mautic.contactledger.sourcestats.generate'       => [
                 'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\CampaignSourceStatsSubscriber',
+                'arguments' => [
+                ],
+            ],
+            'mautic.contactledger.clientstats.generate'       => [
+                'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\CampaignClientStatsSubscriber',
                 'arguments' => [
                 ],
             ],
@@ -62,6 +67,10 @@ return [
             'mautic.contactledger.form.type.campaign_source_revenue_widget' => [
                 'class'     => 'MauticPlugin\MauticContactLedgerBundle\Form\Type\CampaignSourceRevenueWidgetType',
                 'alias'     => 'campaign_source_revenue_widget',
+            ],
+            'mautic.contactledger.form.type.campaign_client_revenue_widget' => [
+                'class'     => 'MauticPlugin\MauticContactLedgerBundle\Form\Type\CampaignClientRevenueWidgetType',
+                'alias'     => 'campaign_client_revenue_widget',
             ],
         ],
     ],

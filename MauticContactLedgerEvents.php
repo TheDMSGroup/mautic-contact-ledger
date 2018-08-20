@@ -28,7 +28,12 @@ final class MauticContactLedgerEvents
     const CONTEXT_CREATE = 'mautic.contactledger.context_create';
 
     /**
-     * Listen for a reportstats.generate event and add stats if the context matches.
+     * Listen for a sourcestats.generate event and add stats if the context matches.
      */
-    const REPORT_STATS_GENERATE = 'mautic.contactledger.reportstats.generate';
+    const SOURCE_STATS_GENERATE = 'mautic.contactledger.sourcestats.generate';
+
+    /**
+     * Listen for a clientstats.generate event and add stats if the context matches.
+     */
+    const CLIENT_STATS_GENERATE = 'mautic.contactledger.clientstats.generate';
 }

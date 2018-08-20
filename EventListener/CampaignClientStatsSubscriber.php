@@ -14,7 +14,7 @@ namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class CampaignSourceStatsSubscriber implements EventSubscriberInterface
+class CampaignClientStatsSubscriber implements EventSubscriberInterface
 {
     /**
      * @return array
@@ -22,15 +22,20 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            'mautic.contactledger.sourcestats.generate' => ['generateReportStats', 0],
+            'mautic.contactledger.clientstats.generate' => ['generateReportStats', 0],
         ];
     }
 
+    /**
+     * @param ReportStatsGeneratorEvent $event
+     *
+     * @throws \Exception
+     */
     public function generateReportStats(ReportStatsGeneratorEvent $event)
     {
         $data = null;
 
-        if ('CampaignSourceStats' == $event->getContext()) {
+        if ('CampaignClientStats' == $event->getContext()) {
             $params   = $event->getParams();
             $cacheDir = $params['cacheDir'];
             $em       = $event->getEntityManager();
@@ -41,7 +46,7 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
             $repo = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry::class);
 
             do {
-                $entity = $repo->getEntityGreaterThanDate($params, 0, 'MauticContactSourceBundle:Stat');
+                $entity = $repo->getEntityGreaterThanDate($params, 0, 'MauticContactClientBundle:Stat');
                 if (!empty($entity)) {
                     $nextDate = $entity->getDateAdded();
                     $dateTo   = new \DateTime($params['dateTo']);
@@ -65,9 +70,8 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
                     $now->sub(new \DateInterval('PT15M'));
                     if ($now > $nextDate) {
                         //now do final query for results - this may take a while
-                        $data = $repo->getCampaignSourceStatsData(
+                        $data = $repo->getCampaignClientStatsData(
                             $params,
-                            true,
                             $cacheDir,
                             false
                         ); // expects $params['dateFrom'] & $params['dateTo']
@@ -86,10 +90,6 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
                 }
                 echo '.';
             } while (true);
-        }
-
-        if ('CampaignSourceBudgets' == $event->getContext()) {
-            return;
         }
 
         $statsCollection                = $event->getStatsCollection();

@@ -19,7 +19,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
-class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInterface
+class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInterface
 {
     /**
      * @var EntityManager
@@ -38,7 +38,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
      */
     protected function configure()
     {
-        $this->setName('mautic:ledger:report:stats')
+        $this->setName('mautic:ledger:source:stats')
             ->setDescription(
                 'generate stats in distinct table for reporting purposes'
             );
@@ -59,7 +59,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
         ];
         $repeat           = true;
 
-        $output->writeln('<info>***** Generating Report Stats *****</info>');
+        $output->writeln('<info>***** Generating Report Source Stats *****</info>');
         $timeStart = microtime(true);
 
         if (!$this->checkRunStatus($input, $output)) {
@@ -91,7 +91,7 @@ class ReportStatsCommand extends ModeratedCommand implements ContainerAwareInter
                     } else {
                         // Dispatch event to get data from various bundles
                         $event = new ReportStatsGeneratorEvent($this->em, $params, $context);
-                        $this->dispatcher->dispatch('mautic.contactledger.reportstats.generate', $event);
+                        $this->dispatcher->dispatch('mautic.contactledger.sourcestats.generate', $event);
 
                         // save entities to DB
                         $updatedParams = $event->getParams();

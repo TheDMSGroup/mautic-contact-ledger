@@ -1,7 +1,7 @@
-Mautic.loadSourceRevenueWidget = function () {
-    var $sourcetarget = mQuery('#source-revenue');
-    if ($sourcetarget.length) {
-        mQuery('#source-revenue:first:not(.table-initialized)').addClass('table-initialized').each(function () {
+Mautic.loadClientRevenueWidget = function () {
+    var $clienttarget = mQuery('#client-revenue');
+    if ($clienttarget.length) {
+        mQuery('#client-revenue:first:not(.table-initialized)').addClass('table-initialized').each(function () {
             mQuery.getScriptCachedOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
                 mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css', function () {
                     mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css', function () {
@@ -10,32 +10,31 @@ Mautic.loadSourceRevenueWidget = function () {
                             url: mauticAjaxUrl,
                             type: 'POST',
                             data: {
-                                action: 'plugin:mauticContactLedger:sourceRevenue',
-                                groupby: $sourcetarget.data('groupby'),
+                                action: 'plugin:mauticContactLedger:clientRevenue',
+                                groupby: $clienttarget.data('groupby'),
                             },
                             cache: true,
                             dataType: 'json',
                             success: function (response) {
                                 if(mQuery(window).width() < 415){
-                                    var spaginate = 60;
-                                    var spageStyle = 'full';
+                                    var cpaginate = 60;
+                                    var cpageStyle = 'full';
                                 } else {
-                                    var spaginate = 0;
-                                    var spageStyle = 'simple_numbers';
+                                    var cpaginate = 0;
+                                    var cpageStyle = 'simple_numbers';
                                 }
 
-                                var rowCount = Math.floor(($sourcetarget.data('height') - (235 + spaginate)) / 40);
-                                var colAdjust = $sourcetarget.data('groupby') == 'Source Category' ? 4 : 6;
-                                var order = $sourcetarget.data('groupby') == 'Source Category' ? [[2, 'asc'], [3, 'asc']] : [[2, 'asc'], [4, 'asc'], [5, 'asc']];
-                                var hideCols = $sourcetarget.data('groupby') == 'Source Category' ? [1] : [1, 3];
-                                var hiddenCount = $sourcetarget.data('groupby') == 'Source Category' ? 1 : 3;
-                                var margin = $sourcetarget.data('groupby') == 'Source Category' ? 1 : 2;
-                                var footerAdjust = $sourcetarget.data('groupby') == 'Source Category' ? 2 : 4;
-                                var colSpan = $sourcetarget.data('groupby') == 'Source Category' ? 3 : 4;
-                                var headerAdjust = $sourcetarget.data('groupby') == 'Source Category' ? 1 : 2;
-                                var titleAdjust = $sourcetarget.data('groupby') == 'Source Category' ? 0 : 1;
+                                var rowCount = Math.floor(($clienttarget.data('height') - (235 + cpaginate)) / 40);                                var colAdjust = $clienttarget.data('groupby') == 'Client Category' ? 4 : 6;
+                                var order = $clienttarget.data('groupby') == 'Client Category' ? [[2, 'asc'], [3, 'asc']] : [[2, 'asc'], [4, 'asc'], [5, 'asc']];
+                                var hideCols = $clienttarget.data('groupby') == 'Client Category' ? [1] : [1, 3];
+                                var hiddenCount = $clienttarget.data('groupby') == 'Client Category' ? 1 : 3;
+                                var margin = $clienttarget.data('groupby') == 'Client Category' ? 1 : 2;
+                                var footerAdjust = $clienttarget.data('groupby') == 'Client Category' ? 2 : 4;
+                                var colSpan = $clienttarget.data('groupby') == 'Client Category' ? 3 : 4;
+                                var headerAdjust = $clienttarget.data('groupby') == 'Client Category' ? 1 : 2;
+                                var titleAdjust = $clienttarget.data('groupby') == 'Client Category' ? 0 : 1;
 
-                                mQuery('#source-revenue').DataTable({
+                                mQuery('#client-revenue').DataTable({
                                     language: {
                                         emptyTable: 'No results found for this date range and filters.'
                                     },
@@ -50,8 +49,7 @@ Mautic.loadSourceRevenueWidget = function () {
                                         'excelHtml5',
                                         'csvHtml5'
                                     ],
-                                    pagingType: spageStyle,
-
+                                    pagingType: cpageStyle,
                                     columnDefs: [
                                         {
                                             render: function (data, type, row) {
@@ -67,7 +65,7 @@ Mautic.loadSourceRevenueWidget = function () {
                                         },
                                         {
                                             render: function (data, type, row) {
-                                                return renderSourceName(row);
+                                                return renderClientName(row);
                                             },
                                             targets: 4
                                         },
@@ -75,32 +73,34 @@ Mautic.loadSourceRevenueWidget = function () {
                                             render: function (data, type, row) {
                                                 return '$' + data;
                                             },
-                                            targets: [Number(7) + Number(hiddenCount), Number(8) + Number(hiddenCount), Number(9) + Number(hiddenCount), Number(11) + Number(hiddenCount)]
+                                            targets: [Number(6) + Number(hiddenCount), Number(7) + Number(hiddenCount), Number(8) + Number(hiddenCount)]
+                                            // use this one when cost is processed correctly
+                                            //targets: [Number(7) + Number(hiddenCount), Number(8) + Number(hiddenCount), Number(10) + Number(hiddenCount), , Number(11) + Number(hiddenCount)]
                                         },
-                                        {
-                                            render: function (data, type, row) {
-                                                return renderMarginPercentage(data);
-                                            },
-                                            targets: [Number(11) + Number(margin)]
-                                        },
+                                        // { // hidden until cost is porocessed correctly
+                                        //     render: function (data, type, row) {
+                                        //         return renderMarginPercentage(data);
+                                        //     },
+                                        //     targets: [Number(9) + Number(margin)]
+                                        // },
                                         {visible: false, targets: hideCols},
                                         {width: '5%', targets: [0]},
                                     ],
 
                                     footerCallback: function (row, data, start, end, display) {
                                         if (data && data.length === 0 || typeof data[0] === 'undefined') {
-                                            mQuery('#source-builder-overlay').hide();
+                                            mQuery('#client-builder-overlay').hide();
                                             return;
                                         }
                                         try {
                                             // Add table footer if it doesnt
                                             // exist
-                                            var container = mQuery('#source-revenue');
+                                            var container = mQuery('#client-revenue');
                                             var columns = data[0].length;
-                                            if (mQuery('tr.detailPageTotal').length === 0) {
+                                            if (mQuery('tr.clientPageTotal').length === 0) {
                                                 var footer = mQuery('<tfoot></tfoot>');
-                                                var tr = mQuery('<tr class=\'detailPageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
-                                                var tr2 = mQuery('<tr class=\'detailGrandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                                var tr = mQuery('<tr class=\'clientPageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                                var tr2 = mQuery('<tr class=\'clientGrandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
                                                 tr.append(mQuery('<td colspan="'+colSpan+'">Page totals</td>'));
                                                 tr2.append(mQuery('<td colspan="'+colSpan+'">Grand totals</td>'));
                                                 for (var i = colAdjust; i < columns; i++) {
@@ -141,34 +141,33 @@ Mautic.loadSourceRevenueWidget = function () {
                                                 footer1.find('td:nth-child(' + (i - footerAdjust) + ')').html(FormatFooter(title, pageSum, i)); // nth child minus 2 or 4
                                                 footer2.find('td:nth-child(' + (i - footerAdjust) + ')').html(FormatFooter(title, sum, i)); // nth child minus 2 or 4
                                             }
-                                            mQuery('#source-builder-overlay').hide();
+                                            mQuery('#client-builder-overlay').hide();
                                         }
                                         catch (e) {
                                             console.log(e);
                                         }
                                     } // FooterCallback
                                 }); //.DataTables
-                                mQuery('#source-revenue_wrapper .dt-buttons').css({
+                                mQuery('#client-revenue_wrapper .dt-buttons').css({
                                     float: 'right',
                                     marginLeft: '10px'
                                 });
-                                mQuery('#source-revenue').css('width', 'auto');
-                                mQuery('#source-revenue').css('display', 'block');
-                                mQuery('#source-revenue').css('overflow-x', 'scroll');
+                                mQuery('#client-revenue').css('width', 'auto');
+                                mQuery('#client-revenue').css('display', 'block');
+                                mQuery('#client-revenue').css('overflow-x', 'scroll');
                                 if(mQuery(window).width() < 415)
                                 {
-                                    mQuery("#source-revenue_filter").css("float","left");
-                                    mQuery("#source-revenue_filter").css("max-width","40%");
+                                    mQuery("#client-revenue_filter").css("float","left");
+                                    mQuery("#client-revenue_filter").css("max-width","40%");
                                     mQuery('.dt-buttons.btn-group').css("max-width", "35%");
-                                    mQuery('#source-revenue_paginate').css({
+                                    mQuery('#client-revenue_paginate').css({
                                         fontSize: '.7em',
                                         marginLeft: '-10%'
                                     });
+                                }  else {
+                                mQuery('#client-revenue_paginate').css('margin-top', '-32px');
 
-                                } else {
-                                    mQuery('#source-revenue_paginate').css('margin-top', '-32px');
-                                }
-
+                    }
 
                             } //success
                         });//ajax
@@ -210,10 +209,10 @@ Mautic.loadSourceRevenueWidget = function () {
         return data + '%';
     }
 
-    function renderSourceName (row) {
-        if ($sourcetarget.data('groupby') == 'Source Name') {
+    function renderClientName (row) {
+        if ($clienttarget.data('groupby') == 'Client Name') {
             if (row[3] !== '') {
-                return '<a href="./contactsource/view/' + row[3] + '" class="campaign-name-link" title="' + row[4] + '">' + row[4] + '</a>';
+                return '<a href="./contactclient/view/' + row[3] + '" class="campaign-name-link" title="' + row[4] + '">' + row[4] + '</a>';
             }
             return row[3];
         }
@@ -232,12 +231,12 @@ Mautic.loadSourceRevenueWidget = function () {
         if (column === 'Revenue' || column === 'Cost' || column === 'GM') {
             return curFormat(value);
         }
-        if (column === 'eCPM') {
+        if (column === 'RPM') {
             return curPreciseFormat(value);
         }
         return numFormat(value);
     }
-}; //loadSourceRevenueWidget
+}; //loadClientRevenueWidget
 
 // getScriptCachedOnce for faster page loads in the backend.
 mQuery.getScriptCachedOnce = function (url, callback) {
