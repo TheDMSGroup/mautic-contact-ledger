@@ -24,7 +24,7 @@ Mautic.loadGlobalRevenueWidget = function () {
                                     var gpageStyle = 'simple_numbers';
                                 }
 
-                                var rowCount = Math.floor(($sourcetarget.data('height') - (235 + gpaginate)) / 40);                                mQuery('#global-revenue').DataTable({
+                                var rowCount = Math.floor(($globaltarget.data('height') - (235 + gpaginate)) / 40);                                mQuery('#global-revenue').DataTable({
                                     language: {
                                         emptyTable: 'No results found for this date range and filters.'
                                     },
