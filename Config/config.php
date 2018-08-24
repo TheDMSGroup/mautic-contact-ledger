@@ -47,6 +47,9 @@ return [
                     'mautic.contactledger.model.ledgerentry',
                 ],
             ],
+            'mautic.contactledger.report.subscriber'         => [
+                'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\ReportSubscriber',
+            ],
             'mautic.contactledger.sourcestats.generate'       => [
                 'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\CampaignSourceStatsSubscriber',
                 'arguments' => [
