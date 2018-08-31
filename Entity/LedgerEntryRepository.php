@@ -411,18 +411,23 @@ class LedgerEntryRepository extends CommonRepository
         //client_stats subselect expression
         $clientstatBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $clientstatBuilder
-            ->select('ccss.type', 'ccss.contact_id', 'ccss.contactclient_id')
+            ->select(
+                'ccss.contact_id',
+                'ccss.contactclient_id',
+                'SUM(IF(ccss.type = "rejected", 1, 0)) AS rejected',
+                'SUM(IF(ccss.type = "converted", 1, 0)) AS converted'
+            )
             ->from(MAUTIC_TABLE_PREFIX.'contactclient_stats', 'ccss')
             ->where('ccss.contact_id IN (:leads)')
-            ->groupBy('ccss.contact_id');
+            ->groupBy('ccss.contact_id', 'ccss.contactclient_id');
 
         // Main Query
         $statBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $statBuilder
             ->select(
                 'COUNT(l.id) AS received',
-                "SUM(IF(cc.type = 'rejected', 1, 0)) AS rejected",
-                "SUM(IF(cc.type = 'converted', 1, 0)) AS converted",
+                'SUM(cc.rejected) AS rejected',
+                'SUM(cc.converted) AS converted',
                 'SUM(cl.revenue) AS revenue',
                 'cl.campaign_id',
                 'lu.utm_source AS utm_source',
