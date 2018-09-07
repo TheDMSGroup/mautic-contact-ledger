@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Command\ModeratedCommand;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStats;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
+use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -175,8 +176,9 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
      */
     private function getCampaignClientStatsData($params)
     {
+        /** @var LedgerEntryRepository $repo */
         $repo     = $this->em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry::class);
-        $statData = $repo->getCampaignClientStatsData($params, true, $params['cacheDir'], false);
+        $statData = $repo->getCampaignClientStatsData($params, $params['cacheDir'], false);
 
         return $statData;
     }
