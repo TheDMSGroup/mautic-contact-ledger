@@ -15,6 +15,7 @@ use Mautic\CoreBundle\Command\ModeratedCommand;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -39,6 +40,20 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
     protected function configure()
     {
         $this->setName('mautic:ledger:source:stats')
+            ->addOption(
+                '--date-from',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Date to begin processing. Must be valid DateTime string.',
+                null
+            )
+            ->addOption(
+                '--date-to',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Date to end processing. Must be valid DateTime string.',
+                null
+            )
             ->setDescription(
                 'generate stats in distinct table for reporting purposes'
             );
@@ -70,7 +85,8 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
 
         do {
             // TODO: right now, contexts are hardcoded. need to define a way to register context by bundle
-            foreach (['CampaignSourceStats', 'CampaignSourceBudgets'] as $context) {
+            // 'CampaignSourceBudgets'
+            foreach (['CampaignSourceStats'] as $context) {
                 $params = $this->getDateParams($params, $context);
 
                 $output->writeln(
@@ -154,17 +170,13 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
         if (class_exists('\MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context)) {
             // first get oldest date from the table implied in context
             $repo = $this->em->getRepository('MauticContactLedgerBundle:'.$context);
-            if (empty($lastEntity = $repo->getLastEntity())) {
+            if ($from = $repo->getLastDateAdded()) {
                 // this should only ever happen once, the very first cron run per context
                 $repo       = $this->em->getRepository('MauticContactSourceBundle:Stat');
                 $lastEntity = $repo->findBy([], ['id' => 'ASC'], 1, 0);
                 $lastEntity = $lastEntity[0];
+                $from = $lastEntity->getDateAdded();
             }
-
-            /**
-             * @var \DateTime
-             */
-            $from = $lastEntity->getDateAdded();
             $from = is_string($from) ? new \DateTime($from) : $from;
 
             // round down to 5 minute increment

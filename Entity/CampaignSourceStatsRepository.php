@@ -54,18 +54,24 @@ class CampaignSourceStatsRepository extends CommonRepository
     /**
      * Gets the ID of the latest ID.
      *
-     * @return object
+     * @return null|string
      */
-    public function getLastEntity()
+    public function getLastDateAdded($dateFrom = null)
     {
-        $entity = null;
-        $result = $this->getMaxId();
+        $result = null;
+        $query  = $this->getEntityManager()->getConnection()->createQueryBuilder()
+            ->select('date_added')
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats', 'css')
+            ->orderBy('date_added', 'DESC')
+            ->getMaxResults(1)
+            ->execute()
+            ->fetchAll();
 
-        if (isset($result)) {
-            $entity = $this->getEntity($result);
+        if (isset($query[0]['date_added'])) {
+            $result = $query[0]['date_added'];
         }
 
-        return $entity;
+        return $result;
     }
 
     /**
@@ -161,24 +167,29 @@ class CampaignSourceStatsRepository extends CommonRepository
     }
 
     /**
-     * Gets MAX(date_added) Entity where reprocessFlag = 1.
+     * Gets highest date_added where reprocessFlag = 1.
      *
-     * @return object
+     * @return null|string
      */
     public function getMaxDateToReprocess()
     {
-        $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
-            ->select('MAX(clcss.id)')
+        $result = null;
+        $query  = $this->getEntityManager()->getConnection()->createQueryBuilder()
+            ->select('date_added')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats', 'clcss')
-            ->where('clcss.reprocess_flag = 1');
-        $result = $query->execute()->fetchAll();
+            ->where('clcss.reprocess_flag = 1')
+            ->orderBy('date_added', 'DESC')
+            ->getMaxResults(1)
+            ->execute()
+            ->fetchAll();
 
-        if (isset($result)) {
-            $entity = $this->getEntity($result[0]['MAX(clcss.id)']);
+        if (isset($query[0]['date_added'])) {
+            $result = $query[0]['date_added'];
         }
 
-        return $entity;
+        return $result;
     }
+
 
     public function getEntitiesToReprocess($params)
     {

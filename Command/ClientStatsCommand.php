@@ -13,6 +13,7 @@ namespace MauticPlugin\MauticContactLedgerBundle\Command;
 use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Command\ModeratedCommand;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
+use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -154,17 +155,13 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
         if (class_exists('\MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context)) {
             // first get oldest date from the table implied in context
             $repo = $this->em->getRepository('MauticContactLedgerBundle:'.$context);
-            if (empty($lastEntity = $repo->getLastEntity())) {
+            if ($from = $repo->getLastDateAdded()) {
                 // this should only ever happen once, the very first cron run per context
                 $repo       = $this->em->getRepository('MauticContactClientBundle:Stat');
                 $lastEntity = $repo->findBy([], ['id' => 'ASC'], 1, 0);
                 $lastEntity = $lastEntity[0];
+                $from = $lastEntity->getDateAdded();
             }
-
-            /**
-             * @var \DateTime
-             */
-            $from = $lastEntity->getDateAdded();
             $from = is_string($from) ? new \DateTime($from) : $from;
 
             // round down to 5 minute increment

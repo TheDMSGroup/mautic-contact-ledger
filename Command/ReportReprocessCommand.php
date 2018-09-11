@@ -113,20 +113,15 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
     private function getDateParams($params, $repoName)
     {
         // first get oldest date from the table implied in context
-        $repo               = $this->em->getRepository($repoName);
-        $maxDateToReprocess = $repo->getMaxDateToReprocess();
+        $repo = $this->em->getRepository($repoName);
+        $to   = $repo->getMaxDateToReprocess();
 
-        if ($maxDateToReprocess instanceof CampaignSourceStats || $maxDateToReprocess instanceof CampaignClientStats) {
-            /**
-             * @var \DateTime
-             */
-            $to = $maxDateToReprocess->getDateAdded();
+        if ($to) {
+            /** @var \DateTime $to */
             $to = is_string($to) ? new \DateTime($to) : $to;
 
             // set from  to minus 4 minute 59 sec increment
-            /**
-             * @var \DateTime
-             */
+            /** @var \DateTime $from */
             $from = clone $to;
             $from->sub(new \DateInterval('PT4M'));
             $from->sub(new \DateInterval('PT59S'));
