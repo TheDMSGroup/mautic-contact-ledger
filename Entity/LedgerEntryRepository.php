@@ -438,8 +438,6 @@ class LedgerEntryRepository extends CommonRepository
             )
             ->from(MAUTIC_TABLE_PREFIX.'leads', 'l')
             ->where('l.date_added BETWEEN :dateFrom AND :dateTo')
-            ->andWhere('bx.lead_field_id = 336')
-            ->andWhere('bx.value = 1')
             ->groupBy('cl.campaign_id', 'cc.contactclient_id', 'lu.utm_source')
             ->setParameter('leads', $leads, Connection::PARAM_STR_ARRAY)
             ->setParameter('dateFrom', $params['dateFrom'])
@@ -448,8 +446,7 @@ class LedgerEntryRepository extends CommonRepository
             ->leftJoin('l', '('.$ledgerBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id')
             ->innerJoin('l', '('.$clientstatBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id')
             ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_utmtags', 'lu', 'l.id = lu.lead_id')
-            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'cl.campaign_id = c.id')
-            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_fields_leads_boolean_xref', 'bx', 'bx.lead_id = l.id');
+            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'cl.campaign_id = c.id');
 
         if (isset($params['limit']) && (0 < $params['limit'])) {
             $statBuilder->setMaxResults($params['limit']);
