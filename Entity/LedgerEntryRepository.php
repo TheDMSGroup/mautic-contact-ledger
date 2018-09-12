@@ -220,6 +220,27 @@ class LedgerEntryRepository extends CommonRepository
         // get utm_source data for leads with NO Contact Source Stat record (direct API, manually created, imports etc)
         $otherFinancials = $this->getAlternateCampaignSourceData($params, $bySource, $cache_dir, $realtime);
         $financials      = array_merge($financials, $otherFinancials);
+
+        if (empty($financials)) {
+            // no data for the time period, so return empty row values
+            $financials[0] = [
+                'is_published'     => 0,
+                'campaign_id'      => null,
+                'name'             => null,
+                'received'         => 0,
+                'scrubbed'         => 0,
+                'rejected'         => 0,
+                'converted'        => 0,
+                'revenue'          => 0,
+                'cost'             => 0,
+            ];
+            if ($bySource) {
+                $financials[0]['contactsource_id'] = null;
+                $financials[0]['source']           = null;
+                $financials[0]['utm_source']       = ''; // cant be null
+            }
+        }
+
         foreach ($financials as $financial) {
             // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
             $financial['revenue']      = number_format(floatval($financial['revenue']), 2, '.', ',');
@@ -271,36 +292,14 @@ class LedgerEntryRepository extends CommonRepository
         return true == $realtime ? $results : $resultsWithKeys;
     }
 
-    public function getEntityGreaterThanDate($params, $offset = 0, $table)
-    {
-        $builder = $this->getEntityManager()->createQueryBuilder();
-        $builder->select('ss')
-            ->from($table, 'ss')
-            ->where(
-                $builder->expr()->andX(
-                    $builder->expr()->gte('ss.dateAdded', ':dateFrom')
-                )
-            )
-            ->andWhere(
-                $builder->expr()->andX(
-                    $builder->expr()->neq('ss.type', ':invalid')
-                )
-            )
-            ->orderBy('ss.id', 'ASC')
-            ->setMaxResults(1);
-
-        if ($offset > 0) {
-            $builder->setFirstResult($offset);
-        }
-        $builder
-            ->setParameter('dateFrom', $params['dateFrom'])
-            ->setParameter('invalid', 'invalid');
-        $query  = $builder->getQuery();
-        $result = $query->getResult();
-
-        return isset($result[0]) ? $result[0] : null;
-    }
-
+    /**
+     * @param        $params
+     * @param bool   $bySource
+     * @param string $cache_dir
+     * @param bool   $realtime
+     *
+     * @return array
+     */
     public function getAlternateCampaignSourceData($params, $bySource = false, $cache_dir = __DIR__, $realtime = true)
     {
         // get array of leads first.
@@ -465,6 +464,22 @@ class LedgerEntryRepository extends CommonRepository
         );
         $financials = $stmt->fetchAll();
         $stmt->closeCursor();
+
+        if (empty($financials)) {
+            // no data for the time period, so return empty row values
+            $financials[0] = [
+                'is_published'     => 0,
+                'campaign_id'      => null,
+                'campaign_name'    => null,
+                'contactclient_id' => null,
+                'utm_source'       => '', // cant be null
+                'received'         => 0,
+                'rejected'         => 0,
+                'converted'        => 0,
+                'revenue'          => 0,
+                'cost'             => 0,
+            ];
+        }
 
         foreach ($financials as $financial) {
             $financial['revenue']      = number_format(floatval($financial['revenue']), 2, '.', ',');

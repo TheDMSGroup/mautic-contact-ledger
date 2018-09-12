@@ -12,15 +12,24 @@ namespace MauticPlugin\MauticContactLedgerBundle\Command;
 
 use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Command\ModeratedCommand;
+use Mautic\CoreBundle\Helper\CacheStorageHelper;
+use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStatsRepository;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInterface
 {
+    /**
+     * @var Container
+     */
+    protected $container;
+
     /**
      * @var EntityManager
      */
@@ -32,6 +41,31 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
     protected $dispatcher;
 
     /**
+     * @var \DateTime
+     */
+    protected $dateContext;
+
+    /**
+     * @var \DateTime
+     */
+    protected $dateLimit;
+
+    /**
+     * @var CacheStorageHelper
+     */
+    protected $cache;
+
+    /**
+     * @var bool
+     */
+    protected $withCache;
+
+    /**
+     * @var string
+     */
+    protected $expire;
+
+    /**
      * {@inheritdoc}
      *
      * @throws \Symfony\Component\Console\Exception\InvalidArgumentException
@@ -39,6 +73,20 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
     protected function configure()
     {
         $this->setName('mautic:ledger:client:stats')
+            ->addOption(
+                '--date-limit',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'DateTime string to stop processing. Ex -90 days, 2018-04-01 Default = -90 days',
+                null
+            )
+            ->addOption(
+                '--with-cache',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'true or false (0 or 1). Defaults to true. Run from last cached date or ignore (reset) cache.',
+                null
+            )
             ->setDescription(
                 'generate stats in distinct table for reporting purposes'
             );
@@ -51,15 +99,41 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $container        = $this->getContainer();
-        $this->dispatcher = $container->get('event_dispatcher');
-        $this->em         = $container->get('doctrine.orm.entity_manager');
-        $params           = [
-            'cacheDir' => $container->getParameter('kernel.cache_dir'),
-        ];
-        $repeat           = true;
+        $this->expire     = empty($input->getOption('date-limit')) ? '-90 days' : $input->getOption(
+            'date-limit'
+        ); // change this as needed.
+        $this->withCache  = empty($input->getOption('with-cache')) ? true : $input->getOption(
+            'with-cache'
+        );
+        $this->container  = $this->getContainer();
+        $this->dispatcher = $this->container->get('event_dispatcher');
+        $this->em         = $this->container->get('doctrine.orm.entity_manager');
+        $this->cache      = new CacheStorageHelper(
+            'db',
+            'ClientStats',
+            $this->container->get('doctrine.dbal.default_connection')
+        );
+        $this->dateLimit  = new \DateTime(date('Y-m-d H:i:s', strtotime($this->expire)));
 
-        $output->writeln('<info>***** Generating Report Client Stats *****</info>');
+        $now = new \DateTime();
+        $now->sub(new \DateInterval('PT15M'));
+
+        if ($this->dateLimit >= $now) {
+            $output->writeln(
+                '<error>date-limit option must resolve to a date/time earlier than now minus 15 minutes</error>'
+            );
+
+            return 0;
+        }
+
+        // this gets passed into the final query so it can be cached. It can be large
+        $params = [
+            'cacheDir' => $this->container->getParameter('kernel.cache_dir'),
+        ];
+        $this->setDateContext();
+        $repeat = true;
+
+        $output->writeln('<info>***** Generating Client Report Stats *****</info>');
         $timeStart = microtime(true);
 
         if (!$this->checkRunStatus($input, $output)) {
@@ -69,66 +143,65 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
         }
 
         do {
-            // TODO: right now, contexts are hardcoded. need to define a way to register context by bundle
             $context = 'CampaignClientStats';
-            $params  = $this->getDateParams($params, $context);
-
+            $params  = $this->getDateParams($params);
             $output->writeln(
-                    "<comment>--> Using Parameters:\n \tContext => ".$context.", \n \tDate => ".$params['dateFrom'].' and '.$params['dateTo']." UTC,\n \tQuery Cache Directory => ".$params['cacheDir'].'</comment>'
-                );
+                "<comment>--> Using Parameters:\n \tWith Cache => ".$this->withCache.", \n \tExpire Term => ".$this->expire.", \n \tDate => ".$params['dateFrom'].' and '.$params['dateTo']." UTC,\n \tQuery Cache Directory => ".$params['cacheDir'].'</comment>'
+            );
 
-            if (null == $params['dateFrom']) {
-                // How soon is now? less than 15 mins? Dont run.
-                $output->writeln(
-                        '<comment>Exiting without Running Context. Report Cron caught up to current time. </comment>'
-                    );
-            } else {
-                if ('invalid' == $params['dateFrom']) {
-                    // Class for context does not exist. Fail gracefully.
+            // Does a record exist for date range?
+            /** @var CampaignClientStatsRepository */
+            $repo             = $this->em->getRepository('MauticContactLedgerBundle:CampaignClientStats');
+            $existingEntities = $repo->getExistingEntitiesByDate($params);
+
+            if (empty($existingEntities)) {
+                // Dispatch event and process result to report stats table
+                $event = new ReportStatsGeneratorEvent($this->em, $params, $context);
+                $this->dispatcher->dispatch('mautic.contactledger.clientstats.generate', $event);
+
+                // save entities to DB
+                foreach ($event->getStatsCollection() as $subscriber) {
                     $output->writeln(
-                            '<error>Exiting without Running Context. No class exists for context: '.$context.'. </error>'
-                        );
-                } else {
-                    // Dispatch event to get data from various bundles
-                    $event = new ReportStatsGeneratorEvent($this->em, $params, $context);
-                    $this->dispatcher->dispatch('mautic.contactledger.clientstats.generate', $event);
-
-                    // save entities to DB
-                    $updatedParams = $event->getParams();
-                    $dateToLog     = $updatedParams['dateTo'];
-                    foreach ($event->getStatsCollection() as $subscriber) {
-                        $output->writeln(
-                                '<info>--> Pesisting data for '.$context.' using date '.$dateToLog.'.</info>'
-                            );
-                        if (isset($subscriber[$context]) && !empty($subscriber[$context])) {
-                            foreach ($subscriber[$context] as $stat) {
-                                $entity = $this->mapArrayToEntity($stat, $context, $dateToLog);
-                                $this->em->persist($entity);
-                            }
-                        } else {
-                            $output->writeln(
-                                    '<comment>--> No data for '.$context.' using date '.$dateToLog.'.</comment>');
-                            $repeat = false;
+                        '<info>--> Pesisting data for '.$context.' using date '.$this->dateContext->format(
+                            'Y-m-d H:i:s'
+                        ).'.</info>'
+                    );
+                    if (isset($subscriber[$context]) && !empty($subscriber[$context])) {
+                        foreach ($subscriber[$context] as $stat) {
+                            $entity = $this->mapArrayToEntity($stat, $context, $this->dateContext);
+                            $this->em->persist($entity);
                         }
                     }
                     $this->em->flush();
-                    $timeContext = microtime(true);
-                    $contextTime = $timeContext - $timeStart;
-                    $output->writeln('<comment>--> Elapsed time so far: '.$contextTime.'.</comment>');
+                }
+            } else {
+                $output->writeln('<comment>--> Data already Exists: '.$this->dateContext->format('Y-m-d H:i:s').'.</comment>');
+
+                if ($this->withCache) {
+                    // we have processed this time block already, so jump to last cached time block
+                    // if there is no cached value, just proceed using current DateTime context
+                    $lastTimeBlock = $this->cache->get('ClientStats') instanceof \DateTime ? $this->cache->get(
+                        'ClientStats'
+                    ) : $this->dateContext;
+                    $this->setDateContext($lastTimeBlock);
                 }
             }
-
-            $now          = new \DateTime();
-            $latestParams = $event->getParams();
-            $dateTo       = $latestParams['dateTo'];
-            $lastPass     = new \DateTime($dateTo);
-            $now->sub(new \DateInterval('PT15M'));
-            if ($now <= $lastPass) {
+            $lapTime     = microtime(true);
+            $elapsedTime = $lapTime - $timeStart;
+            $output->writeln('<comment>--> Elapsed time so far: '.$elapsedTime.'.</comment>');
+            if ($this->dateContext <= $this->dateLimit || $elapsedTime >= 250) { // max out after 4 mins 50 seconds and let next cron kick off. based on 5 min cron run
                 // stop looping
                 $repeat = false;
+            } else {
+                $dateShift = $this->dateContext->sub(new \DateInterval('PT5M'));
+                $this->setDateContext($dateShift);
             }
         } while (true == $repeat);
-
+        // cache last date processed
+        $this->cache->set('ClientStats', $this->dateContext, null);
+        $output->writeln(
+            '<info>Last Date Cache value written to DB: '.$this->dateContext->format('Y-m-d H:i:s').'.</info>'
+        );
         $this->completeRun();
 
         $output->writeln('<info>Complete With No Errors.</info>');
@@ -140,7 +213,27 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
     }
 
     /**
-     * Get the last Date record and add 1 sec for From and 5 mins for To.
+     * This becomes the dateAdded value to use in report stats table
+     * This will be the default To date,  which a From date is calculated by subtracting 4 mins 59s.
+     *
+     * @param \DateTime|null $dateContext
+     *
+     * @throws \Exception
+     */
+    private function setDateContext(\DateTime $dateContext = null)
+    {
+        if (!$dateContext) { // we havent set context so we need the default to be: now minus 15 mins, rounded to 5 min increment.
+            $now = new \DateTime();
+            $now->sub(new \DateInterval('PT15M'));
+            // round down to 5 minute increment
+            $now->setTime($now->format('H'), floor($now->format('i') / 5) * 5, 0);
+            $dateContext = $now;
+        }
+        $this->dateContext = $dateContext;
+    }
+
+    /**
+     * Return 5 minute to and from intervals based on dateContext.
      *
      * @param string
      *
@@ -148,53 +241,22 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
      *
      * @throws \Exception
      */
-    private function getDateParams($params, $context)
+    private function getDateParams($params)
     {
-        // make sure class exists for $context
-        if (class_exists('\MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context)) {
-            // first get oldest date from the table implied in context
-            $repo = $this->em->getRepository('MauticContactLedgerBundle:'.$context);
-            if (empty($lastEntity = $repo->getLastEntity())) {
-                // this should only ever happen once, the very first cron run per context
-                $repo       = $this->em->getRepository('MauticContactClientBundle:Stat');
-                $lastEntity = $repo->findBy([], ['id' => 'ASC'], 1, 0);
-                $lastEntity = $lastEntity[0];
-            }
+        /**
+         * @var \DateTime
+         */
+        $to = $this->dateContext;
+        /**
+         * @var \DateTime
+         */
+        $from = clone $to;
+        $from->sub(new \DateInterval('PT4M'));
+        $from->sub(new \DateInterval('PT59S'));
 
-            /**
-             * @var \DateTime
-             */
-            $from = $lastEntity->getDateAdded();
-            $from = is_string($from) ? new \DateTime($from) : $from;
+        $params['dateFrom'] = $from->format('Y-m-d H:i:s');
 
-            // round down to 5 minute increment
-            $from->setTime($from->format('H'), floor($from->format('i') / 5) * 5, 0);
-            $from->add(new \DateInterval('PT1S'));
-
-            // How soon is now? less than 15 mins? Dont run.
-            $now = new \DateTime();
-            $now->sub(new \DateInterval('PT15M'));
-            if ($from > $now) {
-                // within 15 mins
-                $params['dateFrom'] = $params['dateTo'] = null;
-
-                return $params;
-            }
-            /**
-             * @var \DateTime
-             */
-            $to = clone $from;
-            $to->add(new \DateInterval('PT4M'));
-            $to->add(new \DateInterval('PT59S'));
-
-            $params['dateFrom'] = $from->format('Y-m-d H:i:s');
-
-            $params['dateTo'] = $to->format('Y-m-d H:i:s');
-
-            return $params;
-        }
-
-        $params['dateFrom'] = $params['dateTo'] = 'invalid';
+        $params['dateTo'] = $to->format('Y-m-d H:i:s');
 
         return $params;
     }
@@ -208,17 +270,17 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
     private function mapArrayToEntity($stat, $context, $dateTo)
     {
         $fieldsMap = [
-                'campaignId'      => 'campaign_id',
-                'received'        => 'received',
-                'declined'        => 'rejected',
-                'converted'       => 'converted',
-                'cost'            => 'cost',
-                'revenue'         => 'revenue',
-                'contactClientId' => 'contactclient_id',
-                'grossIncome'     => 'gross_income',
-                'margin'          => 'gross_margin',
-                'ecpm'            => 'ecpm',
-                'utmSource'       => 'utm_source',
+            'campaignId'      => 'campaign_id',
+            'received'        => 'received',
+            'declined'        => 'rejected',
+            'converted'       => 'converted',
+            'cost'            => 'cost',
+            'revenue'         => 'revenue',
+            'contactClientId' => 'contactclient_id',
+            'grossIncome'     => 'gross_income',
+            'margin'          => 'gross_margin',
+            'ecpm'            => 'ecpm',
+            'utmSource'       => 'utm_source',
         ];
 
         $class  = '\MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context;

@@ -37,38 +37,6 @@ class CampaignClientStatsRepository extends CommonRepository
     }
 
     /**
-     * Gets the ID of the latest ID.
-     *
-     * @return int
-     */
-    public function getMaxId()
-    {
-        $result = $this->getEntityManager()->getConnection()->createQueryBuilder()
-            ->select('max(id) AS id')
-            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats', 'ccs')
-            ->execute()->fetchAll();
-
-        return $result[0]['id'];
-    }
-
-    /**
-     * Gets the ID of the latest ID.
-     *
-     * @return object
-     */
-    public function getLastEntity()
-    {
-        $entity = null;
-        $result = $this->getMaxId();
-
-        if (isset($result)) {
-            $entity = $this->getEntity($result);
-        }
-
-        return $entity;
-    }
-
-    /**
      * @param $params
      * @param true $
      * @param $cache_dir
@@ -159,6 +127,20 @@ class CampaignClientStatsRepository extends CommonRepository
     }
 
     /**
+     * @param $params
+     *
+     * @return array
+     */
+    public function getExistingEntitiesByDate($params)
+    {
+        $criteria = ['dateAdded'=>$params['dateTo']];
+
+        $entities = $this->findBy($criteria);
+
+        return $entities;
+    }
+
+    /**
      * Gets MAX(date_added) Entity where reprocessFlag = 1.
      *
      * @return object
@@ -166,24 +148,13 @@ class CampaignClientStatsRepository extends CommonRepository
     public function getMaxDateToReprocess()
     {
         $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
-            ->select('MAX(clccs.id)')
+            ->select('date_added')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats', 'clccs')
-            ->where('clccs.reprocess_flag = 1');
+            ->where('clccs.reprocess_flag = 1')
+            ->setMaxResults(1)
+            ->orderBy('date_added', 'DESC');
         $result = $query->execute()->fetchAll();
 
-        if (isset($result)) {
-            $entity = $this->getEntity($result[0]['MAX(clccs.id)']);
-        }
-
-        return $entity;
-    }
-
-    public function getEntitiesToReprocess($params)
-    {
-        $criteria = ['dateAdded'=>$params['dateTo'], 'reprocessFlag' => true];
-
-        $entities = $this->findBy($criteria);
-
-        return $entities;
+        return $result;
     }
 }
