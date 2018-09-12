@@ -220,6 +220,27 @@ class LedgerEntryRepository extends CommonRepository
         // get utm_source data for leads with NO Contact Source Stat record (direct API, manually created, imports etc)
         $otherFinancials = $this->getAlternateCampaignSourceData($params, $bySource, $cache_dir, $realtime);
         $financials      = array_merge($financials, $otherFinancials);
+
+        if (empty($financials)) {
+            // no data for the time period, so return empty row values
+            $financials[0] = [
+                'is_published'     => 0,
+                'campaign_id'      => null,
+                'name'    => null,
+                'received'         => 0,
+                'scrubbed'         => 0,
+                'rejected'         => 0,
+                'converted'        => 0,
+                'revenue'          => 0,
+                'cost'             => 0,
+            ];
+            if ($bySource) {
+                $financials[0]['contactsource_id'] = null;
+                $financials[0]['source'] = null;
+                $financials[0]['utm_source'] = ''; // cant be null
+            }
+        }
+
         foreach ($financials as $financial) {
             // must be ordered as active, id, name, received, converted, revenue, cost, gm, margin, ecpm
             $financial['revenue']      = number_format(floatval($financial['revenue']), 2, '.', ',');

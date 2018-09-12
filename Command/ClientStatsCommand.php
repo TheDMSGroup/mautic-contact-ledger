@@ -152,7 +152,6 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
             // Does a record exist for date range?
             /** @var CampaignClientStatsRepository */
             $repo = $this->em->getRepository('MauticContactLedgerBundle:CampaignClientStats');
-            //$params['dateTo'] = '2018-04-09 19:10:00'; //temporary for testing
             $existingEntities = $repo->getExistingEntitiesByDate($params);
 
             if (empty($existingEntities)) {
@@ -181,7 +180,7 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
                 if ($this->withCache) {
                     // we have processed this time block already, so jump to last cached time block
                     // if there is no cached value, just proceed using current DateTime context
-                    $lastTimeBlock = $this->cache->get('ClientStats') instanceof DateTime ? $this->cache->get(
+                    $lastTimeBlock = $this->cache->get('ClientStats') instanceof \DateTime ? $this->cache->get(
                         'ClientStats'
                     ) : $this->dateContext;
                     $this->setDateContext($lastTimeBlock);
@@ -199,7 +198,7 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
             }
         } while (true == $repeat);
         // cache last date processed
-        $this->cache->set('ClientStats', $this->dateContext, 0);
+        $this->cache->set('ClientStats', $this->dateContext, null);
         $output->writeln(
             '<info>Last Date Cache value written to DB: '.$this->dateContext->format('Y-m-d H:i:s').'.</info>'
         );
