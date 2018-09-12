@@ -132,7 +132,7 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
         $this->setDateContext();
         $repeat = true;
 
-        $output->writeln('<info>***** Generating Client Report Stats *****</info>');
+        $output->writeln('<info>***** Generating Source Report Stats *****</info>');
         $timeStart = microtime(true);
 
         if (!$this->checkRunStatus($input, $output)) {
