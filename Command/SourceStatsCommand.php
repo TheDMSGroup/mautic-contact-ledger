@@ -70,7 +70,8 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
 
         do {
             // TODO: right now, contexts are hardcoded. need to define a way to register context by bundle
-            foreach (['CampaignSourceStats', 'CampaignSourceBudgets'] as $context) {
+            // 'CampaignSourceBudgets'
+            foreach (['CampaignSourceStats'] as $context) {
                 $params = $this->getDateParams($params, $context);
 
                 $output->writeln(
@@ -154,17 +155,13 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
         if (class_exists('\MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context)) {
             // first get oldest date from the table implied in context
             $repo = $this->em->getRepository('MauticContactLedgerBundle:'.$context);
-            if (empty($lastEntity = $repo->getLastEntity())) {
+            if ($from = $repo->getLastDateAdded()) {
                 // this should only ever happen once, the very first cron run per context
                 $repo       = $this->em->getRepository('MauticContactSourceBundle:Stat');
                 $lastEntity = $repo->findBy([], ['id' => 'ASC'], 1, 0);
                 $lastEntity = $lastEntity[0];
+                $from       = $lastEntity->getDateAdded();
             }
-
-            /**
-             * @var \DateTime
-             */
-            $from = $lastEntity->getDateAdded();
             $from = is_string($from) ? new \DateTime($from) : $from;
 
             // round down to 5 minute increment
