@@ -50,7 +50,6 @@ class CampaignClientStatsSubscriber implements EventSubscriberInterface
                 $cacheDir,
                 false
             ); // expects $params['dateFrom'] & $params['dateTo']
-
         }
 
         $statsCollection                = $event->getStatsCollection();

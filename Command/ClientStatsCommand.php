@@ -12,16 +12,16 @@ namespace MauticPlugin\MauticContactLedgerBundle\Command;
 
 use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Command\ModeratedCommand;
+use Mautic\CoreBundle\Helper\CacheStorageHelper;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStatsRepository;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
-use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\Console\Input\InputOption;
-use Mautic\CoreBundle\Helper\CacheStorageHelper;
 
 class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInterface
 {
@@ -41,12 +41,12 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
     protected $dispatcher;
 
     /**
-     * @var \DateTime $dateContext
+     * @var \DateTime
      */
     protected $dateContext;
 
     /**
-     * @var \DateTime $dateLimit
+     * @var \DateTime
      */
     protected $dateLimit;
 
@@ -56,7 +56,7 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
     protected $cache;
 
     /**
-     * @var boolean
+     * @var bool
      */
     protected $withCache;
 
@@ -72,7 +72,6 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
      */
     protected function configure()
     {
-
         $this->setName('mautic:ledger:client:stats')
             ->addOption(
                 '--date-limit',
@@ -216,7 +215,7 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
 
     /**
      * This becomes the dateAdded value to use in report stats table
-     * This will be the default To date,  which a From date is calculated by subtracting 4 mins 59s
+     * This will be the default To date,  which a From date is calculated by subtracting 4 mins 59s.
      *
      * @param \DateTime|null $dateContext
      *
@@ -224,8 +223,7 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
      */
     private function setDateContext(\DateTime $dateContext = null)
     {
-        if (!$dateContext) // we havent set context so we need the default to be: now minus 15 mins, rounded to 5 min increment.
-        {
+        if (!$dateContext) { // we havent set context so we need the default to be: now minus 15 mins, rounded to 5 min increment.
             $now = new \DateTime();
             $now->sub(new \DateInterval('PT15M'));
             // round down to 5 minute increment

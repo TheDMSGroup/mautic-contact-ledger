@@ -271,7 +271,6 @@ class LedgerEntryRepository extends CommonRepository
         return true == $realtime ? $results : $resultsWithKeys;
     }
 
-
     /**
      * @param        $params
      * @param bool   $bySource
