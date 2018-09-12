@@ -15,7 +15,6 @@ use Mautic\CoreBundle\Command\ModeratedCommand;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -40,20 +39,6 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
     protected function configure()
     {
         $this->setName('mautic:ledger:source:stats')
-            ->addOption(
-                '--date-from',
-                null,
-                InputOption::VALUE_OPTIONAL,
-                'Date to begin processing. Must be valid DateTime string.',
-                null
-            )
-            ->addOption(
-                '--date-to',
-                null,
-                InputOption::VALUE_OPTIONAL,
-                'Date to end processing. Must be valid DateTime string.',
-                null
-            )
             ->setDescription(
                 'generate stats in distinct table for reporting purposes'
             );
@@ -175,7 +160,7 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
                 $repo       = $this->em->getRepository('MauticContactSourceBundle:Stat');
                 $lastEntity = $repo->findBy([], ['id' => 'ASC'], 1, 0);
                 $lastEntity = $lastEntity[0];
-                $from = $lastEntity->getDateAdded();
+                $from       = $lastEntity->getDateAdded();
             }
             $from = is_string($from) ? new \DateTime($from) : $from;
 

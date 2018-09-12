@@ -190,7 +190,6 @@ class CampaignSourceStatsRepository extends CommonRepository
         return $result;
     }
 
-
     public function getEntitiesToReprocess($params)
     {
         $criteria = ['dateAdded'=>$params['dateTo'], 'reprocessFlag' => true];

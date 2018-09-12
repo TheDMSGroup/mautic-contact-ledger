@@ -13,7 +13,6 @@ namespace MauticPlugin\MauticContactLedgerBundle\Command;
 use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Command\ModeratedCommand;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
-use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -160,7 +159,7 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
                 $repo       = $this->em->getRepository('MauticContactClientBundle:Stat');
                 $lastEntity = $repo->findBy([], ['id' => 'ASC'], 1, 0);
                 $lastEntity = $lastEntity[0];
-                $from = $lastEntity->getDateAdded();
+                $from       = $lastEntity->getDateAdded();
             }
             $from = is_string($from) ? new \DateTime($from) : $from;
 
