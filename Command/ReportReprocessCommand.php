@@ -116,14 +116,13 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
         $repo               = $this->em->getRepository($repoName);
         $maxDateToReprocess = $repo->getMaxDateToReprocess();
 
-        if ($maxDateToReprocess instanceof CampaignSourceStats || $maxDateToReprocess instanceof CampaignClientStats) {
+        if (!empty($maxDateToReprocess)) {
             /**
              * @var \DateTime
              */
-            $to = $maxDateToReprocess->getDateAdded();
-            $to = is_string($to) ? new \DateTime($to) : $to;
+            $to = new \DateTime($maxDateToReprocess[0]['date_added']);
 
-            // set from  to minus 4 minute 59 sec increment
+            // set from = $to minus 4 minute 59 sec increment
             /**
              * @var \DateTime
              */
@@ -151,7 +150,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
     {
         // first get oldest date from the table implied in context
         $repo                = $this->em->getRepository($repoName);
-        $entitiesToReprocess = $repo->getEntitiesToReprocess($params);
+        $entitiesToReprocess = $repo->getExistingEntitiesByDate($params);
 
         return $entitiesToReprocess;
     }

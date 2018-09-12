@@ -139,4 +139,22 @@ class CampaignClientStatsRepository extends CommonRepository
 
         return $entities;
     }
+
+    /**
+     * Gets MAX(date_added) Entity where reprocessFlag = 1.
+     *
+     * @return object
+     */
+    public function getMaxDateToReprocess()
+    {
+        $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
+            ->select('date_added')
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats', 'clccs')
+            ->where('clccs.reprocess_flag = 1')
+            ->setMaxResults(1)
+            ->orderBy('date_added', 'DESC');
+        $result = $query->execute()->fetchAll();
+
+        return $result;
+    }
 }
