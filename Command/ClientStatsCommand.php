@@ -177,6 +177,8 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
                     $this->em->flush();
                 }
             } else {
+                $output->writeln('<comment>--> Data already Exists: '.$this->dateContext->format('Y-m-d H:i:s').'.</comment>');
+
                 if ($this->withCache) {
                     // we have processed this time block already, so jump to last cached time block
                     // if there is no cached value, just proceed using current DateTime context
