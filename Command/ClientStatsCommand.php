@@ -15,7 +15,7 @@ use Mautic\CoreBundle\Command\ModeratedCommand;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStatsRepository;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
-use OpenCloud\ObjectStore\Resource\Container;
+use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
