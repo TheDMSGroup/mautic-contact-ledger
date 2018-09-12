@@ -13,7 +13,6 @@ namespace MauticPlugin\MauticContactLedgerBundle\Command;
 use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Command\ModeratedCommand;
 use Mautic\CoreBundle\Helper\CacheStorageHelper;
-use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStatsRepository;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\Console\Input\InputInterface;
@@ -151,7 +150,7 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
 
             // Does a record exist for date range?
             /** @var CampaignSourceStatsRepository */
-            $repo = $this->em->getRepository('MauticContactLedgerBundle:CampaignSourceStats');
+            $repo             = $this->em->getRepository('MauticContactLedgerBundle:CampaignSourceStats');
             $existingEntities = $repo->getExistingEntitiesByDate($params);
 
             if (empty($existingEntities)) {
@@ -211,7 +210,6 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
 
         return 0;
     }
-
 
     /**
      * This becomes the dateAdded value to use in report stats table

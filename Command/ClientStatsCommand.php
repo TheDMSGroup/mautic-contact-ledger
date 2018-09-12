@@ -151,7 +151,7 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
 
             // Does a record exist for date range?
             /** @var CampaignClientStatsRepository */
-            $repo = $this->em->getRepository('MauticContactLedgerBundle:CampaignClientStats');
+            $repo             = $this->em->getRepository('MauticContactLedgerBundle:CampaignClientStats');
             $existingEntities = $repo->getExistingEntitiesByDate($params);
 
             if (empty($existingEntities)) {

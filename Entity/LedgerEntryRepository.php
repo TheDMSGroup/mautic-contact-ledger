@@ -226,7 +226,7 @@ class LedgerEntryRepository extends CommonRepository
             $financials[0] = [
                 'is_published'     => 0,
                 'campaign_id'      => null,
-                'name'    => null,
+                'name'             => null,
                 'received'         => 0,
                 'scrubbed'         => 0,
                 'rejected'         => 0,
@@ -236,8 +236,8 @@ class LedgerEntryRepository extends CommonRepository
             ];
             if ($bySource) {
                 $financials[0]['contactsource_id'] = null;
-                $financials[0]['source'] = null;
-                $financials[0]['utm_source'] = ''; // cant be null
+                $financials[0]['source']           = null;
+                $financials[0]['utm_source']       = ''; // cant be null
             }
         }
 
