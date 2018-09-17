@@ -92,7 +92,7 @@ class ReportSubscriber extends CommonSubscriber
             ->setParameter('dateTo', $dateTo->format('Y-m-d H:i:s'));
 
         if ($event->checkContext(self::CONTEXT_CONTACT_LEDGER_CLIENT_STATS)) {
-            $qb->select('SUM(cls.revenue / cls.received) as rpu, SUM(cls.revenue / 1000) AS rpm');
+            $qb->select('SUM(cls.revenue) / SUM(cls.received) as rpu, SUM(cls.revenue / 1000) AS rpm');
             $qb->leftJoin('cls', MAUTIC_TABLE_PREFIX.'contactclient', 'cc', 'cc.id = cls.contact_client_id');
             $catPrefix = 'cc';
             $from      = 'contact_ledger_campaign_client_stats';
