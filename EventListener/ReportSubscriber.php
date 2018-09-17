@@ -205,7 +205,8 @@ class ReportSubscriber extends CommonSubscriber
                 'label'   => 'mautic.contactledger.dashboard.client-revenue.header.rpu',
                 'type'    => 'float',
                 'alias'   => 'rpu',
-                'formula' => 'SUM('.$prefix.'revenue / '.$prefix.'received)',
+                'formula' => 'SUM('.$prefix.'revenue) / SUM('.$prefix.'received)',
+                'formula' => 'SUM('.$prefix.'revenue) / SUM('.$prefix.'received)',
             ],
         ];
 
