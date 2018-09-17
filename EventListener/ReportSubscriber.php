@@ -206,7 +206,6 @@ class ReportSubscriber extends CommonSubscriber
                 'type'    => 'float',
                 'alias'   => 'rpu',
                 'formula' => 'SUM('.$prefix.'revenue) / SUM('.$prefix.'received)',
-                'formula' => 'SUM('.$prefix.'revenue) / SUM('.$prefix.'received)',
             ],
         ];
 
