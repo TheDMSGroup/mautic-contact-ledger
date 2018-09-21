@@ -78,19 +78,6 @@ class ReportSubscriber extends CommonSubscriber
             $dateShift = $dateOffset[$event->getReport()->getScheduleUnit()];
         }
 
-        if (empty($dateFrom)) {
-            $dateFrom = new \DateTime();
-            $dateFrom->modify($dateShift);
-        }
-
-        if (empty($dateTo)) {
-            $dateTo = new \DateTime();
-        }
-
-        $qb->andWhere('cls.date_added BETWEEN :dateFrom AND :dateTo')
-            ->setParameter('dateFrom', $dateFrom->format('Y-m-d H:i:s'))
-            ->setParameter('dateTo', $dateTo->format('Y-m-d H:i:s'));
-
         if ($event->checkContext(self::CONTEXT_CONTACT_LEDGER_CLIENT_STATS)) {
             $qb->select('SUM(cls.revenue) / SUM(cls.received) as rpu, SUM(cls.revenue / 1000) AS rpm');
             $qb->leftJoin('cls', MAUTIC_TABLE_PREFIX.'contactclient', 'cc', 'cc.id = cls.contact_client_id');
@@ -103,6 +90,19 @@ class ReportSubscriber extends CommonSubscriber
         } else {
             return;
         }
+
+        if (empty($dateFrom)) {
+            $dateFrom = new \DateTime();
+            $dateFrom->modify($dateShift);
+        }
+
+        if (empty($dateTo)) {
+            $dateTo = new \DateTime();
+        }
+
+        $qb->andWhere('cls.date_added BETWEEN :dateFrom AND :dateTo')
+            ->setParameter('dateFrom', $dateFrom->format('Y-m-d H:i:s'))
+            ->setParameter('dateTo', $dateTo->format('Y-m-d H:i:s'));
 
         $qb->from(MAUTIC_TABLE_PREFIX.$from, 'cls')
             ->leftJoin('cls', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = cls.campaign_id');
