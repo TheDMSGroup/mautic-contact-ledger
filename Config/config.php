@@ -60,6 +60,11 @@ return [
                 'arguments' => [
                 ],
             ],
+            'mautic.contactledger.clientstats.save'       => [
+                'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\ContactClientStatSaveSubscriber',
+                'arguments' => [
+                ],
+            ],
         ],
         'models' => [
             'mautic.contactledger.model.ledgerentry' => [

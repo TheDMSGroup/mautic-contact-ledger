@@ -39,19 +39,17 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
         //first check to see if the table has any records in the params range
         // do this before running the more intensive query below
 
-        $repo = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStats::class);
+        $repo      = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStats::class);
         $dateAdded = $contact->getDateAdded();
         $dateAdded->setTime($dateAdded->format('H'), floor($dateAdded->format('i') / 5) * 5, 0);
         $params = [
-            'dateTo' => $dateAdded
+            'dateTo' => $dateAdded,
         ];
 
         $existingEntities = $repo->getExistingEntitiesByDate($params); // expects $params['dateTo'] as rounded to 5 mins
 
-        if($existingEntities)
-        {
-            foreach ($existingEntities as $entity)
-            {
+        if ($existingEntities) {
+            foreach ($existingEntities as $entity) {
                 $entity->setReprocessFlag(true);
                 $em->persist($entity);
             }
