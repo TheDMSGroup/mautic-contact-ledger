@@ -78,6 +78,19 @@ class ReportSubscriber extends CommonSubscriber
             $dateShift = $dateOffset[$event->getReport()->getScheduleUnit()];
         }
 
+        if ($event->checkContext(self::CONTEXT_CONTACT_LEDGER_CLIENT_STATS)) {
+            $qb->select('SUM(cls.revenue) / SUM(cls.received) as rpu, SUM(cls.revenue / 1000) AS rpm');
+            $qb->leftJoin('cls', MAUTIC_TABLE_PREFIX.'contactclient', 'cc', 'cc.id = cls.contact_client_id');
+            $catPrefix = 'cc';
+            $from      = 'contact_ledger_campaign_client_stats';
+        } elseif ($event->checkContext(self::CONTEXT_CONTACT_LEDGER_SOURCE_STATS)) {
+            $qb->leftJoin('cls', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = cls.contact_source_id');
+            $catPrefix = 'cs';
+            $from      = 'contact_ledger_campaign_source_stats';
+        } else {
+            return;
+        }
+
         if (empty($dateFrom)) {
             $dateFrom = new \DateTime();
             $dateFrom->modify($dateShift);
@@ -90,19 +103,6 @@ class ReportSubscriber extends CommonSubscriber
         $qb->andWhere('cls.date_added BETWEEN :dateFrom AND :dateTo')
             ->setParameter('dateFrom', $dateFrom->format('Y-m-d H:i:s'))
             ->setParameter('dateTo', $dateTo->format('Y-m-d H:i:s'));
-
-        if ($event->checkContext(self::CONTEXT_CONTACT_LEDGER_CLIENT_STATS)) {
-            $qb->select('SUM(cls.revenue / cls.received) as rpu, SUM(cls.revenue / 1000) AS rpm');
-            $qb->leftJoin('cls', MAUTIC_TABLE_PREFIX.'contactclient', 'cc', 'cc.id = cls.contact_client_id');
-            $catPrefix = 'cc';
-            $from      = 'contact_ledger_campaign_client_stats';
-        } elseif ($event->checkContext(self::CONTEXT_CONTACT_LEDGER_SOURCE_STATS)) {
-            $qb->leftJoin('cls', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = cls.contact_source_id');
-            $catPrefix = 'cs';
-            $from      = 'contact_ledger_campaign_source_stats';
-        } else {
-            return;
-        }
 
         $qb->from(MAUTIC_TABLE_PREFIX.$from, 'cls')
             ->leftJoin('cls', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = cls.campaign_id');
@@ -205,7 +205,7 @@ class ReportSubscriber extends CommonSubscriber
                 'label'   => 'mautic.contactledger.dashboard.client-revenue.header.rpu',
                 'type'    => 'float',
                 'alias'   => 'rpu',
-                'formula' => 'SUM('.$prefix.'revenue / '.$prefix.'received)',
+                'formula' => 'SUM('.$prefix.'revenue) / SUM('.$prefix.'received)',
             ],
         ];
 
