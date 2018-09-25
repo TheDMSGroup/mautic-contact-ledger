@@ -146,7 +146,6 @@ class CampaignClientStatsRepository extends CommonRepository
      */
     public function updateExistingEntitiesByDate($params, $em)
     {
-
         $qb = new QueryBuilder($em);
         $qb->update('MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStats', 's')
             ->set('s.reprocessFlag', true)
