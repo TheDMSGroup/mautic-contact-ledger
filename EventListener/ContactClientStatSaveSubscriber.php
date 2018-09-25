@@ -11,11 +11,34 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
+use Doctrine\ORM\EntityManager;
 use MauticPlugin\MauticContactClientBundle\Event\ContactClientStatEvent;
+use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStatsRepository;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ContactClientStatSaveSubscriber implements EventSubscriberInterface
 {
+
+    /**
+     * @var array $updatedDates
+     */
+    private $updatedDates =[];
+
+    /** @var EntityManager */
+    private $em;
+
+    /**
+     * ContactClientStatSaveSubscriber constructor.
+     *
+     * @param EntityManager $em
+     */
+    public function __construct(EntityManager $em)
+    {
+        $this->campaignClientStatRepository = $em->getRepository('MauticContactLedgerBundle:CampaignClientStats');
+        $this->em = $em;
+    }
+
+
     /**
      * @return array
      */
@@ -32,26 +55,18 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
     public function updateCampaignClientStatsRecords(ContactClientStatEvent $event)
     {
         $contact          = $event->getContact();
-        $em               = $event->getEntityManager();
-
-        //first check to see if the table has any records in the params range
-        // do this before running the more intensive query below
-
-        $repo      = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStats::class);
         $dateAdded = $contact->getDateAdded();
         $dateAdded->setTime($dateAdded->format('H'), floor($dateAdded->format('i') / 5) * 5, 0);
+        $ts = $dateAdded->getTimestamp();
         $params = [
-            'dateTo' => $dateAdded,
+            'dateTo' => $dateAdded
         ];
 
-        $existingEntities = $repo->getExistingEntitiesByDate($params); // expects $params['dateTo'] as rounded to 5 mins
-
-        if ($existingEntities) {
-            foreach ($existingEntities as $entity) {
-                $entity->setReprocessFlag(true);
-                $em->persist($entity);
-            }
-            $em->flush();
+        if(!isset($this->updatedDates[$ts]))
+        {
+            $this->updatedDates[$ts] = true;
+            $this->campaignClientStatRepository->updateExistingEntitiesByDate($params, $this->em); // expects $params['dateTo'] as rounded to 5 mins
         }
+
     }
 }

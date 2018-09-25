@@ -11,6 +11,7 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
+use Doctrine\ORM\QueryBuilder;
 use Mautic\CoreBundle\Entity\CommonRepository;
 
 /**
@@ -66,8 +67,8 @@ class CampaignClientStatsRepository extends CommonRepository
 
         if ('Client Category' == $groupBy) {
             $query->addSelect(
-                    'cat.title as category'
-                );
+                'cat.title as category'
+            );
             $query->leftJoin('ccs', MAUTIC_TABLE_PREFIX.'categories', 'cat', 'cc.category_id = cat.id');
             $query->addGroupBy('cat.title');
         } else {
@@ -75,7 +76,7 @@ class CampaignClientStatsRepository extends CommonRepository
                 'ccs.contact_client_id as clientid,
                 cc.name as clientname, 
                 ccs.utm_source as utm_source'
-                );
+            );
             $query->addGroupBy('ccs.contact_client_id', 'ccs.utm_source');
         }
         $query
@@ -133,11 +134,27 @@ class CampaignClientStatsRepository extends CommonRepository
      */
     public function getExistingEntitiesByDate($params)
     {
-        $criteria = ['dateAdded'=>$params['dateTo']];
+        $criteria = ['dateAdded' => $params['dateTo']];
 
         $entities = $this->findBy($criteria);
 
         return $entities;
+    }
+
+    /**
+     * @param $params
+     */
+    public function updateExistingEntitiesByDate($params, $em)
+    {
+
+        $qb = new QueryBuilder($em);
+        $qb->update('MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStats', 's')
+            ->set('s.reprocessFlag', true)
+            ->where('s.dateAdded = :dateAdded')
+            ->andWhere('s.reprocessFlag =  false');
+        $qb->setParameter('dateAdded', $params['dateTo']);
+        $query = $qb->getQuery();
+        $query->execute();
     }
 
     /**
@@ -147,7 +164,7 @@ class CampaignClientStatsRepository extends CommonRepository
      */
     public function getMaxDateToReprocess()
     {
-        $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
+        $query  = $this->getEntityManager()->getConnection()->createQueryBuilder()
             ->select('date_added')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats', 'clccs')
             ->where('clccs.reprocess_flag = 1')

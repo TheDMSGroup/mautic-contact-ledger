@@ -63,6 +63,7 @@ return [
             'mautic.contactledger.clientstats.save'       => [
                 'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\ContactClientStatSaveSubscriber',
                 'arguments' => [
+                    'doctrine.orm.entity_manager',
                 ],
             ],
         ],
