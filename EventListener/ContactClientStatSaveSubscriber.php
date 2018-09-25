@@ -28,8 +28,6 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
 
     /**
      * @param ContactClientStatEvent $event
-     *
-     * @throws \Exception
      */
     public function updateCampaignClientStatsRecords(ContactClientStatEvent $event)
     {
