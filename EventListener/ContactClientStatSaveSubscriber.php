@@ -12,7 +12,6 @@
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use Doctrine\ORM\EntityManager;
-use MauticPlugin\MauticContactClientBundle\Event\ContactClientStatEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ContactClientStatSaveSubscriber implements EventSubscriberInterface
@@ -50,9 +49,9 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @param ContactClientStatEvent $event
+     * @param $event
      */
-    public function updateCampaignClientStatsRecords(ContactClientStatEvent $event)
+    public function updateCampaignClientStatsRecords($event)
     {
         $contact   = $event->getContact();
         $dateAdded = $contact->getDateAdded();
