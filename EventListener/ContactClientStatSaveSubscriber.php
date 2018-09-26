@@ -20,10 +20,13 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
     /**
      * @var array
      */
-    private $updatedDates =[];
+    private $updatedDates = [];
 
     /** @var EntityManager */
     private $em;
+
+    /** CampaignClientStatsRepository $campaignClientStatRepository */
+    private $campaignClientStatRepository;
 
     /**
      * ContactClientStatSaveSubscriber constructor.
@@ -51,8 +54,8 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
      */
     public function updateCampaignClientStatsRecords(ContactClientStatEvent $event)
     {
-        $contact          = $event->getContact();
-        $dateAdded        = $contact->getDateAdded();
+        $contact   = $event->getContact();
+        $dateAdded = $contact->getDateAdded();
         $dateAdded->setTime($dateAdded->format('H'), floor($dateAdded->format('i') / 5) * 5, 0);
         $ts     = $dateAdded->getTimestamp();
         $params = [
@@ -61,7 +64,10 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
 
         if (!isset($this->updatedDates[$ts])) {
             $this->updatedDates[$ts] = true;
-            $this->campaignClientStatRepository->updateExistingEntitiesByDate($params, $this->em); // expects $params['dateTo'] as rounded to 5 mins
+            $this->campaignClientStatRepository->updateExistingEntitiesByDate(
+                $params,
+                $this->em
+            ); // expects $params['dateTo'] as rounded to 5 mins
         }
     }
 }
