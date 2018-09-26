@@ -11,6 +11,7 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\QueryBuilder;
 use Mautic\CoreBundle\Entity\CommonRepository;
 
@@ -142,9 +143,10 @@ class CampaignClientStatsRepository extends CommonRepository
     }
 
     /**
-     * @param $params
+     * @param               $params
+     * @param EntityManager $em
      */
-    public function updateExistingEntitiesByDate($params, $em)
+    public function updateExistingEntitiesByDate($params, EntityManager $em)
     {
         $qb = new QueryBuilder($em);
         $qb->update('MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStats', 's')
@@ -159,7 +161,7 @@ class CampaignClientStatsRepository extends CommonRepository
     /**
      * Gets MAX(date_added) Entity where reprocessFlag = 1.
      *
-     * @return object
+     * @return array
      */
     public function getMaxDateToReprocess()
     {
