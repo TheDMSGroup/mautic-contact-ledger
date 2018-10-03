@@ -407,7 +407,7 @@ class LedgerEntryRepository extends CommonRepository
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'clss')
             ->where('clss.contact_id IN (:leads)')
             ->andWhere('and clss.class_name = "ContactClient"')
-            ->groupBy('clss.contact_id', 'clss.campaign_id'. 'clss.object_id');
+            ->groupBy('clss.contact_id', 'clss.campaign_id'.'clss.object_id');
 
         //client_stats subselect expression
         $clientstatBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
