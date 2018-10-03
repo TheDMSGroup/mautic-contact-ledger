@@ -325,7 +325,7 @@ class LedgerEntryRepository extends CommonRepository
                 'SUM(IF(cc.type = "converted", 1, 0)) AS converted',
                 'SUM(cl.`cost`) AS cost',
                 'SUM(cl.`revenue`) AS revenue',
-                'cl.campaign_id',
+                'cal.campaign_id',
                 'c.name',
                 'c.is_published',
                 '0 as scrubbed',
@@ -356,7 +356,8 @@ class LedgerEntryRepository extends CommonRepository
         $ledgerBuilder
             ->leftJoin('l', '('.$costRevenueBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id')
             ->leftJoin('l', '('.$convertedBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id')
-            ->leftJoin('cl', 'campaigns', 'c', 'cl.campaign_id = c.id');
+            ->leftJoin('l', 'campaign_leadss', 'cal', 'cal.campaign_id = l.id')
+            ->leftJoin('cal', 'campaigns', 'c', 'cal.campaign_id = c.id');
 
         $ledgerBuilder
             ->groupBy('cl.campaign_id');
@@ -402,23 +403,25 @@ class LedgerEntryRepository extends CommonRepository
         //ledger subselect expression
         $ledgerBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $ledgerBuilder
-            ->select('SUM(clss.cost) as cost', 'SUM(clss.revenue) as revenue', 'clss.campaign_id', 'clss.contact_id')
+            ->select('0 as cost', 'SUM(clss.revenue) as revenue', 'clss.campaign_id', 'clss.contact_id', 'clss.object_id as object_id')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'clss')
             ->where('clss.contact_id IN (:leads)')
-            ->groupBy('clss.contact_id', 'clss.campaign_id');
+            ->andWhere('and clss.class_name = "ContactClient"')
+            ->groupBy('clss.contact_id', 'clss.campaign_id'. 'clss.object_id');
 
         //client_stats subselect expression
         $clientstatBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $clientstatBuilder
             ->select(
                 'ccss.contact_id',
+                'ccss.campaign_id',
                 'ccss.contactclient_id',
                 'SUM(IF(ccss.type = "rejected", 1, 0)) AS rejected',
                 'SUM(IF(ccss.type = "converted", 1, 0)) AS converted'
             )
             ->from(MAUTIC_TABLE_PREFIX.'contactclient_stats', 'ccss')
             ->where('ccss.contact_id IN (:leads)')
-            ->groupBy('ccss.contact_id', 'ccss.contactclient_id');
+            ->groupBy('ccss.contact_id', 'ccss.campaign_id', 'ccss.contactclient_id');
 
         // Main Query
         $statBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
@@ -428,7 +431,7 @@ class LedgerEntryRepository extends CommonRepository
                 'SUM(cc.rejected) AS rejected',
                 'SUM(cc.converted) AS converted',
                 'SUM(cl.revenue) AS revenue',
-                'cl.campaign_id',
+                'cal.campaign_id',
                 'lu.utm_source AS utm_source',
                 'c.is_published',
                 'c.name as campaign_name',
@@ -437,15 +440,16 @@ class LedgerEntryRepository extends CommonRepository
             )
             ->from(MAUTIC_TABLE_PREFIX.'leads', 'l')
             ->where('l.date_added BETWEEN :dateFrom AND :dateTo')
-            ->groupBy('cl.campaign_id', 'cc.contactclient_id', 'lu.utm_source')
+            ->groupBy('cal.campaign_id', 'cc.contactclient_id', 'lu.utm_source')
             ->setParameter('leads', $leads, Connection::PARAM_STR_ARRAY)
             ->setParameter('dateFrom', $params['dateFrom'])
             ->setParameter('dateTo', $params['dateTo']);
         $statBuilder
-            ->leftJoin('l', '('.$ledgerBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id')
-            ->innerJoin('l', '('.$clientstatBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id')
+            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaign_leads', 'cal', 'cal.lead_id = l.id')
             ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_utmtags', 'lu', 'l.id = lu.lead_id')
-            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'cl.campaign_id = c.id');
+            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'cl.campaign_id = c.id')
+            ->innerJoin('l', '('.$clientstatBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id AND cc.campaign_id = cal.campaign_id')
+            ->leftJoin('l', '('.$ledgerBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id AND cl.object_id = cc.contactclient_id');
 
         if (isset($params['limit']) && (0 < $params['limit'])) {
             $statBuilder->setMaxResults($params['limit']);
