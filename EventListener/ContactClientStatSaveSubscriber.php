@@ -12,6 +12,7 @@
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use Doctrine\ORM\EntityManager;
+use Mautic\LeadBundle\Entity\Lead as Contact;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ContactClientStatSaveSubscriber implements EventSubscriberInterface
@@ -53,20 +54,25 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
      */
     public function updateCampaignClientStatsRecords($event)
     {
-        $contact   = $event->getContact();
-        $dateAdded = $contact->getDateAdded();
-        $dateAdded->setTime($dateAdded->format('H'), floor($dateAdded->format('i') / 5) * 5, 0);
-        $ts     = $dateAdded->getTimestamp();
-        $params = [
-            'dateTo' => $dateAdded,
-        ];
+        /** @var ContactClientStatEvent $contact */
+        $contact = $event->getContact();
+        if ($contact && $contact instanceof Contact) {
+            $dateAdded = $contact->getDateAdded();
+            if ($dateAdded) {
+                $dateAdded->setTime($dateAdded->format('H'), floor($dateAdded->format('i') / 5) * 5, 0);
+                $ts     = $dateAdded->getTimestamp();
+                $params = [
+                    'dateTo' => $dateAdded,
+                ];
 
-        if (!isset($this->updatedDates[$ts])) {
-            $this->updatedDates[$ts] = true;
-            $this->campaignClientStatRepository->updateExistingEntitiesByDate(
-                $params,
-                $this->em
-            ); // expects $params['dateTo'] as rounded to 5 mins
+                if (!isset($this->updatedDates[$ts])) {
+                    $this->updatedDates[$ts] = true;
+                    $this->campaignClientStatRepository->updateExistingEntitiesByDate(
+                        $params,
+                        $this->em
+                    ); // expects $params['dateTo'] as rounded to 5 mins
+                }
+            }
         }
     }
 }
