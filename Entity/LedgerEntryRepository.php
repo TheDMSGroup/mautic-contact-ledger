@@ -447,9 +447,9 @@ class LedgerEntryRepository extends CommonRepository
         $statBuilder
             ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaign_leads', 'cal', 'cal.lead_id = l.id')
             ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_utmtags', 'lu', 'l.id = lu.lead_id')
-            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'cl.campaign_id = c.id')
             ->innerJoin('l', '('.$clientstatBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id AND cc.campaign_id = cal.campaign_id')
-            ->leftJoin('l', '('.$ledgerBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id AND cl.object_id = cc.contactclient_id');
+            ->leftJoin('l', '('.$ledgerBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id AND cl.object_id = cc.contactclient_id')
+            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'cl.campaign_id = c.id');
 
         if (isset($params['limit']) && (0 < $params['limit'])) {
             $statBuilder->setMaxResults($params['limit']);
