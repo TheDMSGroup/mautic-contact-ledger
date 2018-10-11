@@ -149,8 +149,9 @@ class LedgerEntryRepository extends CommonRepository
                 'IFNULL(clr.revenue, 0)                              AS revenue'
             )
             ->from(MAUTIC_TABLE_PREFIX.'contactsource_stats', 'ss')
+            ->join('ss', MAUTIC_TABLE_PREFIX.'leads', 'l', 'l.id = ss.contact_id')
             ->join('ss', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = ss.campaign_id')
-            ->where('ss.type <> :invalid AND ss.date_added BETWEEN :dateFrom AND :dateTo')
+            ->where('ss.type <> :invalid AND l.date_identified BETWEEN :dateFrom AND :dateTo')
             ->groupBy('ss.campaign_id')
             ->orderBy('COUNT(ss.campaign_id)', 'ASC');
         $costBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
