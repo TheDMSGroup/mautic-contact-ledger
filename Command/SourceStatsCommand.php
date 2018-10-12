@@ -195,7 +195,6 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
                 $dateShift = $this->dateContext->sub(new \DateInterval('PT5M'));
                 $this->setDateContext($dateShift);
                 $this->cache->set('SourceStats', $this->dateContext, null);
-
             }
         } while (true == $repeat);
         // cache last date processed
