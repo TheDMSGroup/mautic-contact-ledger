@@ -149,8 +149,9 @@ class LedgerEntryRepository extends CommonRepository
                 'IFNULL(clr.revenue, 0)                              AS revenue'
             )
             ->from(MAUTIC_TABLE_PREFIX.'contactsource_stats', 'ss')
+            ->join('ss', MAUTIC_TABLE_PREFIX.'leads', 'l', 'l.id = ss.contact_id')
             ->join('ss', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = ss.campaign_id')
-            ->where('ss.type <> :invalid AND ss.date_added BETWEEN :dateFrom AND :dateTo')
+            ->where('ss.type <> :invalid AND l.date_identified BETWEEN :dateFrom AND :dateTo')
             ->groupBy('ss.campaign_id')
             ->orderBy('COUNT(ss.campaign_id)', 'ASC');
         $costBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
@@ -311,7 +312,7 @@ class LedgerEntryRepository extends CommonRepository
             ->from(MAUTIC_TABLE_PREFIX.'leads', 'l1')
             ->leftJoin('l1', MAUTIC_TABLE_PREFIX.'contactsource_stats', 'cs', 'l1.id = cs.contact_id')
             ->where('cs.contact_id IS NULL')
-            ->andWhere('l1.date_added BETWEEN :dateFrom AND :dateTo');
+            ->andWhere('l1.date_identified BETWEEN :dateFrom AND :dateTo');
         $leadBuilder
             ->setParameter('dateFrom', $params['dateFrom'])
             ->setParameter('dateTo', $params['dateTo']);
