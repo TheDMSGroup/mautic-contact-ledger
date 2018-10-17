@@ -189,12 +189,13 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
             $lapTime     = microtime(true);
             $elapsedTime = $lapTime - $timeStart;
             $output->writeln('<comment>--> Elapsed time so far: '.$elapsedTime.'.</comment>');
-            if ($this->dateContext <= $this->dateLimit || $elapsedTime >= 250) { // max out after 4 mins 50 seconds and let next cron kick off. based on 5 min cron run
+            if ($this->dateContext <= $this->dateLimit) {
                 // stop looping
                 $repeat = false;
             } else {
                 $dateShift = $this->dateContext->sub(new \DateInterval('PT5M'));
                 $this->setDateContext($dateShift);
+                $this->cache->set('ClientStats', $this->dateContext, null);
             }
         } while (true == $repeat);
         // cache last date processed
