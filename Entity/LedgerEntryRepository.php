@@ -357,7 +357,7 @@ class LedgerEntryRepository extends CommonRepository
         $ledgerBuilder
             ->leftJoin('l', '('.$costRevenueBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id')
             ->leftJoin('l', '('.$convertedBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id')
-            ->leftJoin('l', 'campaign_leads', 'cal', 'cal.campaign_id = l.id')
+            ->leftJoin('l', 'campaign_leads', 'cal', 'cal.lead_id = c.id')
             ->leftJoin('cal', 'campaigns', 'c', 'cal.campaign_id = c.id');
 
         $ledgerBuilder
