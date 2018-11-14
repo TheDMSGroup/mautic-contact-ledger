@@ -59,6 +59,12 @@ return [
                     'doctrine.orm.entity_manager',
                 ],
             ],
+            'mautic.contactledger.customcontent.subscriber'         => [
+                'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\CustomContentSubscriber',
+                'arguments' => [
+                    'doctrine.orm.entity_manager',
+                ],
+            ],
         ],
         'models' => [
             'mautic.contactledger.model.ledgerentry' => [
