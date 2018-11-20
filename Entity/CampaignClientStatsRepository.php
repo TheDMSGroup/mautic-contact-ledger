@@ -137,7 +137,7 @@ class CampaignClientStatsRepository extends CommonRepository
      *
      * @return array
      */
-    public function getCampaignClientWidgetData($params, $cache_dir = __DIR__)
+    public function getCampaignClientTabData($params, $cache_dir = __DIR__)
     {
         $results = [];
         $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()

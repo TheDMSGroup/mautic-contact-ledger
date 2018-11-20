@@ -10,9 +10,9 @@
  */
 ?>
 <script>
-    var campaignId = {campaignId: <?php echo $campaign->getId(); ?>};
-    mQuery.getScript(mauticBaseUrl + 'plugins/MauticContactLedgerBundle/Assets/build/sourcestats.js');
+    var campaignId =  <?php echo $campaign->getId(); ?>;
+    mQuery.getScript(mauticBaseUrl + 'plugins/MauticContactLedgerBundle/Assets/js/sourcestats.js');
 </script>
 <div class="tab-pane fade in bdr-w-0 page-list" id="sourcestats-container">
-    Source Stats Placeholder
+    <table id="sourcestats-table" class="table table-striped table-bordered dataTable no-footer"></table>
 </div>

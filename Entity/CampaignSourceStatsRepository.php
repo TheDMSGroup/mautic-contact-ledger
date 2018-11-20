@@ -43,8 +43,12 @@ class CampaignSourceStatsRepository extends CommonRepository
      *
      * @return array
      */
-    public function getDashboardRevenueWidgetData($params, $bySource = false, $cache_dir = __DIR__, $groupBy = 'Source Name')
-    {
+    public function getDashboardRevenueWidgetData(
+        $params,
+        $bySource = false,
+        $cache_dir = __DIR__,
+        $groupBy = 'Source Name'
+    ) {
         $results = [];
         $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
             ->select(
@@ -74,7 +78,7 @@ class CampaignSourceStatsRepository extends CommonRepository
                 $query->addGroupBy('cat.title');
             } else {
                 $query->addSelect(
-                'css.contact_source_id as sourceid,
+                    'css.contact_source_id as sourceid,
                 cs.name as sourcename, 
                 css.utm_source as utm_source'
                 );
@@ -129,13 +133,82 @@ class CampaignSourceStatsRepository extends CommonRepository
     }
 
     /**
+     * @param $params
+     * @param $cache_dir
+     *
+     * data for the source stats for a single campaign
+     *
+     * @return array
+     */
+    public function getCampaignSourceTabData($params, $cache_dir = __DIR__)
+    {
+        $results = [];
+        $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
+            ->select(
+                'css.contact_source_id as sourceid,
+            cs.name as sourcename,
+            css.utm_source as utm_source,
+            SUM(css.received) as received,
+            SUM(css.scrubbed) as scrubbed,
+            SUM(css.declined) as declined,
+            SUM(css.converted) as converted,
+            SUM(css.revenue) as revenue,
+            SUM(css.cost) as cost'
+            )
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats', 'css')
+            ->leftJoin('css', MAUTIC_TABLE_PREFIX.'contactsource', 'cs', 'cs.id = css.contact_source_id')
+            ->where('css.date_added BETWEEN :dateFrom AND :dateTo')
+            ->andWhere('css.campaign_id =  :campaignId')
+            ->groupBy('css.contact_source_id', 'css.utm_source')
+            ->orderBy('cs.name', 'ASC');
+
+        $query
+            ->setParameter('dateFrom', $params['dateFrom'])
+            ->setParameter('dateTo', $params['dateTo'])
+            ->setParameter('campaignId', $params['campaignId']);
+
+        $financials = $query->execute()->fetchAll();
+        foreach ($financials as $financial) {
+            $financial['gross_income'] = $financial['revenue'] - $financial['cost'];
+
+            if ($financial['gross_income'] > 0) {
+                $financial['gross_margin'] = 100 * $financial['gross_income'] / $financial['revenue'];
+                $financial['ecpm']         = number_format($financial['gross_income'] / 1000, 4, '.', ',');
+            } else {
+                $financial['gross_margin'] = 0;
+                $financial['ecpm']         = 0;
+            }
+
+            $result = [
+                $financial['sourceid'],
+                $financial['sourcename'],
+                empty($financial['utm_source']) ? '-' : $financial['utm_source'],
+                $financial['received'],
+                $financial['scrubbed'],
+                $financial['declined'],
+                $financial['converted'],
+                number_format($financial['revenue'], 2, '.', ','),
+                number_format($financial['cost'], 2, '.', ','),
+                number_format($financial['gross_income'], 2, '.', ','),
+                $financial['gross_margin'],
+                $financial['ecpm'],
+            ];
+
+            $results['rows'][] = $result;
+        }
+
+        return $results;
+    }
+
+
+    /**
      * Gets MAX(date_added) Entity where reprocessFlag = 1.
      *
      * @return object
      */
     public function getMaxDateToReprocess()
     {
-        $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
+        $query  = $this->getEntityManager()->getConnection()->createQueryBuilder()
             ->select('date_added')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats', 'clcss')
             ->where('clcss.reprocess_flag = 1')
@@ -148,7 +221,7 @@ class CampaignSourceStatsRepository extends CommonRepository
 
     public function getExistingEntitiesByDate($params)
     {
-        $criteria = ['dateAdded'=>$params['dateTo']];
+        $criteria = ['dateAdded' => $params['dateTo']];
 
         $entities = $this->findBy($criteria);
 
