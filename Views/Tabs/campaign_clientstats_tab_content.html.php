@@ -14,6 +14,5 @@
     mQuery.getScript(mauticBaseUrl + 'plugins/MauticContactLedgerBundle/Assets/js/clientstats.js');
 </script>
 <div class="tab-pane fade in bdr-w-0 page-list" id="clientstats-container">
-    Client Stats Placeholder
-    <table id="clientstats-table"></table>
+    <table id="clientstats-table" class="table table-striped table-bordered dataTable no-footer"></table>
 </div>

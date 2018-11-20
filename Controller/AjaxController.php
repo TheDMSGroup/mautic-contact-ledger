@@ -32,7 +32,7 @@ class AjaxController extends CommonAjaxController
      */
     protected function globalRevenueAction(Request $request)
     {
-        $params    = $this->getDateParams();
+        $params    = $this->getDateParams('dashboard');
         $cache_dir =$this->container->getParameter('kernel.cache_dir');
 
         // Get the API payload to test.
@@ -76,7 +76,7 @@ class AjaxController extends CommonAjaxController
      */
     protected function sourceRevenueAction(Request $request)
     {
-        $params    = $this->getDateParams();
+        $params    = $this->getDateParams('dashboard');
         $cache_dir = $this->container->getParameter('kernel.cache_dir');
 
         // Get the API payload to test.
@@ -264,27 +264,40 @@ class AjaxController extends CommonAjaxController
     }
 
     /**
-     * Get date params and set defaults
-     * and convert User timezone to UTC before sending to Queries.
-     *
      * @return array
-     *
      * @throws \Exception
      */
     private function getDateParams()
     {
-        $params    =[];
-        $lastMonth = new \DateTime();
-        $lastMonth->sub(new \DateInterval('P30D'));
-        $today    = new \DateTime();
+        $session = $this->get('session');
+        $dateRange = [];
+        $fromSession = $session->get('mautic.daterange.form.from');
+        $toSession = $session->get('mautic.daterange.form.to');
+        if(!empty($fromSession) && !empty($toSession))
+        {
+            $dateRange = [
+                'dateFrom' => new \DateTime($fromSession),
+                'dateTo' => new \DateTime($toSession)
+            ];
+        }
 
-        $from = new \DateTime($this->request->getSession()
-            ->get('mautic.dashboard.date.from', $lastMonth->format('Y-m-d 00:00:00')));
+
+        if(empty($dateRange) || empty($dateRange['dateFrom']))
+        {
+            // get System Default Date Ranges
+            $dashboardModel = $this->get('mautic.dashboard.model.dashboard');
+            $dateRange = $dashboardModel->getDefaultFilter();
+        }
+
+        // clone so the session var doesnt get modified, just the values passed into tables
+        $from = clone $dateRange['dateFrom'];
+        $to = clone $dateRange['dateTo'];
+        $params    =[];
+
         $from->setTimezone(new \DateTimeZone('UTC'));
 
-        $to   = new \DateTime($this->request->getSession()
-            ->get('mautic.dashboard.date.to', $today->format('Y-m-d')));
-        $to->add(new \DateInterval('P1D'))
+        $to
+            ->add(new \DateInterval('P1D'))
             ->sub(new \DateInterval('PT1S'))
             ->setTimezone(new \DateTimeZone('UTC'));
 

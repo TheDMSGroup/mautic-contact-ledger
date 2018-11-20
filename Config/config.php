@@ -63,6 +63,9 @@ return [
                 'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\CustomContentSubscriber',
                 'arguments' => [
                     'doctrine.orm.entity_manager',
+                    '@mautic.contactledger.model.ledgerentry',
+                    '@mautic.dashboard.model.dashboard',
+                    'session',
                 ],
             ],
         ],
