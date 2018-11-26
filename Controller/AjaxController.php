@@ -185,9 +185,9 @@ class AjaxController extends CommonAjaxController
      */
     protected function clientStatsTabAction(Request $request)
     {
-        $params    = $this->getDateParams();
+        $params               = $this->getDateParams();
         $params['campaignId'] = $request->request->get('campaignId');
-        $cache_dir = $this->container->getParameter('kernel.cache_dir');
+        $cache_dir            = $this->container->getParameter('kernel.cache_dir');
 
         // Get the API payload to test.
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
@@ -205,7 +205,7 @@ class AjaxController extends CommonAjaxController
             'mautic.contactledger.dashboard.client-revenue.header.converted',
             'mautic.contactledger.dashboard.client-revenue.header.revenue',
             'mautic.contactledger.dashboard.client-revenue.header.ecpm',
-            'mautic.contactledger.dashboard.client-revenue.header.rpu'
+            'mautic.contactledger.dashboard.client-revenue.header.rpu',
         ];
         foreach ($headers as $header) {
             $data['columns'][] = [
@@ -226,9 +226,9 @@ class AjaxController extends CommonAjaxController
      */
     protected function sourceStatsTabAction(Request $request)
     {
-        $params    = $this->getDateParams();
+        $params               = $this->getDateParams();
         $params['campaignId'] = $request->request->get('campaignId');
-        $cache_dir = $this->container->getParameter('kernel.cache_dir');
+        $cache_dir            = $this->container->getParameter('kernel.cache_dir');
 
         // Get the API payload to test.
         //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
@@ -249,7 +249,7 @@ class AjaxController extends CommonAjaxController
             'mautic.contactledger.dashboard.source-revenue.header.cost',
             'mautic.contactledger.dashboard.source-revenue.header.gm',
             'mautic.contactledger.dashboard.source-revenue.header.ecpm',
-            'mautic.contactledger.dashboard.source-revenue.header.margin'
+            'mautic.contactledger.dashboard.source-revenue.header.margin',
         ];
         foreach ($headers as $header) {
             $data['columns'][] = [
@@ -307,33 +307,31 @@ class AjaxController extends CommonAjaxController
 
     /**
      * @return array
+     *
      * @throws \Exception
      */
     private function getDateParams()
     {
-        $session = $this->get('session');
-        $dateRange = [];
+        $session     = $this->get('session');
+        $dateRange   = [];
         $fromSession = $session->get('mautic.daterange.form.from');
-        $toSession = $session->get('mautic.daterange.form.to');
-        if(!empty($fromSession) && !empty($toSession))
-        {
+        $toSession   = $session->get('mautic.daterange.form.to');
+        if (!empty($fromSession) && !empty($toSession)) {
             $dateRange = [
                 'dateFrom' => new \DateTime($fromSession),
-                'dateTo' => new \DateTime($toSession)
+                'dateTo'   => new \DateTime($toSession),
             ];
         }
 
-
-        if(empty($dateRange) || empty($dateRange['dateFrom']))
-        {
+        if (empty($dateRange) || empty($dateRange['dateFrom'])) {
             // get System Default Date Ranges
             $dashboardModel = $this->get('mautic.dashboard.model.dashboard');
-            $dateRange = $dashboardModel->getDefaultFilter();
+            $dateRange      = $dashboardModel->getDefaultFilter();
         }
 
         // clone so the session var doesnt get modified, just the values passed into tables
-        $from = clone $dateRange['dateFrom'];
-        $to = clone $dateRange['dateTo'];
+        $from      = clone $dateRange['dateFrom'];
+        $to        = clone $dateRange['dateTo'];
         $params    =[];
 
         $from->setTimezone(new \DateTimeZone('UTC'));

@@ -200,7 +200,6 @@ class CampaignSourceStatsRepository extends CommonRepository
         return $results;
     }
 
-
     /**
      * Gets MAX(date_added) Entity where reprocessFlag = 1.
      *

@@ -128,7 +128,6 @@ class CampaignClientStatsRepository extends CommonRepository
         return $results;
     }
 
-
     /**
      * @param $params
      * @param $cache_dir
@@ -177,7 +176,7 @@ class CampaignClientStatsRepository extends CommonRepository
                 $financial['rpu']          = 0;
             }
 
-            $result= [$financial['clientid']];
+            $result   = [$financial['clientid']];
             $result[] = empty($financial['clientname']) ? '-' : $financial['clientname'];
             $result[] = empty($financial['utm_source']) ? '-' : $financial['utm_source'];
 
@@ -193,7 +192,6 @@ class CampaignClientStatsRepository extends CommonRepository
 
         return $results;
     }
-
 
     /**
      * @param $params
