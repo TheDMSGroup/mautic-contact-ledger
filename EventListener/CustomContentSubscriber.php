@@ -10,37 +10,53 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
+use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\CoreEvents;
-use Mautic\CoreBundle\Event\CustomAssetsEvent;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\DashboardBundle\Model\DashboardModel;
 use MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel;
+use Symfony\Component\HttpFoundation\Session\Session;
 
-/**
- * Class CustomContentSubscriber.
- */
 class CustomContentSubscriber extends CommonSubscriber
 {
+    /**
+     * @var EntityManager
+     */
+    protected $em;
+
     /**
      * @var LedgerEntryModel
      */
     protected $ledgerEntryModel;
+
     /**
      * @var DashboardModel
      */
     protected $dashboardModel;
 
     /**
+     * @var Session
+     */
+    protected $session;
+
+    /**
      * CustomContentSubscriber constructor.
      *
+     * @param EntityManager    $em
      * @param LedgerEntryModel $ledgerEntryModel
      * @param DashboardModel   $dashboardModel
      */
-    public function __construct(LedgerEntryModel $ledgerEntryModel, DashboardModel $dashboardModel)
-    {
+    public function __construct(
+        EntityManager $em,
+        LedgerEntryModel $ledgerEntryModel,
+        DashboardModel $dashboardModel,
+        Session $session
+    ) {
+        $this->em               = $em;
         $this->ledgerEntryModel = $ledgerEntryModel;
         $this->dashboardModel   = $dashboardModel;
+        $this->session          = $session;
     }
 
     /**
@@ -50,51 +66,70 @@ class CustomContentSubscriber extends CommonSubscriber
     {
         return [
             CoreEvents::VIEW_INJECT_CUSTOM_CONTENT => ['getContentInjection', 0],
-            // CoreEvents::VIEW_INJECT_CUSTOM_ASSETS  => ['getAssetInjection', 0],
         ];
     }
 
-    // /**
-    //  * @param CustomAssetsEvent $event
-    //  *
-    //  * @return CustomAssetsEvent
-    //  */
-    // public function getAssetInjection(CustomAssetsEvent $event)
-    // {
-    //     // $location = $this->router->getContext()->getPathInfo();
-    //     //
-    //     // if (preg_match('#campaigns/view/\d+$#', $location)) {
-    //     //     $event->addScript('plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', 'bodyClose');
-    //     //     $event->addStylesheet('plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css');
-    //     // }
-    //     //
-    //     // return $event;
-    // }
-
     /**
      * @param CustomContentEvent $event
-     *
-     * @return CustomContentEvent
-     *
-     * @throws \Doctrine\DBAL\DBALException
      */
     public function getContentInjection(CustomContentEvent $event)
     {
         switch ($event->getViewName()) {
             case 'MauticCampaignBundle:Campaign:details.html.php':
-                if ('left.section.top' === $event->getContext()) {
+
+                $postDateRange = $this->request->request->get('daterange', []); // POST vars
+                if (empty($postDateRange)) {
                     /** @var \DateTime[] $dateRange */
-                    $dateRange = $this->request->request->get('daterange', []);
-                    if (empty($dateRange)) {
-                        $dateRange = $this->dashboardModel->getDefaultFilter();
-                        $dateFrom  = $dateRange['date_from'] = $dateRange['dateFrom'];
-                        $dateTo    = $dateRange['date_to'] = $dateRange['dateTo'];
+                    $sessionDateFrom = $this->session->get('mautic.daterange.form.from'); // session Vars
+                    $sessionDateTo   = $this->session->get('mautic.daterange.form.to');
+                    if (empty($sessionDateFrom) && empty($sessionDateTo)) {
+                        $dateRange = $this->dashboardModel->getDefaultFilter(); // App Default setting
+                        $dateFrom  = new \DateTime($dateRange['date_from']);
+                        $dateTo    =  new \DateTime($dateRange['date_to']);
                     } else {
-                        $dateFrom = $dateRange['dateFrom'] = new \DateTime($dateRange['date_from']);
-                        $dateTo   = $dateRange['dateTo'] = new \DateTime($dateRange['date_to']);
+                        $dateFrom = $dateRange['dateFrom'] = new \DateTime($sessionDateFrom);
+                        $dateTo   = $dateRange['dateTo'] = new \DateTime($sessionDateTo);
                     }
-                    /** @var array $vars */
-                    $vars = $event->getVars();
+                } else {
+                    // convert POST strings to DateTime Objects
+                    $dateFrom = $dateRange['dateFrom'] = new \DateTime($postDateRange['date_from']);
+                    $dateTo   = $dateRange['dateTo'] = new \DateTime($postDateRange['date_to']);
+                    $this->session->set('mautic.daterange.form.from', $postDateRange['date_from']);
+                    $this->session->set('mautic.daterange.form.to', $postDateRange['date_to']);
+                }
+
+                $vars              = $event->getVars();
+                $vars['dateRange'] = $dateRange;
+
+                if ('tabs' === $event->getContext()) {
+                    $tabTemplate = 'MauticContactLedgerBundle:Tabs:campaign_ledger_tabs.html.php';
+                    $event->addTemplate(
+                        $tabTemplate,
+                        [
+                            'tabData' => $vars,
+                        ]
+                    );
+                }
+                if ('tabs.content' === $event->getContext()) {
+                    $tabContentTemplate = 'MauticContactLedgerBundle:Tabs:campaign_sourcestats_tab_content.html.php';
+                    $event->addTemplate(
+                        $tabContentTemplate,
+                        [
+                            'tabData'  => $vars,
+                            'campaign' => $vars['campaign'],
+                        ]
+                    );
+                    $tabContentTemplate = 'MauticContactLedgerBundle:Tabs:campaign_clientstats_tab_content.html.php';
+                    $event->addTemplate(
+                        $tabContentTemplate,
+                        [
+                            'tabData'  => $vars,
+                            'campaign' => $vars['campaign'],
+                        ]
+                    );
+                }
+
+                if ('left.section.top' === $event->getContext()) {
                     /** @var mixed $chartData */
                     $chartData = null;
                     /** @var string $chartTemplate */
@@ -107,9 +142,22 @@ class CustomContentSubscriber extends CommonSubscriber
                             $dateTo
                         );
                     }
-                    $event->addTemplate($chartTemplate, [
-                        'campaignRevenueChartData' => $chartData,
-                    ]);
+                    $date_from = clone $dateFrom;
+                    $date_to   = clone $dateTo;
+
+                    // $action = $this->generateUrl('mautic_campaign_action', ['objectAction' => 'view', 'objectId' => $vars['campaign']]);
+                    $dateRangeForm = $event->getDispatcher()->getContainer()->get('form.factory')->create(
+                        'daterange',
+                        ['date_from' => $date_from->format('Y-m-d'), 'date_to' => $date_to->format('Y-m-d')]
+                    );
+
+                    $event->addTemplate(
+                        $chartTemplate,
+                        [
+                            'campaignRevenueChartData' => $chartData,
+                            'dateRangeForm'            => $dateRangeForm->createView(),
+                        ]
+                    );
                 }
                 break;
             //default:

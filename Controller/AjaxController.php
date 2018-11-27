@@ -177,6 +177,91 @@ class AjaxController extends CommonAjaxController
     }
 
     /**
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     *
+     * @throws \Exception
+     */
+    protected function clientStatsTabAction(Request $request)
+    {
+        $params               = $this->getDateParams();
+        $params['campaignId'] = $request->request->get('campaignId');
+        $cache_dir            = $this->container->getParameter('kernel.cache_dir');
+
+        // Get the API payload to test.
+        //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
+        $em      = $this->dispatcher->getContainer()->get('doctrine.orm.default_entity_manager');
+        $repo    = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStats::class);
+
+        $data       = $repo->getCampaignClientTabData($params, $cache_dir);
+
+        $headers    = [
+            'mautic.contactledger.dashboard.client-revenue.header.clientid',
+            'mautic.contactledger.dashboard.client-revenue.header.clientname',
+            'mautic.contactledger.dashboard.client-revenue.header.utmsource',
+            'mautic.contactledger.dashboard.client-revenue.header.received',
+            'mautic.contactledger.dashboard.client-revenue.header.declined',
+            'mautic.contactledger.dashboard.client-revenue.header.converted',
+            'mautic.contactledger.dashboard.client-revenue.header.revenue',
+            'mautic.contactledger.dashboard.client-revenue.header.ecpm',
+            'mautic.contactledger.dashboard.client-revenue.header.rpu',
+        ];
+        foreach ($headers as $header) {
+            $data['columns'][] = [
+                'title' => $this->translator->trans($header),
+            ];
+        }
+        $data = UTF8Helper::fixUTF8($data);
+
+        return $this->sendJsonResponse($data);
+    }
+
+    /**
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     *
+     * @throws \Exception
+     */
+    protected function sourceStatsTabAction(Request $request)
+    {
+        $params               = $this->getDateParams();
+        $params['campaignId'] = $request->request->get('campaignId');
+        $cache_dir            = $this->container->getParameter('kernel.cache_dir');
+
+        // Get the API payload to test.
+        //$params['limit'] = 1000; // just in case we want to set this, or use a config parameter
+        $em      = $this->dispatcher->getContainer()->get('doctrine.orm.default_entity_manager');
+        $repo    = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats::class);
+
+        $data       = $repo->getCampaignSourceTabData($params, $cache_dir);
+
+        $headers    = [
+            'mautic.contactledger.dashboard.source-revenue.header.sourceid',
+            'mautic.contactledger.dashboard.source-revenue.header.sourcename',
+            'mautic.contactledger.dashboard.source-revenue.header.utmsource',
+            'mautic.contactledger.dashboard.source-revenue.header.received',
+            'mautic.contactledger.dashboard.source-revenue.header.scrubbed',
+            'mautic.contactledger.dashboard.source-revenue.header.declined',
+            'mautic.contactledger.dashboard.source-revenue.header.converted',
+            'mautic.contactledger.dashboard.source-revenue.header.revenue',
+            'mautic.contactledger.dashboard.source-revenue.header.cost',
+            'mautic.contactledger.dashboard.source-revenue.header.gm',
+            'mautic.contactledger.dashboard.source-revenue.header.ecpm',
+            'mautic.contactledger.dashboard.source-revenue.header.margin',
+        ];
+        foreach ($headers as $header) {
+            $data['columns'][] = [
+                'title' => $this->translator->trans($header),
+            ];
+        }
+        $data = UTF8Helper::fixUTF8($data);
+
+        return $this->sendJsonResponse($data);
+    }
+
+    /**
      * @param mixed $value
      *
      * @return string
@@ -221,27 +306,38 @@ class AjaxController extends CommonAjaxController
     }
 
     /**
-     * Get date params and set defaults
-     * and convert User timezone to UTC before sending to Queries.
-     *
      * @return array
      *
      * @throws \Exception
      */
     private function getDateParams()
     {
-        $params    =[];
-        $lastMonth = new \DateTime();
-        $lastMonth->sub(new \DateInterval('P30D'));
-        $today    = new \DateTime();
+        $session     = $this->get('session');
+        $dateRange   = [];
+        $fromSession = $session->get('mautic.daterange.form.from');
+        $toSession   = $session->get('mautic.daterange.form.to');
+        if (!empty($fromSession) && !empty($toSession)) {
+            $dateRange = [
+                'dateFrom' => new \DateTime($fromSession),
+                'dateTo'   => new \DateTime($toSession),
+            ];
+        }
 
-        $from = new \DateTime($this->request->getSession()
-            ->get('mautic.dashboard.date.from', $lastMonth->format('Y-m-d 00:00:00')));
+        if (empty($dateRange) || empty($dateRange['dateFrom'])) {
+            // get System Default Date Ranges
+            $dashboardModel = $this->get('mautic.dashboard.model.dashboard');
+            $dateRange      = $dashboardModel->getDefaultFilter();
+        }
+
+        // clone so the session var doesnt get modified, just the values passed into tables
+        $from      = clone $dateRange['dateFrom'];
+        $to        = clone $dateRange['dateTo'];
+        $params    =[];
+
         $from->setTimezone(new \DateTimeZone('UTC'));
 
-        $to   = new \DateTime($this->request->getSession()
-            ->get('mautic.dashboard.date.to', $today->format('Y-m-d')));
-        $to->add(new \DateInterval('P1D'))
+        $to
+            ->add(new \DateInterval('P1D'))
             ->sub(new \DateInterval('PT1S'))
             ->setTimezone(new \DateTimeZone('UTC'));
 

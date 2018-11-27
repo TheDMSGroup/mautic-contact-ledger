@@ -130,6 +130,71 @@ class CampaignClientStatsRepository extends CommonRepository
 
     /**
      * @param $params
+     * @param $cache_dir
+     *
+     * data for the client stats for a single campaign
+     *
+     * @return array
+     */
+    public function getCampaignClientTabData($params, $cache_dir = __DIR__)
+    {
+        $results = [];
+        $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
+            ->select(
+                'ccs.contact_client_id as clientid,
+                cc.name as clientname, 
+                ccs.utm_source as utm_source,
+                SUM(ccs.received) as received,
+                SUM(ccs.declined) as declined,
+                SUM(ccs.converted) as converted,
+                SUM(ccs.revenue) as revenue,
+                SUM(ccs.cost) as cost'
+            )
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats', 'ccs')
+            ->leftJoin('ccs', MAUTIC_TABLE_PREFIX.'contactclient', 'cc', 'cc.id = ccs.contact_client_id')
+            ->where('ccs.date_added BETWEEN :dateFrom AND :dateTo')
+            ->andWhere('ccs.campaign_id =  :campaignId')
+            ->groupBy('ccs.contact_client_id', 'ccs.utm_source')
+            ->orderBy('cc.name', 'ASC');
+
+        $query
+            ->setParameter('dateFrom', $params['dateFrom'])
+            ->setParameter('dateTo', $params['dateTo'])
+            ->setParameter('campaignId', $params['campaignId']);
+
+        $financials = $query->execute()->fetchAll();
+        foreach ($financials as $financial) {
+            $financial['gross_income'] = $financial['revenue'] - $financial['cost'];
+
+            if ($financial['gross_income'] > 0) {
+                $financial['gross_margin'] = 100 * $financial['gross_income'] / $financial['revenue'];
+                $financial['ecpm']         = number_format($financial['gross_income'] / 1000, 4, '.', ',');
+                $financial['rpu']          = number_format($financial['revenue'] / $financial['received'], 4, '.', ',');
+            } else {
+                $financial['gross_margin'] = 0;
+                $financial['ecpm']         = 0;
+                $financial['rpu']          = 0;
+            }
+
+            $result   = [$financial['clientid']];
+            $result[] = empty($financial['clientname']) ? '-' : $financial['clientname'];
+            $result[] = empty($financial['utm_source']) ? '-' : $financial['utm_source'];
+
+            $result[] = $financial['received'];
+            $result[] = $financial['declined'];
+            $result[] = $financial['converted'];
+            $result[] = number_format($financial['revenue'], 2, '.', ',');
+            $result[] = $financial['ecpm'];
+            $result[] = $financial['rpu'];
+
+            $results['rows'][] = $result;
+        }
+
+        return $results;
+    }
+
+    /**
+     * @param $params
      *
      * @return array
      */
