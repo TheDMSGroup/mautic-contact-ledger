@@ -289,7 +289,7 @@ class CampaignClientStats extends CommonEntity
      *
      * @return $this
      */
-    public function setContactClientId($contactCientId)
+    public function setContactClientId($contactClientId)
     {
         $this->contactClientId = $contactClientId;
 
