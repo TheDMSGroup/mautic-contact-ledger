@@ -12,7 +12,6 @@
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\QueryBuilder;
 use Mautic\CoreBundle\Entity\CommonRepository;
 
 /**
@@ -213,14 +212,21 @@ class CampaignClientStatsRepository extends CommonRepository
      */
     public function updateExistingEntitiesByDate($params, EntityManager $em)
     {
-        $qb = new QueryBuilder($em);
-        $qb->update('MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStats', 's')
-            ->set('s.reprocessFlag', true)
-            ->where('s.dateAdded = :dateAdded')
-            ->andWhere('s.reprocessFlag =  false');
-        $qb->setParameter('dateAdded', $params['dateTo']);
-        $query = $qb->getQuery();
-        $query->execute();
+        $conn           = $em->getConnection();
+        $origAutoCommit = $conn->isAutoCommit();
+        $conn->setAutoCommit(true);
+
+        $qb = $conn->createQueryBuilder();
+        $qb->update($this->getTableName(), 's')
+            ->set('s.reprocess_flag', true)
+            ->where(
+                $qb->expr()->eq('s.reprocess_flag', false),
+                's.date_added = :dateAdded'
+            )
+            ->setParameter('dateAdded', $params['dateTo'])
+            ->execute();
+
+        $conn->setAutoCommit($origAutoCommit);
     }
 
     /**
