@@ -13,6 +13,7 @@ namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
 use Doctrine\ORM\EntityManager;
 use Mautic\LeadBundle\Entity\Lead as Contact;
+use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStatsRepository;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ContactClientStatSaveSubscriber implements EventSubscriberInterface
@@ -25,7 +26,7 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
     /** @var EntityManager */
     private $em;
 
-    /** CampaignClientStatsRepository $campaignClientStatRepository */
+    /** @var CampaignClientStatsRepository */
     private $campaignClientStatRepository;
 
     /**
@@ -60,9 +61,8 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
             $dateAdded = $contact->getDateAdded();
             if ($dateAdded) {
                 $dateAdded->setTime($dateAdded->format('H'), floor($dateAdded->format('i') / 5) * 5, 0);
-                $ts     = $dateAdded->getTimestamp();
                 $params = [
-                    'dateTo' => $dateAdded->format('Y-m-d H:i:s'),
+                    'timestampTo' => $dateAdded->getTimestamp(),
                 ];
 
                 if (!isset($this->updatedDates[$ts])) {

@@ -221,7 +221,7 @@ class CampaignClientStatsRepository extends CommonRepository
             ->set('s.reprocess_flag', true)
             ->where(
                 $qb->expr()->eq('s.reprocess_flag', false),
-                's.date_added = :dateAdded'
+                's.date_added = FROM_UNIXTIME(:dateAdded)'
             )
             ->setParameter('dateAdded', $params['dateTo'])
             ->execute();
