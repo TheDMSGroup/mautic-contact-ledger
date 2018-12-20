@@ -61,8 +61,9 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
             $dateAdded = $contact->getDateAdded();
             if ($dateAdded) {
                 $dateAdded->setTime($dateAdded->format('H'), floor($dateAdded->format('i') / 5) * 5, 0);
+                $ts = $dateAdded->getTimestamp();
                 $params = [
-                    'dateTo' => $dateAdded->getTimestamp(),
+                    'dateTo' => $ts,
                 ];
 
                 if (!isset($this->updatedDates[$ts])) {
