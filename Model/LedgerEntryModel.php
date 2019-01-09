@@ -16,6 +16,7 @@ use Mautic\CoreBundle\Helper\Chart\ChartQuery;
 use Mautic\CoreBundle\Model\AbstractCommonModel;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry;
+use MauticPlugin\MauticContactLedgerBundle\Event\ChartDataAlterEvent;
 
 /**
  * class LedgerEntryModel.
@@ -139,14 +140,38 @@ class LedgerEntryModel extends AbstractCommonModel
         $dbunit           = '%Y %U' == $dbunit ? '%Y week %u' : $dbunit;
         $dbunit           = '%Y-%m' == $dbunit ? '%M %Y' : $dbunit;
 
-        $data = $this->getRepository()->getCampaignRevenueData($campaign, $dateFrom, $dateTo, $unit, $dbunit, $cache_dir);
+        $data = $this->getRepository()->getCampaignRevenueData(
+            $campaign,
+            $dateFrom,
+            $dateTo,
+            $unit,
+            $dbunit,
+            $cache_dir
+        );
+
+        // Allow other bundles to alter the data before rendering
+        $event = new ChartDataAlterEvent(
+            'campaign.revenue.chart',
+            [
+                'campaign' => $campaign,
+                'dateFrom' => $dateFrom,
+                'dateTo'   => $dateTo,
+                'unit'     => $unit,
+                'dbunit'   => $dbunit,
+                'cacheDir' => $cache_dir,
+            ], $data
+        );
+        $this->dispatcher->dispatch('mautic.contactledger.chartdata.alter', $event);
+        $data = $event->getData();
+
+        // Prepare data for chart rendering
 
         // fix when only 1 result
         if (1 == count($data)) {
             $data = $this->fixSingleResultForCharts($data, $unit, $dbunit);
         }
-
         if (!empty($data)) {
+
             $defaultDollars = self::formatDollar(0);
             foreach ($data as $item) {
                 $labels[] = $item['label'];
@@ -311,7 +336,14 @@ class LedgerEntryModel extends AbstractCommonModel
         $dbunit           = '%Y %U' == $dbunit ? '%Y week %u' : $dbunit;
         $dbunit           = '%Y-%m' == $dbunit ? '%M %Y' : $dbunit;
 
-        $results = $this->getRepository()->getCampaignRevenueData($campaign, $dateFrom, $dateTo, $unit, $dbunit, $cache_dir);
+        $results = $this->getRepository()->getCampaignRevenueData(
+            $campaign,
+            $dateFrom,
+            $dateTo,
+            $unit,
+            $dbunit,
+            $cache_dir
+        );
 
         foreach ($results as $result) {
             $result['label']   = $result['label'];
