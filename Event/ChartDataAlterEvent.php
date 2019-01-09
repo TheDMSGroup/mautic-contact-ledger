@@ -45,9 +45,10 @@ class ChartDataAlterEvent extends Event
         $data
     ) {
         $this->chartName = $chartName;
-        $this->data = $data;
-        $this->params  = $params;
+        $this->data      = $data;
+        $this->params    = $params;
     }
+
     /**
      * @return string
      */
@@ -72,6 +73,7 @@ class ChartDataAlterEvent extends Event
     public function setData($data)
     {
         $this->data = $data;
+
         return $this;
     }
 

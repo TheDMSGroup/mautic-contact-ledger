@@ -171,7 +171,6 @@ class LedgerEntryModel extends AbstractCommonModel
             $data = $this->fixSingleResultForCharts($data, $unit, $dbunit);
         }
         if (!empty($data)) {
-
             $defaultDollars = self::formatDollar(0);
             foreach ($data as $item) {
                 $labels[] = $item['label'];
@@ -344,6 +343,21 @@ class LedgerEntryModel extends AbstractCommonModel
             $dbunit,
             $cache_dir
         );
+
+        // Allow other bundles to alter the data before rendering
+        $event = new ChartDataAlterEvent(
+            'campaign.revenue.datatable',
+            [
+                'campaign' => $campaign,
+                'dateFrom' => $dateFrom,
+                'dateTo'   => $dateTo,
+                'unit'     => $unit,
+                'dbunit'   => $dbunit,
+                'cacheDir' => $cache_dir,
+            ], $results
+        );
+        $this->dispatcher->dispatch('mautic.contactledger.chartdata.alter', $event);
+        $results = $event->getData();
 
         foreach ($results as $result) {
             $result['label']   = $result['label'];

@@ -37,7 +37,6 @@ final class MauticContactLedgerEvents
      */
     const CLIENT_STATS_GENERATE = 'mautic.contactledger.clientstats.generate';
 
-
     /**
      * Listen for a chartdata.alter event and allow other bundles to alter the ledger chart data.
      */
