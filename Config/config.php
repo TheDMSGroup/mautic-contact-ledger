@@ -17,6 +17,9 @@ return [
 
     'services' => [
         'events' => [
+            'mautic.contactledger.subscriber.context_create'  => [
+                'class' => 'MauticPlugin\MauticContactLedgerBundle\EventListener\ContactLedgerContextSubscriber',
+            ],
             'mautic.contactledger.subscriber.lead'            => [
                 'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\LeadSubscriber',
                 'arguments' => [
@@ -24,14 +27,10 @@ return [
                     '@mautic.contactledger.subscriber.context_create',
                 ],
             ],
-            'mautic.contactledger.subscriber.context_create'  => [
-                'class' => 'MauticPlugin\MauticContactLedgerBundle\EventListener\ContactLedgerContextSubscriber',
-            ],
             'mautic.contactledger.subscriber.context_capture' => [
                 'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\ContactLedgerContextCaptureSubscriber',
                 'arguments' => [
                     '@mautic.contactledger.model.ledgerentry',
-                    '@mautic.contactledger.subscriber.context_create',
                 ],
             ],
             'mautic.contactledger.dashboard.subscriber'       => [

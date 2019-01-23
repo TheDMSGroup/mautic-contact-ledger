@@ -41,6 +41,11 @@ class LedgerEntryModel extends AbstractCommonModel
         $revenue = null,
         $memo = null
     ) {
+        if (null === $lead) {
+            $this->logger->warning('Cannot create a ledger entry without a Contact');
+            return;
+        }
+
         $bundleName = $className = $objectId = null;
 
         if (is_array($actor)) {
@@ -83,7 +88,7 @@ class LedgerEntryModel extends AbstractCommonModel
                 $className = array_pop($pathParts);
                 if ($className === $entryObject[1]) {
                     foreach ($pathParts as $pathPart) {
-                        if (false !== strstr($pathPart, 'Bundle')) {
+                        if (false !== strpos($pathPart, 'Bundle')) {
                             $entryObject[0] = $pathPart;
                             break 2;
                         }
