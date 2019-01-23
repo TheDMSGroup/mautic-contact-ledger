@@ -23,19 +23,14 @@ class ContactLedgerContextCaptureSubscriber extends CommonSubscriber
     /** @var LedgerEntryModel */
     protected $model;
 
-    /** @var mixed */
-    protected $context;
-
     /**
      * LeadSubscriber constructor.
      *
      * @param LedgerEntryModel $model
-     * @param mixed            $context
      */
-    public function __construct(LedgerEntryModel $model, $context = null)
+    public function __construct(LedgerEntryModel $model)
     {
         $this->model   = $model;
-        $this->context = $context;
     }
 
     /**
@@ -53,10 +48,10 @@ class ContactLedgerContextCaptureSubscriber extends CommonSubscriber
      */
     public function contextCapture($event)
     {
-        $lead     = $this->context->getLead();
-        $campaign = $this->context->getCampaign();
-        $actor    = $this->context->getActor();
-        $activity = $this->context->getActivity();
+        $lead     = $event->getLead();
+        $campaign = $event->getCampaign();
+        $actor    = $event->getActor();
+        $activity = $event->getActivity();
 
         $this->model->addEntry($lead, $campaign, $actor, $activity);
     }
