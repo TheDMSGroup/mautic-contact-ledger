@@ -40,7 +40,7 @@ Mautic.loadCampaignSourceStatsTable = function (campaignId) {
                             render: function (data, type, row) {
                                 return '$' + data;
                             },
-                            targets: [Number(6), Number(7)]
+                            targets: [7,8,9]
                         },
 
                         {visible: false, targets: hideCols},
