@@ -146,11 +146,10 @@ Mautic.loadCampaignClientStatsTable = function (campaignId) {
         }
         return numFormat(value);
     }
-}
+};
 
 mQuery(document).ready(function () {
     if (!mQuery('#clientstats-container').hasClass('table-done')) {
         Mautic.loadCampaignClientStatsTable(campaignId);
     }
 });
-

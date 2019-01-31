@@ -143,7 +143,7 @@ Mautic.loadCampaignSourceStatsTable = function (campaignId) {
         }
         return numFormat(value);
     }
-}
+};
 
 mQuery(document).ready(function () {
     if (!mQuery('#sourcestats-container').hasClass('table-done')) {
