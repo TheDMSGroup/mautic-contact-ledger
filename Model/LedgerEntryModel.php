@@ -221,10 +221,10 @@ class LedgerEntryModel extends AbstractCommonModel
                     [
                         'label'                     => 'Profit',
                         'data'                      => $profits,
-                        'backgroundColor'           => 'rgba(51,204,51,0.1)',
-                        'borderColor'               => 'rgba(51,204,51,0.8)',
-                        'pointHoverBackgroundColor' => 'rgba(51,204,51,0.75)',
-                        'pointHoverBorderColor'     => 'rgba(51,204,51,1)',
+                        'backgroundColor'           => 'rgba(51,170,51,0.1)',
+                        'borderColor'               => 'rgba(51,170,51,0.8)',
+                        'pointHoverBackgroundColor' => 'rgba(51,170,51,0.75)',
+                        'pointHoverBorderColor'     => 'rgba(51,170,51,1)',
                     ],
                 ],
             ];
