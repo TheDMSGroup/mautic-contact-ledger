@@ -24,13 +24,15 @@ use MauticPlugin\MauticContactLedgerBundle\Event\ChartDataAlterEvent;
 class LedgerEntryModel extends AbstractCommonModel
 {
     /**
-     * @param Lead              $lead
-     * @param Campaign|null     $campaign
-     * @param array|object|null $actor
-     * @param string            $activity
-     * @param string|float|null $cost
-     * @param string|float|null $revenue
-     * @param string|null       $memo
+     * @param Lead          $lead
+     * @param Campaign|null $campaign
+     * @param null          $actor
+     * @param null          $activity
+     * @param null          $cost
+     * @param null          $revenue
+     * @param null          $memo
+     *
+     * @throws \Exception
      */
     public function addEntry(
         Lead $lead,
@@ -139,6 +141,14 @@ class LedgerEntryModel extends AbstractCommonModel
     }
 
     /**
+     * @return bool|\Doctrine\ORM\EntityRepository|\MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository
+     */
+    public function getRepository()
+    {
+        return $this->em->getRepository('MauticContactLedgerBundle:LedgerEntry');
+    }
+
+    /**
      * @param Campaign  $campaign
      * @param \DateTime $dateFrom
      * @param \DateTime $dateTo
@@ -149,15 +159,14 @@ class LedgerEntryModel extends AbstractCommonModel
      */
     public function getCampaignRevenueChartData(Campaign $campaign, \DateTime $dateFrom, \DateTime $dateTo)
     {
+        $container = $this->dispatcher->getContainer();
         $chartData = ['labels' => [], 'datasets' => []];
         $labels    = $costs = $revenues = $profits = [];
-        $cache_dir = $this->dispatcher->getContainer()->getParameter('kernel.cache_dir');
+        $cache_dir = $container->getParameter('kernel.cache_dir');
 
         $unit             = $this->getTimeUnitFromDateRange($dateFrom, $dateTo);
         $chartQueryHelper = new ChartQuery($this->em->getConnection(), $dateFrom, $dateTo, $unit);
         $dbunit           = $chartQueryHelper->translateTimeUnit($unit);
-        $dbunit           = '%Y %U' == $dbunit ? '%Y week %u' : $dbunit;
-        $dbunit           = '%Y-%m' == $dbunit ? '%M %Y' : $dbunit;
 
         $data = $this->getRepository()->getCampaignRevenueData(
             $campaign,
@@ -186,11 +195,7 @@ class LedgerEntryModel extends AbstractCommonModel
         // Prepare data for chart rendering
 
         // fix when only 1 result
-        if (1 == count($data)) {
-            $data = $this->fixSingleResultForCharts($data, $unit, $dbunit);
-        }
         if (!empty($data)) {
-            $defaultDollars = self::formatDollar(0);
             foreach ($data as $item) {
                 $labels[] = $item['label'];
 
@@ -274,56 +279,6 @@ class LedgerEntryModel extends AbstractCommonModel
     }
 
     /**
-     * @return bool|\Doctrine\ORM\EntityRepository|\MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository
-     */
-    public function getRepository()
-    {
-        return $this->em->getRepository('MauticContactLedgerBundle:LedgerEntry');
-    }
-
-    protected function fixSingleResultForCharts($results, $unit, $dbunit)
-    {
-        $unitStrings = [
-            'H' => '1 Hour',
-            'W' => '1 Week',
-            'D' => '1 Day',
-            'm' => '1 Month',
-            'i' => '1 Minute',
-            's' => '1 Second',
-            'Y' => '1 Year',
-        ];
-
-        $unitBefore = date_sub(
-            new \DateTime($results[0]['label']),
-            date_interval_create_from_date_string($unitStrings[$unit])
-        );
-        $unitAfter  = date_add(
-            new \DateTime($results[0]['label']),
-            date_interval_create_from_date_string($unitStrings[$unit])
-        );
-        array_unshift(
-            $results,
-            [
-                'cost'    => '0',
-                'label'   => $unitBefore->format(str_replace('%', '', $dbunit)),
-                'profit'  => '0',
-                'revenue' => '0',
-            ]
-        );
-        array_push(
-            $results,
-            [
-                'cost'    => '0',
-                'label'   => $unitAfter->format(str_replace('%', '', $dbunit)),
-                'profit'  => '0',
-                'revenue' => '0',
-            ]
-        );
-
-        return $results;
-    }
-
-    /**
      * @param mixed $dollarValue
      *
      * @return string
@@ -351,8 +306,6 @@ class LedgerEntryModel extends AbstractCommonModel
         $unit             = $this->getTimeUnitFromDateRange($dateFrom, $dateTo);
         $chartQueryHelper = new ChartQuery($this->em->getConnection(), $dateFrom, $dateTo, $unit);
         $dbunit           = $chartQueryHelper->translateTimeUnit($unit);
-        $dbunit           = '%Y %U' == $dbunit ? '%Y week %u' : $dbunit;
-        $dbunit           = '%Y-%m' == $dbunit ? '%M %Y' : $dbunit;
 
         $results = $this->getRepository()->getCampaignRevenueData(
             $campaign,
@@ -379,7 +332,6 @@ class LedgerEntryModel extends AbstractCommonModel
         $results = $event->getData();
 
         foreach ($results as $result) {
-            $result['label']   = $result['label'];
             $result['cost']    = self::formatDollar($result['cost']);
             $result['revenue'] = self::formatDollar($result['revenue']);
             $result['profit']  = self::formatDollar($result['profit']);
@@ -398,4 +350,46 @@ class LedgerEntryModel extends AbstractCommonModel
     {
         return $this->getRepository()->getDashboardRevenueWidgetData($params);
     }
+
+    // protected function fixSingleResultForCharts($results, $unit, $dbunit)
+    // {
+    //     $unitStrings = [
+    //         'H' => '1 Hour',
+    //         'W' => '1 Week',
+    //         'D' => '1 Day',
+    //         'm' => '1 Month',
+    //         'i' => '1 Minute',
+    //         's' => '1 Second',
+    //         'Y' => '1 Year',
+    //     ];
+    //
+    //     $unitBefore = date_sub(
+    //         new \DateTime($results[0]['label']),
+    //         date_interval_create_from_date_string($unitStrings[$unit])
+    //     );
+    //     $unitAfter  = date_add(
+    //         new \DateTime($results[0]['label']),
+    //         date_interval_create_from_date_string($unitStrings[$unit])
+    //     );
+    //     array_unshift(
+    //         $results,
+    //         [
+    //             'cost'    => '0',
+    //             'label'   => $unitBefore->format(str_replace('%', '', $dbunit)),
+    //             'profit'  => '0',
+    //             'revenue' => '0',
+    //         ]
+    //     );
+    //     array_push(
+    //         $results,
+    //         [
+    //             'cost'    => '0',
+    //             'label'   => $unitAfter->format(str_replace('%', '', $dbunit)),
+    //             'profit'  => '0',
+    //             'revenue' => '0',
+    //         ]
+    //     );
+    //
+    //     return $results;
+    // }
 }
