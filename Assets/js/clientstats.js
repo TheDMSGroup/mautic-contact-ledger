@@ -1,5 +1,14 @@
 Mautic.loadCampaignClientStatsTable = function (campaignId) {
     var $clienttarget = mQuery('#clientstats-table');
+
+    if ("undefined" === mQuery.fn.dataTable) {
+        mQuery.getScript(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
+            mQuery.getScript(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datetime-moment.js');
+            mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css');
+            mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css');
+        });
+    }
+
     if ($clienttarget.length) {
         mQuery.ajax({
             url: mauticAjaxUrl,
@@ -120,11 +129,10 @@ Mautic.loadCampaignClientStatsTable = function (campaignId) {
     }
 
     function renderClientName (row) {
-
-            if (row[1] !== '') {
-                return '<a href="'+mauticBaseUrl+'s/contactclient/view/' + row[0] + '" class="campaign-name-link" title="' + row[1] + '">' + row[1] + '</a>';
-            }
-            return row[1];
+        if (row[1] !== '') {
+            return '<a href="'+mauticBaseUrl+'s/contactclient/view/' + row[0] + '" class="campaign-name-link" title="' + row[1] + '">' + row[1] + '</a>';
+        }
+        return row[1];
     }
 
     function FormatFooter (column, value, index) {

@@ -1,160 +1,161 @@
 Mautic.loadGlobalRevenueWidget = function () {
     var $globaltarget = mQuery('#global-revenue');
     var $globalwrapper = mQuery('#global-revenue_wrapper');
+
+    if ("undefined" === mQuery.fn.dataTable) {
+        mQuery.getScript(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
+            mQuery.getScript(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datetime-moment.js');
+            mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css');
+            mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css');
+        });
+    }
+
     if ($globaltarget.length) {
         mQuery('#global-revenue:not(.table-initialized):first').addClass('table-initialized').each(function () {
-            mQuery.getScriptCachedOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/js/datatables.min.js', function () {
-                mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/datatables.min.css', function () {
-                    mQuery.getCssOnce(mauticBasePath + '/' + mauticAssetPrefix + 'plugins/MauticContactLedgerBundle/Assets/css/dataTables.fontAwesome.css', function () {
-                        // dependent files loaded, now get the data and render
-                        mQuery.ajax({
-                            url: mauticAjaxUrl,
-                            type: 'POST',
-                            data: {
-                                action: 'plugin:mauticContactLedger:globalRevenue',
-                            },
-                            cache: true,
-                            dataType: 'json',
-                            success: function (response) {
-                                if(mQuery(window).width() < 415){
-                                    var gpaginate = 60;
-                                    var gpageStyle = 'full';
-                                } else {
-                                    var gpaginate = 0;
-                                    var gpageStyle = 'simple_numbers';
-                                }
-
-                                var rowCount = Math.floor(($globaltarget.data('height') - (235 + gpaginate)) / 40);                                mQuery('#global-revenue').DataTable({
-                                    language: {
-                                        emptyTable: 'No results found for this date range and filters.'
-                                    },
-                                    data: response.rows,
-                                    autoFill: true,
-                                    autoWidth: true,
-                                    columns: response.columns,
-                                    order: [[2, 'asc']],
-                                    bLengthChange: false,
-                                    lengthMenu: [[rowCount]],
-                                    dom: '<<lBf>rtip>',
-                                    buttons: [
-                                        'excelHtml5',
-                                        'csvHtml5'
-                                    ],
-                                    pagingType: gpageStyle,
-
-                                    columnDefs: [
-                                        {
-                                            render: function (data, type, row) {
-                                                return renderPublishToggle(row[1], row[0]);
-                                            },
-                                            targets: 0
-                                        },
-                                        {
-                                            render: function (data, type, row) {
-                                                return renderCampaignName(row);
-                                            },
-                                            targets: 2
-                                        },
-                                        {
-                                            render: function (data, type, row) {
-                                                return '$' + data;
-                                            },
-                                            targets: [7, 8, 9, 11]
-                                        },
-                                        {
-                                            render: function (data, type, row) {
-                                                return renderPercentage(row);
-                                            },
-                                            targets: 10
-                                        },
-                                        {visible: false, targets: [1]},
-                                        // {width: '5%', targets: [0]},
-                                        // {width: '20%', targets: [2]}
-                                    ],
-
-                                    footerCallback: function (row, data, start, end, display) {
-                                        if (data && data.length === 0 || typeof data[0] === 'undefined') {
-                                            mQuery('#global-builder-overlay').hide();
-                                            return;
-                                        }
-                                        try {
-                                            // Add table footer if it doesnt exist
-                                            var container = mQuery('#global-revenue');
-                                            var columns = data[0].length;
-                                            if (mQuery('tr.pageTotal').length === 0) {
-                                                var footer = mQuery('<tfoot></tfoot>');
-                                                var tr = mQuery('<tr class=\'pageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
-                                                var tr2 = mQuery('<tr class=\'grandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
-                                                tr.append(mQuery('<td colspan=\'2\'>Page totals</td>'));
-                                                tr2.append(mQuery('<td colspan=\'2\'>Grand totals</td>'));
-                                                for (var i = 3; i < columns; i++) {
-                                                    tr.append(mQuery('<td class=\'td-right\'></td>'));
-                                                    tr2.append(mQuery('<td class=\'td-right\'></td>'));
-                                                }
-                                                footer.append(tr);
-                                                footer.append(tr2);
-                                                container.append(footer);
-                                            }
-
-                                            var api = this.api();
-
-                                            // Remove the formatting to get
-                                            // integer data for summation
-                                            var intVal = function (i) {
-                                                return typeof i === 'string' ? i.replace(/[\$,]/g, '') * 1 : typeof i === 'number' ? i : 0;
-                                            };
-
-                                            var total = mQuery('#' + container[0].id + ' thead th').length;
-                                            var footer1 = mQuery(container).find('tfoot tr:nth-child(1)');
-                                            var footer2 = mQuery(container).find('tfoot tr:nth-child(2)');
-                                            for (var i = 2; i < total; i++) {
-                                                var pageSum = api
-                                                    .column(i + 1, {page: 'current'})
-                                                    .data()
-                                                    .reduce(function (a, b) {
-                                                        return intVal(a) + intVal(b);
-                                                    }, 0);
-                                                var sum = api
-                                                    .column(i + 1)
-                                                    .data()
-                                                    .reduce(function (a, b) {
-                                                        return intVal(a) + intVal(b);
-                                                    }, 0);
-                                                var title = mQuery(container).find('thead th:nth-child(' + (i + 1) + ')').text();
-                                                footer1.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, pageSum, i));
-                                                footer2.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, sum, i));
-                                            }
-                                            mQuery('#global-builder-overlay').hide();
-
-                                        }
-                                        catch (e) {
-                                            console.log(e);
-                                        }
-                                    } // FooterCallback
-                                }); //.DataTables
-                                mQuery('#global-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
-                                mQuery('#global-revenue').css('width', 'auto');
-                                mQuery('#global-revenue').css('display', 'block');
-                                mQuery('#global-revenue').css('overflow-x', 'scroll');
-                                if(mQuery(window).width() < 415)
-                                {
-                                    mQuery("#global-revenue_filter").css("float","left");
-                                    mQuery("#global-revenue_filter").css("max-width","40%");
-                                    mQuery('.dt-buttons.btn-group').css("max-width", "35%");
-                                    mQuery('#global-revenue_paginate').css({
-                                        fontSize: '.7em',
-                                        marginLeft: '-10%'
-                                    });
-                                } else {
-                                mQuery('#global-revenue_paginate').css('margin-top', '-32px');
-
+            // dependent files loaded, now get the data and render
+            mQuery.ajax({
+                url: mauticAjaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'plugin:mauticContactLedger:globalRevenue',
+                },
+                cache: true,
+                dataType: 'json',
+                success: function (response) {
+                    if(mQuery(window).width() < 415){
+                        var gpaginate = 60;
+                        var gpageStyle = 'full';
+                    } else {
+                        var gpaginate = 0;
+                        var gpageStyle = 'simple_numbers';
                     }
 
-                            } //success
-                        }); //ajax
-                    }); //getScriptsCachedOnce - fonteawesome css
-                });//getScriptsCachedOnce - datatables css
-            });  //getScriptsCachedOnce - datatables js
+                    var rowCount = Math.floor(($globaltarget.data('height') - (235 + gpaginate)) / 40);                                mQuery('#global-revenue').DataTable({
+                        language: {
+                            emptyTable: 'No results found for this date range and filters.'
+                        },
+                        data: response.rows,
+                        autoFill: true,
+                        autoWidth: true,
+                        columns: response.columns,
+                        order: [[2, 'asc']],
+                        bLengthChange: false,
+                        lengthMenu: [[rowCount]],
+                        dom: '<<lBf>rtip>',
+                        buttons: [
+                            'excelHtml5',
+                            'csvHtml5'
+                        ],
+                        pagingType: gpageStyle,
+
+                        columnDefs: [
+                            {
+                                render: function (data, type, row) {
+                                    return renderPublishToggle(row[1], row[0]);
+                                },
+                                targets: 0
+                            },
+                            {
+                                render: function (data, type, row) {
+                                    return renderCampaignName(row);
+                                },
+                                targets: 2
+                            },
+                            {
+                                render: function (data, type, row) {
+                                    return '$' + data;
+                                },
+                                targets: [7, 8, 9, 11]
+                            },
+                            {
+                                render: function (data, type, row) {
+                                    return renderPercentage(row);
+                                },
+                                targets: 10
+                            },
+                            {visible: false, targets: [1]},
+                            // {width: '5%', targets: [0]},
+                            // {width: '20%', targets: [2]}
+                        ],
+
+                        footerCallback: function (row, data, start, end, display) {
+                            if (data && data.length === 0 || typeof data[0] === 'undefined') {
+                                mQuery('#global-builder-overlay').hide();
+                                return;
+                            }
+                            try {
+                                // Add table footer if it doesnt exist
+                                var container = mQuery('#global-revenue');
+                                var columns = data[0].length;
+                                if (mQuery('tr.pageTotal').length === 0) {
+                                    var footer = mQuery('<tfoot></tfoot>');
+                                    var tr = mQuery('<tr class=\'pageTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                    var tr2 = mQuery('<tr class=\'grandTotal\' style=\'font-weight: 600; background: #fafafa;\'></tr>');
+                                    tr.append(mQuery('<td colspan=\'2\'>Page totals</td>'));
+                                    tr2.append(mQuery('<td colspan=\'2\'>Grand totals</td>'));
+                                    for (var i = 3; i < columns; i++) {
+                                        tr.append(mQuery('<td class=\'td-right\'></td>'));
+                                        tr2.append(mQuery('<td class=\'td-right\'></td>'));
+                                    }
+                                    footer.append(tr);
+                                    footer.append(tr2);
+                                    container.append(footer);
+                                }
+
+                                var api = this.api();
+
+                                // Remove the formatting to get
+                                // integer data for summation
+                                var intVal = function (i) {
+                                    return typeof i === 'string' ? i.replace(/[\$,]/g, '') * 1 : typeof i === 'number' ? i : 0;
+                                };
+
+                                var total = mQuery('#' + container[0].id + ' thead th').length;
+                                var footer1 = mQuery(container).find('tfoot tr:nth-child(1)');
+                                var footer2 = mQuery(container).find('tfoot tr:nth-child(2)');
+                                for (var i = 2; i < total; i++) {
+                                    var pageSum = api
+                                        .column(i + 1, {page: 'current'})
+                                        .data()
+                                        .reduce(function (a, b) {
+                                            return intVal(a) + intVal(b);
+                                        }, 0);
+                                    var sum = api
+                                        .column(i + 1)
+                                        .data()
+                                        .reduce(function (a, b) {
+                                            return intVal(a) + intVal(b);
+                                        }, 0);
+                                    var title = mQuery(container).find('thead th:nth-child(' + (i + 1) + ')').text();
+                                    footer1.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, pageSum, i));
+                                    footer2.find('td:nth-child(' + (i) + ')').html(FormatFooter(title, sum, i));
+                                }
+                                mQuery('#global-builder-overlay').hide();
+
+                            }
+                            catch (e) {
+                                console.log(e);
+                            }
+                        } // FooterCallback
+                    }); //.DataTables
+                    mQuery('#global-revenue_wrapper .dt-buttons').css({float: "right", marginLeft: "10px"});
+                    mQuery('#global-revenue').css('width', 'auto');
+                    mQuery('#global-revenue').css('display', 'block');
+                    mQuery('#global-revenue').css('overflow-x', 'scroll');
+                    if(mQuery(window).width() < 415)
+                    {
+                        mQuery("#global-revenue_filter").css("float","left");
+                        mQuery("#global-revenue_filter").css("max-width","40%");
+                        mQuery('.dt-buttons.btn-group').css("max-width", "35%");
+                        mQuery('#global-revenue_paginate').css({
+                            fontSize: '.7em',
+                            marginLeft: '-10%'
+                        });
+                    } else {
+                        mQuery('#global-revenue_paginate').css('margin-top', '-32px');
+                    }
+                } //success
+            }); //ajax
         });
     }
 
