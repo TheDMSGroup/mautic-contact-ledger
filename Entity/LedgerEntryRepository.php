@@ -58,11 +58,12 @@ class LedgerEntryRepository extends CommonRepository
      * @param \DateTime $dateTo
      * @param           $unit
      * @param           $dbunit
-     * @param           $cache_dir
+     * @param string    $cache_dir
+     * @param string    $dateFormat
      *
      * @return array
      *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\DBAL\Cache\CacheException
      */
     public function getCampaignRevenueData(
         Campaign $campaign,
@@ -72,43 +73,28 @@ class LedgerEntryRepository extends CommonRepository
         $dbunit,
         $cache_dir = __DIR__
     ) {
-        $resultDateTime = null;
-        $results        = [];
-        $sqlFrom        = new \DateTime($dateFrom->format('Y-m-d'));
-        $sqlFrom->modify('midnight')->setTimeZone(new \DateTimeZone('UTC'));
-
-        $sqlTo = new \DateTime($dateTo->format('Y-m-d'));
-        $sqlTo->modify('midnight +1 day')->setTimeZone(new \DateTimeZone('UTC'));
-
         $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
-
-        $userTZ     = new \DateTime('now');
-        $interval   = abs($userTZ->getOffset() / 3600);
-        $selectExpr = !in_array($unit, ['H', 'i', 's']) ?
-            "DATE_FORMAT(date_added,  '$dbunit')           as label" :
-            "DATE_FORMAT(DATE_SUB(date_added, INTERVAL $interval HOUR), '$dbunit')           as label";
-
         $builder
             ->select(
-                $selectExpr,
-                'SUM(IFNULL(cost, 0.0))                      as cost',
-                'SUM(IFNULL(revenue, 0.0))                   as revenue',
-                'SUM(IFNULL(revenue, 0.0))-SUM(IFNULL(cost, 0.0)) as profit'
+                'DATE_FORMAT(DATE_ADD(date_added, INTERVAL :interval SECOND), :dbUnit) as label',
+                'SUM(IFNULL(cost, 0.0))                                                as cost',
+                'SUM(IFNULL(revenue, 0.0))                                             as revenue',
+                'SUM(IFNULL(revenue, 0.0))-SUM(IFNULL(cost, 0.0))                      as profit'
             )
             ->from('contact_ledger')
             ->where(
-                $builder->expr()->eq(':campaign_id', 'campaign_id'),
-                $builder->expr()->lte(':fromDate', 'date_added'),
-                $builder->expr()->gt(':toDate', 'date_added')
-            );
-
-        $builder->groupBy("DATE_FORMAT(date_added, '$dbunit')")
-            ->orderBy('label', 'ASC');
+                $builder->expr()->eq('campaign_id', ':campaignId'),
+                $builder->expr()->gte('date_added', 'FROM_UNIXTIME(:dateFrom)'),
+                $builder->expr()->lte('date_added', 'FROM_UNIXTIME(:dateTo)')
+            )
+            ->groupBy('label');
 
         // query the database
-        $builder->setParameter(':campaign_id', $campaign->getId(), Type::INTEGER);
-        $builder->setParameter(':fromDate', $sqlFrom, Type::DATETIME);
-        $builder->setParameter(':toDate', $sqlTo, Type::DATETIME);
+        $builder->setParameter(':interval', (new \DateTime())->getOffset(), Type::INTEGER);
+        $builder->setParameter(':dbUnit', $dbunit, Type::STRING);
+        $builder->setParameter(':campaignId', $campaign->getId(), Type::INTEGER);
+        $builder->setParameter(':dateFrom', $dateFrom->getTimestamp(), Type::INTEGER);
+        $builder->setParameter(':dateTo', $dateTo->getTimestamp(), Type::INTEGER);
 
         $cache = new FilesystemCache($cache_dir.'/sql');
 
@@ -119,18 +105,45 @@ class LedgerEntryRepository extends CommonRepository
             new QueryCacheProfile(900, 'campaign-revenue-queries', $cache)
         );
 
-        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $stmt->closeCursor();
 
-        return $results;
+        // Sort and pad-out the results to match the other charts.
+        $intervalMap = [
+            'H' => ['hour', 'Y-m-d H:00'],
+            'd' => ['day', 'Y-m-d'],
+            'W' => ['week', 'Y \w\e\e\k W'],
+            'Y' => ['year', 'Y'],
+            'm' => ['minute', 'Y-m-d H:i'],
+            's' => ['second', 'Y-m-d H:i:s'],
+        ];
+        $interval    = \DateInterval::createFromDateString('1 '.$intervalMap[$unit][0]);
+        $periods     = new \DatePeriod($dateFrom, $interval, $dateTo);
+        $updatedData = [];
+        foreach ($periods as $period) {
+            $dateToCheck   = $period->format($intervalMap[$unit][1]);
+            $dataKey       = array_search($dateToCheck, array_column($data, 'label'));
+            $updatedData[] = [
+                'label'   => $dateToCheck,
+                'cost'    => (false !== $dataKey) ? $data[$dataKey]['cost'] : 0,
+                'revenue' => (false !== $dataKey) ? $data[$dataKey]['revenue'] : 0,
+                'profit'  => (false !== $dataKey) ? $data[$dataKey]['profit'] : 0,
+            ];
+        }
+
+        return $updatedData;
     }
 
     /**
-     * @param      $params
-     * @param bool $bySource
+     * @param        $params
+     * @param bool   $bySource
+     * @param string $cache_dir
+     * @param bool   $realtime
      *
      * @return array
+     *
+     * @throws \Doctrine\DBAL\Cache\CacheException
      */
     public function getCampaignSourceStatsData($params, $bySource = false, $cache_dir = __DIR__, $realtime = true)
     {
@@ -225,15 +238,15 @@ class LedgerEntryRepository extends CommonRepository
         if (empty($financials)) {
             // no data for the time period, so return empty row values
             $financials[0] = [
-                'is_published'     => 0,
-                'campaign_id'      => null,
-                'name'             => null,
-                'received'         => 0,
-                'scrubbed'         => 0,
-                'rejected'         => 0,
-                'converted'        => 0,
-                'revenue'          => 0,
-                'cost'             => 0,
+                'is_published' => 0,
+                'campaign_id'  => null,
+                'name'         => null,
+                'received'     => 0,
+                'scrubbed'     => 0,
+                'rejected'     => 0,
+                'converted'    => 0,
+                'revenue'      => 0,
+                'cost'         => 0,
             ];
             if ($bySource) {
                 $financials[0]['contactsource_id'] = null;
@@ -380,10 +393,13 @@ class LedgerEntryRepository extends CommonRepository
     }
 
     /**
-     * @param      $params
-     * @param bool $bySource
+     * @param        $params
+     * @param string $cache_dir
+     * @param bool   $realtime
      *
      * @return array
+     *
+     * @throws \Doctrine\DBAL\Cache\CacheException
      */
     public function getCampaignClientStatsData($params, $cache_dir = __DIR__, $realtime = true)
     {
@@ -404,7 +420,13 @@ class LedgerEntryRepository extends CommonRepository
         //ledger subselect expression
         $ledgerBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $ledgerBuilder
-            ->select('0 as cost', 'SUM(clss.revenue) as revenue', 'clss.campaign_id', 'clss.contact_id', 'clss.object_id as object_id')
+            ->select(
+                '0 as cost',
+                'SUM(clss.revenue) as revenue',
+                'clss.campaign_id',
+                'clss.contact_id',
+                'clss.object_id as object_id'
+            )
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'clss')
             ->where('clss.contact_id IN (:leads)')
             ->andWhere('clss.class_name = "ContactClient"')
@@ -448,8 +470,18 @@ class LedgerEntryRepository extends CommonRepository
         $statBuilder
             ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaign_leads', 'cal', 'cal.lead_id = l.id')
             ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_utmtags', 'lu', 'l.id = lu.lead_id')
-            ->innerJoin('l', '('.$clientstatBuilder->getSQL().')', 'cc', 'l.id = cc.contact_id AND cc.campaign_id = cal.campaign_id')
-            ->leftJoin('l', '('.$ledgerBuilder->getSQL().')', 'cl', 'l.id = cl.contact_id AND cl.object_id = cc.contactclient_id')
+            ->innerJoin(
+                'l',
+                '('.$clientstatBuilder->getSQL().')',
+                'cc',
+                'l.id = cc.contact_id AND cc.campaign_id = cal.campaign_id'
+            )
+            ->leftJoin(
+                'l',
+                '('.$ledgerBuilder->getSQL().')',
+                'cl',
+                'l.id = cl.contact_id AND cl.object_id = cc.contactclient_id'
+            )
             ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'cl.campaign_id = c.id');
 
         if (isset($params['limit']) && (0 < $params['limit'])) {
