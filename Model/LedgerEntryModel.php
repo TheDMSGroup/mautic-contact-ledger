@@ -216,7 +216,7 @@ class LedgerEntryModel extends AbstractCommonModel
                         'pointHoverBorderColor'     => 'rgba(204,51,51,1)',
                     ],
                     [
-                        'label'                     => 'Reveue',
+                        'label'                     => 'Revenue',
                         'data'                      => $revenues,
                         'backgroundColor'           => 'rgba(51,51,51,0.1)',
                         'borderColor'               => 'rgba(51,51,51,0.8)',
