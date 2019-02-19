@@ -69,19 +69,7 @@ class LedgerEntryModel extends AbstractCommonModel
             ->setMemo($memo)
             ->setCost($cost)
             ->setRevenue($revenue);
-        $this->logger->warning(
-            sprintf(
-                'Adding LedgerEntry with Contact: %d, Campaign: %d, Actor: [%s, %s, %s], Activity: %s, Cost: %s, Revenue: %s',
-                (null !== $lead->getId() ? $lead->getId() : null),
-                (null !== $campaign ? $campaign->getId() : null),
-                $bundleName,
-                $className,
-                $objectId,
-                $activity,
-                $cost,
-                $revenue
-            )
-        );
+
         $this->getRepository()->saveEntity($entry);
     }
 
