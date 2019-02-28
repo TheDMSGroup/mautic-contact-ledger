@@ -61,6 +61,8 @@ class DashboardSubscriber extends MainDashboardSubscriber
      * Set a widget detail when needed.
      *
      * @param WidgetDetailEvent $event
+     *
+     * @throws \Exception
      */
     public function onWidgetDetailGenerate(WidgetDetailEvent $event)
     {
@@ -92,16 +94,18 @@ class DashboardSubscriber extends MainDashboardSubscriber
 
         if ('campaign.revenue' == $event->getType()) {
             $event->setTemplate('MauticContactLedgerBundle:Widgets:revenue.html.php');
+            $event->stopPropagation();
         }
 
         if ('campaign.source.revenue' == $event->getType()) {
             $event->setTemplate('MauticContactLedgerBundle:Widgets:sourceRevenue.html.php');
+            $event->stopPropagation();
         }
 
         if ('campaign.client.revenue' == $event->getType()) {
             $event->setTemplate('MauticContactLedgerBundle:Widgets:clientRevenue.html.php');
+            $event->stopPropagation();
         }
 
-        $event->stopPropagation();
     }
 }
