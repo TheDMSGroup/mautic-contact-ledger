@@ -71,6 +71,7 @@ class LedgerEntryModel extends AbstractCommonModel
             ->setRevenue($revenue);
 
         $this->getRepository()->saveEntity($entry);
+        $this->em->clear('MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry');
     }
 
     /**
