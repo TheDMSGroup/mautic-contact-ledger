@@ -212,21 +212,21 @@ class CampaignClientStatsRepository extends CommonRepository
      */
     public function updateExistingEntitiesByDate($params, EntityManager $em)
     {
-        $conn           = $em->getConnection();
-        $origAutoCommit = $conn->isAutoCommit();
-        $conn->setAutoCommit(true);
+        $now      = new \DateTime();
+        $safeTime = $now->sub(new \DateInterval('PT15M'))->getTimestamp();
 
-        $qb = $conn->createQueryBuilder();
-        $qb->update($this->getTableName(), 's')
-            ->set('s.reprocess_flag', true)
-            ->where(
-                $qb->expr()->eq('s.reprocess_flag', false),
-                's.date_added = FROM_UNIXTIME(:dateAdded)'
-            )
-            ->setParameter('dateAdded', $params['dateTo'])
-            ->execute();
-
-        $conn->setAutoCommit($origAutoCommit);
+        if ($params['dateTo'] < $safeTime) {
+            $qb = $em->getConnection()->createQueryBuilder();
+            $qb->update($this->getTableName(), 's')
+                ->set('s.reprocess_flag', true)
+                ->where(
+                    $qb->expr()->eq('s.reprocess_flag', 0),
+                    $qb->expr()->eq('s.date_added', 'FROM_UNIXTIME(:dateAdded)')
+                )
+                ->setParameter('dateAdded', $params['dateTo'])
+                ->setMaxResults(1)
+                ->execute();
+        }
     }
 
     /**
