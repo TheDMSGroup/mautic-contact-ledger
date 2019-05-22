@@ -418,7 +418,7 @@ class LedgerEntryRepository extends CommonRepository
                 'SUM(IF(cc.type = "converted", 1, 0)) AS converted',
                 'SUM(cc.attribution) AS revenue',
                 'cc.campaign_id',
-                'lu.utm_source AS utm_source',
+                'cc.utm_source AS utm_source',
                 'c.is_published',
                 'c.name as campaign_name',
                 'cc.contactclient_id as contactclient_id',
@@ -428,10 +428,9 @@ class LedgerEntryRepository extends CommonRepository
             ->where('cc.campaign_id IN(:campaignIds)')
             ->andWhere('cc.date_added BETWEEN :dateFrom AND :dateTo')
             ->groupBy('cc.campaign_id', 'cc.contactclient_id', 'lu.utm_source')
-            ->setParameter('campaignIds', $campaignIds, Connection::PARAM_STR_ARRAY)
+            ->setParameter('campaignIds', $campaignIds, Connection::PARAM_INT_ARRAY)
             ->setParameter('dateFrom', $params['dateFrom'])
             ->setParameter('dateTo', $params['dateTo'])
-            ->leftJoin('cc', MAUTIC_TABLE_PREFIX.'lead_utmtags', 'lu', 'cc.contact_id = lu.lead_id')
             ->leftJoin('cc', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'cc.campaign_id = c.id');
 
         if (isset($params['limit']) && (0 < $params['limit'])) {
