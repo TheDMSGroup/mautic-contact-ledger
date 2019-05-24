@@ -427,7 +427,7 @@ class LedgerEntryRepository extends CommonRepository
             ->from(MAUTIC_TABLE_PREFIX.'contactclient_stats', 'cc')
             ->where('cc.campaign_id IN(:campaignIds)')
             ->andWhere('cc.date_added BETWEEN :dateFrom AND :dateTo')
-            ->groupBy('cc.campaign_id', 'cc.contactclient_id', 'lu.utm_source')
+            ->groupBy('cc.campaign_id', 'cc.contactclient_id', 'cc.utm_source')
             ->setParameter('campaignIds', $campaignIds, Connection::PARAM_INT_ARRAY)
             ->setParameter('dateFrom', $params['dateFrom'])
             ->setParameter('dateTo', $params['dateTo'])
