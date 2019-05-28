@@ -403,102 +403,52 @@ class LedgerEntryRepository extends CommonRepository
      */
     public function getCampaignClientStatsData($params, $cache_dir = __DIR__, $realtime = true)
     {
-        // get array of leads first.
-        $leadBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
-        $leadBuilder
-            ->select(
-                'l1.id'
-            )
-            ->from(MAUTIC_TABLE_PREFIX.'leads', 'l1')
-            ->andWhere('l1.date_added BETWEEN :dateFrom AND :dateTo');
-        $leadBuilder
-            ->setParameter('dateFrom', $params['dateFrom'])
-            ->setParameter('dateTo', $params['dateTo']);
+        // get list of campaigns Ids. The indexes on contactclient_stats table require a where clause with campaign_id, so get them all.
+        $campaignBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $campaignBuilder->select('camp.id')
+                        ->from(MAUTIC_TABLE_PREFIX.'campaigns', 'camp');
+        $campaignIds = $campaignBuilder->execute()->fetchAll(PDO::FETCH_COLUMN);
 
-        $leads = $leadBuilder->execute()->fetchAll(PDO::FETCH_COLUMN);
-
-        //ledger subselect expression
-        $ledgerBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
-        $ledgerBuilder
-            ->select(
-                '0 as cost',
-                'SUM(clss.revenue) as revenue',
-                'clss.campaign_id',
-                'clss.contact_id',
-                'clss.object_id as object_id'
-            )
-            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'clss')
-            ->where('clss.contact_id IN (:leads)')
-            ->andWhere('clss.class_name = "ContactClient"')
-            ->groupBy('clss.contact_id', 'clss.campaign_id', 'clss.object_id');
-
-        //client_stats subselect expression
+        // OK now query the contactclient_stats table using the campaign Ids and dates from params
         $clientstatBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $clientstatBuilder
             ->select(
-                'ccss.contact_id',
-                'ccss.campaign_id',
-                'ccss.contactclient_id',
-                'SUM(IF(ccss.type = "rejected", 1, 0)) AS rejected',
-                'SUM(IF(ccss.type = "converted", 1, 0)) AS converted'
-            )
-            ->from(MAUTIC_TABLE_PREFIX.'contactclient_stats', 'ccss')
-            ->where('ccss.contact_id IN (:leads)')
-            ->groupBy('ccss.contact_id', 'ccss.campaign_id', 'ccss.contactclient_id');
-
-        // Main Query
-        $statBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
-        $statBuilder
-            ->select(
-                'COUNT(l.id) AS received',
-                'SUM(cc.rejected) AS rejected',
-                'SUM(cc.converted) AS converted',
-                'SUM(cl.revenue) AS revenue',
-                'cal.campaign_id',
-                'lu.utm_source AS utm_source',
+                'COUNT(cc.contact_id ) AS received',
+                'SUM(IF(cc.type = "rejected", 1, 0)) AS rejected',
+                'SUM(IF(cc.type = "converted", 1, 0)) AS converted',
+                'SUM(cc.attribution) AS revenue',
+                'cc.campaign_id',
+                'cc.utm_source AS utm_source',
                 'c.is_published',
                 'c.name as campaign_name',
                 'cc.contactclient_id as contactclient_id',
                 '0 as cost'
             )
-            ->from(MAUTIC_TABLE_PREFIX.'leads', 'l')
-            ->where('l.date_added BETWEEN :dateFrom AND :dateTo')
-            ->groupBy('cal.campaign_id', 'cc.contactclient_id', 'lu.utm_source')
-            ->setParameter('leads', $leads, Connection::PARAM_STR_ARRAY)
+            ->from(MAUTIC_TABLE_PREFIX.'contactclient_stats', 'cc')
+            ->where('cc.campaign_id IN(:campaignIds)')
+            ->andWhere('cc.date_added BETWEEN :dateFrom AND :dateTo')
+            ->groupBy('cc.campaign_id', 'cc.contactclient_id', 'cc.utm_source')
+            ->setParameter('campaignIds', $campaignIds, Connection::PARAM_INT_ARRAY)
             ->setParameter('dateFrom', $params['dateFrom'])
-            ->setParameter('dateTo', $params['dateTo']);
-        $statBuilder
-            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaign_leads', 'cal', 'cal.lead_id = l.id')
-            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'lead_utmtags', 'lu', 'l.id = lu.lead_id')
-            ->innerJoin(
-                'l',
-                '('.$clientstatBuilder->getSQL().')',
-                'cc',
-                'l.id = cc.contact_id AND cc.campaign_id = cal.campaign_id'
-            )
-            ->leftJoin(
-                'l',
-                '('.$ledgerBuilder->getSQL().')',
-                'cl',
-                'l.id = cl.contact_id AND cl.object_id = cc.contactclient_id'
-            )
-            ->leftJoin('l', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'cl.campaign_id = c.id');
+            ->setParameter('dateTo', $params['dateTo'])
+            ->leftJoin('cc', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'cc.campaign_id = c.id');
 
         if (isset($params['limit']) && (0 < $params['limit'])) {
-            $statBuilder->setMaxResults($params['limit']);
+            $clientstatBuilder->setMaxResults($params['limit']);
         }
         $results         = ['rows' => []];
         $resultsWithKeys = [];
 
         // setup cache
         $cache = new FilesystemCache($cache_dir.'/sql');
-        $statBuilder->getConnection()->getConfiguration()->setResultCacheImpl($cache);
-        $stmt       = $statBuilder->getConnection()->executeCacheQuery(
-            $statBuilder->getSQL(),
-            $statBuilder->getParameters(),
-            $statBuilder->getParameterTypes(),
+        $clientstatBuilder->getConnection()->getConfiguration()->setResultCacheImpl($cache);
+        $stmt       = $clientstatBuilder->getConnection()->executeCacheQuery(
+            $clientstatBuilder->getSQL(),
+            $clientstatBuilder->getParameters(),
+            $clientstatBuilder->getParameterTypes(),
             new QueryCacheProfile(900, 'dashboard-revenue-queries', $cache)
         );
+
         $financials = $stmt->fetchAll();
         $stmt->closeCursor();
 
