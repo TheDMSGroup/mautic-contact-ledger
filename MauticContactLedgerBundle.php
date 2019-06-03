@@ -22,8 +22,6 @@ use Mautic\PluginBundle\Entity\Plugin;
  */
 class MauticContactLedgerBundle extends PluginBundleBase
 {
-    private static $migrations = [Migrations\Version20190603144423::class];
-
     /**
      * Called by PluginController::reloadAction when the addon version does not match what's installed.
      *
@@ -41,14 +39,14 @@ class MauticContactLedgerBundle extends PluginBundleBase
         $queries        = [];
         $fromVersion    = $plugin->getVersion();
 
-        $table = $schema->getTable(MAUTIC_TABLE_PREFIX.'contactsource_stats');
+        $table = $installedSchema->getTable(MAUTIC_TABLE_PREFIX.'contactsource_stats');
         if (!$table->hasIndex('unique_dupe_prevent')) {
-            $queries[] = "ALTER TABLE {$this->prefix}contactsource_stats ADD UNIQUE unique_dupe_prevent(campaign_id, contact_client_id, utm_source, date_added)";
+            $queries[] = 'ALTER TABLE '.MAUTIC_TABLE_PREFIX.'contactsource_stats ADD UNIQUE unique_dupe_prevent(campaign_id, contact_client_id, utm_source, date_added)';
         }
 
-        $table = $schema->getTable(MAUTIC_TABLE_PREFIX.'contactclient_stats');
+        $table = $installedSchema->getTable(MAUTIC_TABLE_PREFIX.'contactclient_stats');
         if (!$table->hasIndex('unique_dupe_prevent')) {
-            $queries[] = "ALTER TABLE {$this->prefix}contactclient_stats ADD UNIQUE unique_dupe_prevent(campaign_id, contact_client_id, utm_source, date_added)";
+            $queries[] = 'ALTER TABLE '.MAUTIC_TABLE_PREFIX.'contactclient_stats ADD UNIQUE unique_dupe_prevent(campaign_id, contact_client_id, utm_source, date_added)';
         }
 
         if (!empty($queries)) {
