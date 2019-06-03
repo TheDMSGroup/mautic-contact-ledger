@@ -11,9 +11,8 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle;
 
-use Doctrine\DBAL\Migrations\SkipMigrationException;
+use Doctrine\DBAL\Migrations\Version;
 use Doctrine\DBAL\Schema\Schema;
-use Mautic\CoreBundle\Doctrine\AbstractMauticMigration;
 use Mautic\CoreBundle\Factory\MauticFactory;
 use Mautic\PluginBundle\Bundle\PluginBundleBase;
 use Mautic\PluginBundle\Entity\Plugin;
@@ -42,20 +41,16 @@ class MauticContactLedgerBundle extends PluginBundleBase
         $queries        = [];
         $fromVersion    = $plugin->getVersion();
 
-        foreach (static::$migrations as $migration) {
-            try {
-                /** @var AbstractMauticMigration $migr */
-                $migr = new $migration();
-                $migr->preUp($installedSchema);
-                $migr->up($installedSchema);
-            } catch (\Exception $e) {
-                if (!($e instanceof SkipMigrationException)) {
-                    throw $e;
-                }
-            }
+        $table = $schema->getTable(MAUTIC_TABLE_PREFIX.'contactsource_stats');
+        if (!$table->hasIndex('unique_dupe_prevent')) {
+            $queries[] = "ALTER TABLE {$this->prefix}contactsource_stats ADD UNIQUE unique_dupe_prevent(campaign_id, contact_client_id, utm_source, date_added)";
         }
 
-        $queries = $installedSchema->toSql($platform);
+        $table = $schema->getTable(MAUTIC_TABLE_PREFIX.'contactclient_stats');
+        if (!$table->hasIndex('unique_dupe_prevent')) {
+            $queries[] = "ALTER TABLE {$this->prefix}contactclient_stats ADD UNIQUE unique_dupe_prevent(campaign_id, contact_client_id, utm_source, date_added)";
+        }
+
         if (!empty($queries)) {
             $db->beginTransaction();
             try {
@@ -65,7 +60,6 @@ class MauticContactLedgerBundle extends PluginBundleBase
                 $db->commit();
             } catch (\Exception $e) {
                 $db->rollback();
-
                 throw $e;
             }
         }
