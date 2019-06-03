@@ -46,8 +46,8 @@ class MauticContactLedgerBundle extends PluginBundleBase
             try {
                 /** @var AbstractMauticMigration $migr */
                 $migr = new $migration();
-                $mirg->preUp($installedSchema);
-                $mirg->up($installedSchema);
+                $migr->preUp($installedSchema);
+                $migr->up($installedSchema);
             } catch (\Exception $e) {
                 if (!($e instanceof SkipMigrationException)) {
                     throw $e;
