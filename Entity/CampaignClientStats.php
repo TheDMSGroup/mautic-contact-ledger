@@ -189,6 +189,8 @@ class CampaignClientStats extends CommonEntity
 
         $builder->addIndex(['campaign_id', 'contact_client_id', 'utm_source'], 'idx_campaign_client_utm')
             ->addIndex(['date_added'], 'idx_dateadded');
+
+        $builder->addUniqueConstraint(['campaign_id', 'contact_client_id', 'utm_source', 'date_added'], 'unique_dupe_insert');
     }
 
     /**

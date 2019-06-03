@@ -341,7 +341,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
                 );
 
                 // 2) Get entities that match date_added
-                $entitiesToReprocess = $this->getEntitiesToReprocess($params, 'MauticContactLedgerBundle:CampaignClientStats'); 
+                $entitiesToReprocess = $this->getEntitiesToReprocess($params, 'MauticContactLedgerBundle:CampaignClientStats');
                 foreach ($entitiesToReprocess as $entityToDelete) {
                     $this->em->remove($entityToDelete);
                 }
@@ -355,8 +355,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
                     $this->em->persist($entity);
                 }
 
-
-                // 5) flush and repeat
+                // 4) flush and repeat
                 $this->em->flush();
                 $timeContext = microtime(true);
                 $contextTime = $timeContext - $timeStart;
