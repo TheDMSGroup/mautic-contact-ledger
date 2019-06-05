@@ -11,6 +11,7 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
+use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Entity\CommonRepository;
 
@@ -216,16 +217,19 @@ class CampaignClientStatsRepository extends CommonRepository
         $safeTime = $now->sub(new \DateInterval('PT15M'))->getTimestamp();
 
         if ($params['dateTo'] < $safeTime) {
-            $qb = $em->getConnection()->createQueryBuilder();
-            $qb->update($this->getTableName(), 's')
-                ->set('s.reprocess_flag', true)
-                ->where(
-                    $qb->expr()->eq('s.reprocess_flag', 0),
-                    $qb->expr()->eq('s.date_added', 'FROM_UNIXTIME(:dateAdded)')
-                )
-                ->setParameter('dateAdded', $params['dateTo'])
-                ->setMaxResults(1)
-                ->execute();
+            try {
+                $qb = $em->getConnection()->createQueryBuilder();
+                $qb->update($this->getTableName(), 's')
+                    ->set('s.reprocess_flag', true)
+                    ->where(
+                        $qb->expr()->eq('s.reprocess_flag', 0),
+                        $qb->expr()->eq('s.date_added', 'FROM_UNIXTIME(:dateAdded)')
+                    )
+                    ->setParameter('dateAdded', $params['dateTo'], Type::INTEGER);
+                $em->getConnection()->getDatabasePlatform()->modifyLimitQuery($qb, 1);
+                $qb->execute();
+            } catch (\Exception $e) {
+            }
         }
     }
 
