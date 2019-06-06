@@ -55,7 +55,7 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
      */
     public function updateCampaignClientStatsRecords($event)
     {
-        /** @var ContactClientStatEvent $contact */
+        /* @var ContactClientStatEvent $contact */
         // $contact = $event->getContact();
         // if ($contact && $contact instanceof Contact) {
         //     $dateAdded = $contact->getDateAdded();
