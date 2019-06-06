@@ -11,6 +11,9 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Connections\MasterSlaveConnection;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Entity\CommonRepository;
@@ -48,7 +51,7 @@ class CampaignClientStatsRepository extends CommonRepository
     public function getDashboardClientWidgetData($params, $cache_dir = __DIR__, $groupBy = 'Client Name')
     {
         $results = [];
-        $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
+        $query   = $this->slaveQueryBuilder()
             ->select(
                 'c.is_published as active,
                 ccs.campaign_id,
@@ -129,6 +132,22 @@ class CampaignClientStatsRepository extends CommonRepository
     }
 
     /**
+     * Create a DBAL QueryBuilder preferring a slave connection if available.
+     *
+     * @return QueryBuilder
+     */
+    private function slaveQueryBuilder()
+    {
+        /** @var Connection $connection */
+        $connection = $this->getEntityManager()->getConnection();
+        if ($connection instanceof MasterSlaveConnection) {
+            $connection->connect('slave');
+        }
+
+        return new QueryBuilder($connection);
+    }
+
+    /**
      * @param $params
      * @param $cache_dir
      *
@@ -139,7 +158,7 @@ class CampaignClientStatsRepository extends CommonRepository
     public function getCampaignClientTabData($params, $cache_dir = __DIR__)
     {
         $results = [];
-        $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
+        $query   = $this->slaveQueryBuilder()
             ->select(
                 'ccs.contact_client_id as clientid,
                 cc.name as clientname, 
@@ -240,7 +259,7 @@ class CampaignClientStatsRepository extends CommonRepository
      */
     public function getMaxDateToReprocess()
     {
-        $query  = $this->getEntityManager()->getConnection()->createQueryBuilder()
+        $query  = $this->slaveQueryBuilder()
             ->select('date_added')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats', 'clccs')
             ->where('clccs.reprocess_flag = 1')
