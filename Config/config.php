@@ -67,6 +67,14 @@ return [
                     'session',
                 ],
             ],
+            'mautic.contactledger.revenueevent.subscriber'         => [
+                'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\RevenueEventSubscriber',
+                'arguments' => [
+                    'doctrine.orm.entity_manager',
+                    '@mautic.contactledger.model.ledgerentry',
+                    '@mautic.dashboard.model.dashboard',
+                ],
+            ],
         ],
         'models' => [
             'mautic.contactledger.model.ledgerentry' => [

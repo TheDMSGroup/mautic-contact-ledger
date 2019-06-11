@@ -41,4 +41,13 @@ class ContactLedgerIntegration extends AbstractIntegration
     {
         return 'none';
     }
+
+    public function appendToForm(&$builder, $data, $formArea)
+    {
+        if ('features' == $formArea) {
+            $builder->add('campaign_list', 'text');
+        }
+
+        //parent::appendToForm($builder, $data, $formArea);
+    }
 }
