@@ -41,12 +41,12 @@ class MauticContactLedgerBundle extends PluginBundleBase
 
         $table = $installedSchema->getTable(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats');
         if (!$table->hasIndex('unique_dupe_prevent')) {
-            $queries[] = 'ALTER TABLE '.MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats ADD UNIQUE unique_dupe_prevent(campaign_id, contact_client_id, utm_source, date_added)';
+            $queries[] = 'ALTER IGNORE TABLE '.MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats ADD UNIQUE unique_dupe_prevent(campaign_id, contact_client_id, utm_source, date_added)';
         }
 
         $table = $installedSchema->getTable(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats');
         if (!$table->hasIndex('unique_dupe_prevent')) {
-            $queries[] = 'ALTER TABLE '.MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats ADD UNIQUE unique_dupe_prevent(campaign_id, contact_source_id, utm_source, date_added)';
+            $queries[] = 'ALTER IGNORE TABLE '.MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats ADD UNIQUE unique_dupe_prevent(campaign_id, contact_source_id, utm_source, date_added)';
         }
 
         if (!empty($queries)) {
