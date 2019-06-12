@@ -42,12 +42,15 @@ class ContactLedgerIntegration extends AbstractIntegration
         return 'none';
     }
 
+    /**
+     * @param \Mautic\PluginBundle\Integration\Form|\Symfony\Component\Form\FormBuilder $builder
+     * @param array                                                                     $data
+     * @param string                                                                    $formArea
+     */
     public function appendToForm(&$builder, $data, $formArea)
     {
         if ('features' == $formArea) {
             $builder->add('campaign_list', 'text');
         }
-
-        //parent::appendToForm($builder, $data, $formArea);
     }
 }

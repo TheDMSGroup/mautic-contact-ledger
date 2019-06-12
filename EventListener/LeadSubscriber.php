@@ -14,6 +14,8 @@ namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 use Mautic\CoreBundle\EventListener\CommonSubscriber;
 use Mautic\LeadBundle\Event\LeadEvent;
 use Mautic\LeadBundle\LeadEvents;
+use MauticPlugin\MauticContactLedgerBundle\Event\RevenueChangeEvent;
+use MauticPlugin\MauticContactLedgerBundle\MauticContactLedgerEvents;
 use MauticPlugin\MauticContactLedgerBundle\Model\LedgerEntryModel;
 use Symfony\Bridge\Monolog\Logger;
 
@@ -99,7 +101,31 @@ class LeadSubscriber extends CommonSubscriber
                     unset($changes['fields']['attribution']);
                     $lead->setChanges($changes);
                 }
+
+                //Revenue Event Webhook(s)
+                //TODO: check for webhooks and campaign enabled
+                $revenueEventServiceOn = true;
+                if ($revenueEventServiceOn) {
+                    $thisCampaignSendsWebhooks = true;
+                    if ($thisCampaignSendsWebhooks) {
+
+                    }
+                }
             }
         }
+    }
+
+    private function dispatchRevenueEventWebhook($campaign, $price)
+    {
+        $payload = [
+            'cid'     => '',
+            'refid'   => '',
+            'clickid' => '',
+            'price'   => '',
+        ];
+
+        $event = new RevenueChangeEvent($payload);
+
+        $this->dispatcher->dispatch(MauticContactLedgerEvents::REVENUE_CHANGE, $event);
     }
 }

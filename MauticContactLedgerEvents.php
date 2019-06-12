@@ -41,4 +41,9 @@ final class MauticContactLedgerEvents
      * Listen for a chartdata.alter event and allow other bundles to alter the ledger chart data.
      */
     const CHART_DATA_ALTER = 'mautic.contactledger.chartdata.alter';
+
+    /**
+     * Listen for attribution changes event to fire Webhook to Engine Track Conversion Service.
+     */
+    const REVENUE_CHANGE = 'mautic.contactledger.revenue.change';
 }
