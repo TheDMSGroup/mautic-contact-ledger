@@ -68,12 +68,12 @@ return [
                 ],
             ],
             'mautic.contactledger.revenueevent.subscriber'         => [
-                'class'     => 'MauticPlugin\MauticContactLedgerBundle\EventListener\RevenueEventSubscriber',
-                'arguments' => [
-                    'doctrine.orm.entity_manager',
-                    '@mautic.contactledger.model.ledgerentry',
-                    '@mautic.dashboard.model.dashboard',
-                ],
+                'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\RevenueEventSubscriber::class,
+                'arguments' => ['payload'],
+            ],
+            'mautic.contactledger.revenuewebhook.subscriber'  => [
+                'class'     => \MauticPlugin\MauticContactLedgerBundle\EventListener\RevenueEventWebhookSubscriber::class,
+                'arguments' => [],
             ],
         ],
         'models' => [

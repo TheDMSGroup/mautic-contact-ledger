@@ -1,11 +1,11 @@
 <?php
 
-namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
+namespace MauticPlugin\MauticRevenueEventBundle\EventListener;
 
 use Mautic\WebhookBundle\EventListener\WebhookSubscriberBase;
-use MauticPlugin\MauticContactLedgerBundle\Event\ContactLedgerContextEvent;
-use MauticPlugin\MauticContactLedgerBundle\Event\RevenueChangeEvent;
-use MauticPlugin\MauticContactLedgerBundle\MauticContactLedgerEvents;
+use MauticPlugin\MauticRevenueEventBundle\Event\RevenueEventContextEvent;
+use MauticPlugin\MauticRevenueEventBundle\Event\RevenueChangeEvent;
+use MauticPlugin\MauticRevenueEventBundle\MauticRevenueEventEvents;
 
 class RevenueEventSubscriber extends WebhookSubscriberBase
 {
@@ -15,18 +15,20 @@ class RevenueEventSubscriber extends WebhookSubscriberBase
     public static function getSubscribedEvents()
     {
         return [
-            MauticContactLedgerEvents::REVENUE_CHANGE => 'onRevenueChange'
+            MauticRevenueEventEvents::REVENUE_CHANGE => 'onRevenueChange'
         ];
     }
 
     /**
-     * @param ContactLedgerContextEvent $event
+     * @param RevenueEventContextEvent $event
      */
     public function onRevenueChange(RevenueChangeEvent $event)
     {
         $payload = $event->getPayload();
 
-        $webhookEvent = $this->getEventWebooksByType(MauticContactLedgerEvents::REVENUE_CHANGE);
+        //trigger_error(json_encode($payload), E_USER_WARNING);
+
+        $webhookEvent = $this->getEventWebooksByType(MauticRevenueEventEvents::REVENUE_CHANGE);
 
         $this->webhookModel->queueWebhooks($webhookEvent, $payload);
     }

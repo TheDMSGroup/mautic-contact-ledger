@@ -108,23 +108,30 @@ class LeadSubscriber extends CommonSubscriber
                 if ($revenueEventServiceOn) {
                     $thisCampaignSendsWebhooks = true;
                     if ($thisCampaignSendsWebhooks) {
-
+                        $this->dispatchRevenueEventWebhook(
+                            $campaign ? $campaign->getId() : 0,
+                            $lead->getId(), //TODO: change to Event/Ledger ID?
+                            $lead->getFieldValue('clickid'),
+                            $newValue
+                        );
                     }
                 }
             }
         }
     }
 
-    private function dispatchRevenueEventWebhook($campaign, $price)
+    private function dispatchRevenueEventWebhook($cid, $refid, $clickid, $price)
     {
         $payload = [
-            'cid'     => '',
-            'refid'   => '',
-            'clickid' => '',
-            'price'   => '',
+            'cid'     => $cid,
+            'refid'   => $refid,
+            'clickid' => $clickid,
+            'price'   => $price,
         ];
 
         $event = new RevenueChangeEvent($payload);
+
+        //trigger_error(json_encode($payload), E_USER_WARNING);
 
         $this->dispatcher->dispatch(MauticContactLedgerEvents::REVENUE_CHANGE, $event);
     }
