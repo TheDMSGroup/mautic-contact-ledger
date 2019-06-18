@@ -43,8 +43,8 @@ class LedgerEntryModel extends AbstractCommonModel
         $revenue = null,
         $memo = null
     ) {
-        if (null === $lead) {
-            $this->logger->warning('Cannot create a ledger entry without a Contact');
+        if (null === $lead || !($lead instanceof Lead)) {
+            $this->logger->error('Cannot create a ledger entry without a Contact');
 
             return;
         }

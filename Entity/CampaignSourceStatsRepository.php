@@ -11,6 +11,9 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Connections\MasterSlaveConnection;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Mautic\CoreBundle\Entity\CommonRepository;
 
 /**
@@ -50,7 +53,7 @@ class CampaignSourceStatsRepository extends CommonRepository
         $groupBy = 'Source Name'
     ) {
         $results = [];
-        $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
+        $query   = $this->slaveQueryBuilder()
             ->select(
                 'c.is_published as active,
                 css.campaign_id,
@@ -133,6 +136,22 @@ class CampaignSourceStatsRepository extends CommonRepository
     }
 
     /**
+     * Create a DBAL QueryBuilder preferring a slave connection if available.
+     *
+     * @return QueryBuilder
+     */
+    private function slaveQueryBuilder()
+    {
+        /** @var Connection $connection */
+        $connection = $this->getEntityManager()->getConnection();
+        if ($connection instanceof MasterSlaveConnection) {
+            $connection->connect('slave');
+        }
+
+        return new QueryBuilder($connection);
+    }
+
+    /**
      * @param $params
      * @param $cache_dir
      *
@@ -143,7 +162,7 @@ class CampaignSourceStatsRepository extends CommonRepository
     public function getCampaignSourceTabData($params, $cache_dir = __DIR__)
     {
         $results = [];
-        $query   = $this->getEntityManager()->getConnection()->createQueryBuilder()
+        $query   = $this->slaveQueryBuilder()
             ->select(
                 'css.contact_source_id as sourceid,
             cs.name as sourcename,
@@ -207,7 +226,7 @@ class CampaignSourceStatsRepository extends CommonRepository
      */
     public function getMaxDateToReprocess()
     {
-        $query  = $this->getEntityManager()->getConnection()->createQueryBuilder()
+        $query  = $this->slaveQueryBuilder()
             ->select('date_added')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats', 'clcss')
             ->where('clcss.reprocess_flag = 1')
