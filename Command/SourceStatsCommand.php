@@ -171,7 +171,7 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
                             $this->em->persist($entity);
                         }
                     }
-                    $this->em->flush();
+                    $this->em->flush(CampaignSourceStats::class);
                 }
             } else {
                 $output->writeln('<comment>--> Data already Exists: '.$this->dateContext->format('Y-m-d H:i:s').'.</comment>');
