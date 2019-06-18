@@ -34,32 +34,8 @@ class MauticContactLedgerBundle extends PluginBundleBase
      */
     public static function onPluginUpdate(Plugin $plugin, MauticFactory $factory, $metadata = null, Schema $installedSchema = null)
     {
-        $db             = $factory->getDatabase();
-        $platform       = $db->getDatabasePlatform()->getName();
-        $queries        = [];
-        $fromVersion    = $plugin->getVersion();
-
-        $table = $installedSchema->getTable(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats');
-        if (!$table->hasIndex('unique_dupe_prevent')) {
-            $queries[] = 'ALTER IGNORE TABLE '.MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats ADD UNIQUE unique_dupe_prevent(campaign_id, contact_client_id, utm_source, date_added)';
-        }
-
-        $table = $installedSchema->getTable(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats');
-        if (!$table->hasIndex('unique_dupe_prevent')) {
-            $queries[] = 'ALTER IGNORE TABLE '.MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_source_stats ADD UNIQUE unique_dupe_prevent(campaign_id, contact_source_id, utm_source, date_added)';
-        }
-
-        if (!empty($queries)) {
-            $db->beginTransaction();
-            try {
-                foreach ($queries as $q) {
-                    $db->query($q);
-                }
-                $db->commit();
-            } catch (\Exception $e) {
-                $db->rollback();
-                throw $e;
-            }
+        if(null !=== $metadata) { 
+            self::updatePluginSchema($metadata, $installedSchema, $factory);
         }
     }
 }
