@@ -294,7 +294,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
                 }
 
                 // 5) flush and repeat
-                $this->em->flush();
+                $this->em->flush(CampaignSourceStats::class);
                 $timeContext = microtime(true);
                 $contextTime = $timeContext - $timeStart;
                 $batchRun    = $timeContext - $batchStart;
@@ -355,8 +355,7 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
                     $this->em->persist($entity);
                 }
 
-                // 4) flush and repeat
-                $this->em->flush();
+                $this->em->flush(CampaignClientStats::class);
                 $timeContext = microtime(true);
                 $contextTime = $timeContext - $timeStart;
                 $batchRun    = $timeContext - $batchStart;

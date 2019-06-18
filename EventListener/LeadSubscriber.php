@@ -96,7 +96,7 @@ class LeadSubscriber extends CommonSubscriber
 
                 if (!$includePast) {
                     // Prevent further events on this change.
-                    unset($changes['fields']['attribution']);
+                    unset($changes['fields']['attribution'], $changes['fields']['dateModified'], $changes['dateModified']);
                     $lead->setChanges($changes);
                 }
             }

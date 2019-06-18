@@ -13,6 +13,7 @@ namespace MauticPlugin\MauticContactLedgerBundle\Command;
 use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Command\ModeratedCommand;
 use Mautic\CoreBundle\Helper\CacheStorageHelper;
+use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStats;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStatsRepository;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
@@ -172,7 +173,7 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
                             $this->em->persist($entity);
                         }
                     }
-                    $this->em->flush();
+                    $this->em->flush(CampaignClientStats::class);
                 }
             } else {
                 $output->writeln('<comment>--> Data already Exists: '.$this->dateContext->format('Y-m-d H:i:s').'.</comment>');

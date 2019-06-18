@@ -14,6 +14,8 @@ namespace MauticPlugin\MauticContactLedgerBundle\Entity;
 use Doctrine\Common\Cache\FilesystemCache;
 use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Connections\MasterSlaveConnection;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Entity\CommonRepository;
@@ -73,7 +75,7 @@ class LedgerEntryRepository extends CommonRepository
         $dbunit,
         $cache_dir = __DIR__
     ) {
-        $builder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $builder = $this->slaveQueryBuilder();
         $builder
             ->select(
                 'DATE_FORMAT(DATE_ADD(date_added, INTERVAL :interval SECOND), :dbUnit) as label',
@@ -136,6 +138,22 @@ class LedgerEntryRepository extends CommonRepository
     }
 
     /**
+     * Create a DBAL QueryBuilder preferring a slave connection if available.
+     *
+     * @return QueryBuilder
+     */
+    private function slaveQueryBuilder()
+    {
+        /** @var Connection $connection */
+        $connection = $this->getEntityManager()->getConnection();
+        if ($connection instanceof MasterSlaveConnection) {
+            $connection->connect('slave');
+        }
+
+        return new QueryBuilder($connection);
+    }
+
+    /**
      * @param        $params
      * @param bool   $bySource
      * @param string $cache_dir
@@ -147,7 +165,7 @@ class LedgerEntryRepository extends CommonRepository
      */
     public function getCampaignSourceStatsData($params, $bySource = false, $cache_dir = __DIR__, $realtime = true)
     {
-        $statBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $statBuilder = $this->slaveQueryBuilder();
         $statBuilder
             ->select(
                 'ss.campaign_id',
@@ -167,13 +185,13 @@ class LedgerEntryRepository extends CommonRepository
             ->where('ss.type <> :invalid AND l.date_identified BETWEEN :dateFrom AND :dateTo')
             ->groupBy('ss.campaign_id')
             ->orderBy('COUNT(ss.campaign_id)', 'ASC');
-        $costBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $costBuilder = $this->slaveQueryBuilder();
         $costBuilder
             ->select('lc.campaign_id', 'SUM(lc.cost) AS cost')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'lc')
             ->groupBy('lc.campaign_id');
         $costJoinCond = 'clc.campaign_id = ss.campaign_id AND ss.date_added BETWEEN :dateFrom AND :dateTo';
-        $revBuilder   = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $revBuilder   = $this->slaveQueryBuilder();
         $revBuilder
             ->select('lr.campaign_id', 'SUM(lr.revenue) AS revenue')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'lr')
@@ -317,7 +335,7 @@ class LedgerEntryRepository extends CommonRepository
     public function getAlternateCampaignSourceData($params, $bySource = false, $cache_dir = __DIR__, $realtime = true)
     {
         // get array of leads first.
-        $leadBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $leadBuilder = $this->slaveQueryBuilder();
         $leadBuilder
             ->select(
                 'l1.id'
@@ -332,7 +350,7 @@ class LedgerEntryRepository extends CommonRepository
         $leads = $leadBuilder->execute()->fetchAll(PDO::FETCH_COLUMN);
 
         // Main Query
-        $ledgerBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $ledgerBuilder = $this->slaveQueryBuilder();
         $ledgerBuilder
             ->select(
                 'COUNT(l.id) AS received',
@@ -351,7 +369,7 @@ class LedgerEntryRepository extends CommonRepository
             ->from('('.$leadBuilder->getSQL().')', 'l');
 
         // cost and revenue expression
-        $costRevenueBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $costRevenueBuilder = $this->slaveQueryBuilder();
         $costRevenueBuilder
             ->select('SUM(clss.cost) as cost', 'SUM(clss.revenue) as revenue', 'clss.campaign_id', 'clss.contact_id')
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger', 'clss')
@@ -360,7 +378,7 @@ class LedgerEntryRepository extends CommonRepository
             ->groupBy('clss.contact_id', 'clss.campaign_id');
 
         // converted expression
-        $convertedBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $convertedBuilder = $this->slaveQueryBuilder();
         $convertedBuilder
             ->select('ccss.type', 'ccss.contact_id', 'ccss.date_added')
             ->from(MAUTIC_TABLE_PREFIX.'contactclient_stats', 'ccss')
@@ -404,13 +422,13 @@ class LedgerEntryRepository extends CommonRepository
     public function getCampaignClientStatsData($params, $cache_dir = __DIR__, $realtime = true)
     {
         // get list of campaigns Ids. The indexes on contactclient_stats table require a where clause with campaign_id, so get them all.
-        $campaignBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $campaignBuilder = $this->slaveQueryBuilder();
         $campaignBuilder->select('camp.id')
-                        ->from(MAUTIC_TABLE_PREFIX.'campaigns', 'camp');
+            ->from(MAUTIC_TABLE_PREFIX.'campaigns', 'camp');
         $campaignIds = $campaignBuilder->execute()->fetchAll(PDO::FETCH_COLUMN);
 
         // OK now query the contactclient_stats table using the campaign Ids and dates from params
-        $clientstatBuilder = $this->getEntityManager()->getConnection()->createQueryBuilder();
+        $clientstatBuilder = $this->slaveQueryBuilder();
         $clientstatBuilder
             ->select(
                 'COUNT(cc.contact_id ) AS received',
@@ -442,7 +460,7 @@ class LedgerEntryRepository extends CommonRepository
         // setup cache
         $cache = new FilesystemCache($cache_dir.'/sql');
         $clientstatBuilder->getConnection()->getConfiguration()->setResultCacheImpl($cache);
-        $stmt       = $clientstatBuilder->getConnection()->executeCacheQuery(
+        $stmt = $clientstatBuilder->getConnection()->executeCacheQuery(
             $clientstatBuilder->getSQL(),
             $clientstatBuilder->getParameters(),
             $clientstatBuilder->getParameterTypes(),

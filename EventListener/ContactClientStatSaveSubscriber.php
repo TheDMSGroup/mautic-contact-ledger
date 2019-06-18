@@ -55,25 +55,25 @@ class ContactClientStatSaveSubscriber implements EventSubscriberInterface
      */
     public function updateCampaignClientStatsRecords($event)
     {
-        /** @var ContactClientStatEvent $contact */
-        $contact = $event->getContact();
-        if ($contact && $contact instanceof Contact) {
-            $dateAdded = $contact->getDateAdded();
-            if ($dateAdded) {
-                $dateAdded->setTime($dateAdded->format('H'), floor($dateAdded->format('i') / 5) * 5, 0);
-                $ts     = $dateAdded->getTimestamp();
-                $params = [
-                    'dateTo' => $ts,
-                ];
-
-                if (!isset($this->updatedDates[$ts])) {
-                    $this->updatedDates[$ts] = true;
-                    $this->campaignClientStatRepository->updateExistingEntitiesByDate(
-                        $params,
-                        $this->em
-                    ); // expects $params['dateTo'] as rounded to 5 mins
-                }
-            }
-        }
+        /* @var ContactClientStatEvent $contact */
+        // $contact = $event->getContact();
+        // if ($contact && $contact instanceof Contact) {
+        //     $dateAdded = $contact->getDateAdded();
+        //     if ($dateAdded) {
+        //         $dateAdded->setTime($dateAdded->format('H'), floor($dateAdded->format('i') / 5) * 5, 0);
+        //         $ts     = $dateAdded->getTimestamp();
+        //         $params = [
+        //             'dateTo' => $ts,
+        //         ];
+        //
+        //         if (!isset($this->updatedDates[$ts])) {
+        //             $this->updatedDates[$ts] = true;
+        //             $this->campaignClientStatRepository->updateExistingEntitiesByDate(
+        //                 $params,
+        //                 $this->em
+        //             ); // expects $params['dateTo'] as rounded to 5 mins
+        //         }
+        //     }
+        // }
     }
 }
