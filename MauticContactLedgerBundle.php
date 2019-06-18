@@ -34,8 +34,6 @@ class MauticContactLedgerBundle extends PluginBundleBase
      */
     public static function onPluginUpdate(Plugin $plugin, MauticFactory $factory, $metadata = null, Schema $installedSchema = null)
     {
-        if(null !=== $metadata) { 
-            self::updatePluginSchema($metadata, $installedSchema, $factory);
-        }
+        self::updatePluginSchema($metadata, $installedSchema, $factory);
     }
 }
