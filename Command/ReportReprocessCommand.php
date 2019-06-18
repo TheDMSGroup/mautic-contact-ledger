@@ -280,6 +280,9 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
 
                 // 2) Get entities that match date_added
                 $entitiesToReprocess = $this->getEntitiesToReprocess($params, 'MauticContactLedgerBundle:CampaignSourceStats');
+                foreach ($entitiesToReprocess as $entityToDelete) {
+                    $this->em->remove($entityToDelete);
+                }
 
                 // 3) reprocess data using this new date criteria
                 $statData = $this->getCampaignSourceStatsData($params);
@@ -288,11 +291,6 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
                     $entity = $this->mapSourceArrayToEntity($stat, $params['dateTo']);
                     $entity->setReprocessFlag(false);
                     $this->em->persist($entity);
-                }
-
-                // 4) purge records from step 2
-                foreach ($entitiesToReprocess as $entityToDelete) {
-                    $this->em->remove($entityToDelete);
                 }
 
                 // 5) flush and repeat
@@ -344,6 +342,9 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
 
                 // 2) Get entities that match date_added
                 $entitiesToReprocess = $this->getEntitiesToReprocess($params, 'MauticContactLedgerBundle:CampaignClientStats');
+                foreach ($entitiesToReprocess as $entityToDelete) {
+                    $this->em->remove($entityToDelete);
+                }
 
                 // 3) reprocess data using this new date criteria
                 $statData = $this->getCampaignClientStatsData($params);
@@ -354,12 +355,6 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
                     $this->em->persist($entity);
                 }
 
-                // 4) purge records from step 2
-                foreach ($entitiesToReprocess as $entityToDelete) {
-                    $this->em->remove($entityToDelete);
-                }
-
-                // 5) flush and repeat
                 $this->em->flush(CampaignClientStats::class);
                 $timeContext = microtime(true);
                 $contextTime = $timeContext - $timeStart;

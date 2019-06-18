@@ -12,7 +12,7 @@
 return [
     'name'        => 'Contact Ledger',
     'description' => 'Adds cost and revenue tracking on a per ler lead basis.',
-    'version'     => '1.0',
+    'version'     => '1.1',
     'author'      => 'Nicholai Bush',
 
     'services' => [
