@@ -281,7 +281,6 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
                 );
 
                 // 2) Get entities that match date_added
-                /** @var CampaignSourceStatsRepository */
                 $entitiesToReprocess = $this->getEntitiesToReprocess($params, 'MauticContactLedgerBundle:CampaignSourceStats');
                 foreach ($entitiesToReprocess as $entityToDelete) {
                     $this->em->remove($entityToDelete);
