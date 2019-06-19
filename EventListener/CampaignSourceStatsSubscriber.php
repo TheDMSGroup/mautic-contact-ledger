@@ -11,6 +11,7 @@
 
 namespace MauticPlugin\MauticContactLedgerBundle\EventListener;
 
+use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -38,6 +39,7 @@ class CampaignSourceStatsSubscriber implements EventSubscriberInterface
             //first check to see if the table has any records in the params range
             // do this before running the more intensive query below
 
+            /** @var LedgerEntryRepository $repo */
             $repo = $em->getRepository(\MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntry::class);
 
             $data = $repo->getCampaignSourceStatsData(

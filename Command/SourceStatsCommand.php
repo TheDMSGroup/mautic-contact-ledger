@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Command\ModeratedCommand;
 use Mautic\CoreBundle\Helper\CacheStorageHelper;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
+use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStatsRepository;
 use MauticPlugin\MauticContactLedgerBundle\Event\ReportStatsGeneratorEvent;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -159,6 +160,7 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
                 $this->dispatcher->dispatch('mautic.contactledger.sourcestats.generate', $event);
 
                 // save entities to DB
+                $entities = [];
                 foreach ($event->getStatsCollection() as $subscriber) {
                     $output->writeln(
                         '<info>--> Pesisting data for '.$context.' using date '.$this->dateContext->format(
@@ -167,12 +169,12 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
                     );
                     if (isset($subscriber[$context]) && !empty($subscriber[$context])) {
                         foreach ($subscriber[$context] as $stat) {
-                            $entity = $this->mapArrayToEntity($stat, $context, $this->dateContext);
-                            $this->em->persist($entity);
+                            $entities[] = $this->mapArrayToEntity($stat, $context, $this->dateContext);
                         }
                     }
-                    $this->em->flush(CampaignSourceStats::class);
                 }
+                $repo->saveEntities($entities);
+                $this->em->clear(CampaignSourceStats::class);
             } else {
                 $output->writeln('<comment>--> Data already Exists: '.$this->dateContext->format('Y-m-d H:i:s').'.</comment>');
 
@@ -291,7 +293,7 @@ class SourceStatsCommand extends ModeratedCommand implements ContainerAwareInter
         $class  = '\MauticPlugin\MauticContactLedgerBundle\Entity\\'.$context;
         $entity = new $class();
         foreach ($fieldsMap[$context] as $entityParam => $statKey) {
-            if (null == $stat[$statKey]) {
+            if (null === $stat[$statKey]) {
                 $stat[$statKey] = '';
             }
             $entity->__set($entityParam, $stat[$statKey]);
