@@ -13,7 +13,9 @@ namespace MauticPlugin\MauticContactLedgerBundle\Command;
 use Doctrine\ORM\EntityManager;
 use Mautic\CoreBundle\Command\ModeratedCommand;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStats;
+use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignClientStatsRepository;
 use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStats;
+use MauticPlugin\MauticContactLedgerBundle\Entity\CampaignSourceStatsRepository;
 use MauticPlugin\MauticContactLedgerBundle\Entity\LedgerEntryRepository;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -287,14 +289,19 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
                 // 3) reprocess data using this new date criteria
                 $statData = $this->getCampaignSourceStatsData($params);
 
+                $entities = [];
                 foreach ($statData as $stat) {
                     $entity = $this->mapSourceArrayToEntity($stat, $params['dateTo']);
                     $entity->setReprocessFlag(false);
-                    $this->em->persist($entity);
+                    $entities[] = $entity;
                 }
 
                 // 5) flush and repeat
-                $this->em->flush(CampaignSourceStats::class);
+                /** @var CampaignSourceStatsRepository $repo */
+                $repo = $this->em->getRepository('MauticContactLedgerBundle:CampaignSourceStats');
+                $repo->saveEntities($entities);
+                $this->em->clear(CampaignSourceStats::class);
+
                 $timeContext = microtime(true);
                 $contextTime = $timeContext - $timeStart;
                 $batchRun    = $timeContext - $batchStart;
@@ -349,13 +356,18 @@ class ReportReprocessCommand extends ModeratedCommand implements ContainerAwareI
                 // 3) reprocess data using this new date criteria
                 $statData = $this->getCampaignClientStatsData($params);
 
+                $entities = [];
                 foreach ($statData as $stat) {
                     $entity = $this->mapClientArrayToEntity($stat, $params['dateTo']);
                     $entity->setReprocessFlag(false);
-                    $this->em->persist($entity);
+                    $entities[] = $entity;
                 }
 
-                $this->em->flush(CampaignClientStats::class);
+                /** @var CampaignClientStatsRepository $repo */
+                $repo = $this->em->getRepository('MauticContactLedgerBundle:CampaignClientStats');
+                $repo->saveEntities($entities);
+                $this->em->clear(CampaignClientStats::class);
+
                 $timeContext = microtime(true);
                 $contextTime = $timeContext - $timeStart;
                 $batchRun    = $timeContext - $batchStart;

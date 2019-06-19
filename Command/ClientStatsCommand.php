@@ -161,6 +161,7 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
                 $this->dispatcher->dispatch('mautic.contactledger.clientstats.generate', $event);
 
                 // save entities to DB
+                $entities = [];
                 foreach ($event->getStatsCollection() as $subscriber) {
                     $output->writeln(
                         '<info>--> Pesisting data for '.$context.' using date '.$this->dateContext->format(
@@ -169,12 +170,12 @@ class ClientStatsCommand extends ModeratedCommand implements ContainerAwareInter
                     );
                     if (isset($subscriber[$context]) && !empty($subscriber[$context])) {
                         foreach ($subscriber[$context] as $stat) {
-                            $entity = $this->mapArrayToEntity($stat, $context, $this->dateContext);
-                            $this->em->persist($entity);
+                            $entities[] = $this->mapArrayToEntity($stat, $context, $this->dateContext);
                         }
                     }
-                    $this->em->flush(CampaignClientStats::class);
                 }
+                $repo->saveEntities($entities);
+                $this->em->clear(CampaignClientStats::class);
             } else {
                 $output->writeln('<comment>--> Data already Exists: '.$this->dateContext->format('Y-m-d H:i:s').'.</comment>');
 
