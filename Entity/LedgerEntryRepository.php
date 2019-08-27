@@ -123,9 +123,10 @@ class LedgerEntryRepository extends CommonRepository
         $interval    = \DateInterval::createFromDateString('1 '.$intervalMap[$unit][0]);
         $periods     = new \DatePeriod($dateFrom, $interval, $dateTo);
         $updatedData = [];
+        $labels      = array_column($data, 'label');
         foreach ($periods as $period) {
             $dateToCheck   = $period->format($intervalMap[$unit][1]);
-            $dataKey       = array_search($dateToCheck, array_column($data, 'label'));
+            $dataKey       = array_search($dateToCheck, $labels);
             $updatedData[] = [
                 'label'   => $dateToCheck,
                 'cost'    => (false !== $dataKey) ? $data[$dataKey]['cost'] : 0,
