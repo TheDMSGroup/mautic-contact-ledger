@@ -83,7 +83,7 @@ class LedgerEntryRepository extends CommonRepository
                 'SUM(IFNULL(revenue, 0.0))                                             as revenue',
                 'SUM(IFNULL(revenue, 0.0))-SUM(IFNULL(cost, 0.0))                      as profit'
             )
-            ->from('contact_ledger')
+            ->from(MAUTIC_TABLE_PREFIX.'contact_ledger')
             ->where(
                 $builder->expr()->eq('campaign_id', ':campaignId'),
                 $builder->expr()->gte('date_added', 'FROM_UNIXTIME(:dateFrom)'),
