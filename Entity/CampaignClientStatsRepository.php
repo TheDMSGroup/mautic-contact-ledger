@@ -63,7 +63,7 @@ class CampaignClientStatsRepository extends CommonRepository
             SUM(ccs.cost) as cost'
             )
             ->from(MAUTIC_TABLE_PREFIX.'contact_ledger_campaign_client_stats', 'ccs')
-            ->join('ccs', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = ccs.campaign_id')
+            ->leftJoin('ccs', MAUTIC_TABLE_PREFIX.'campaigns', 'c', 'c.id = ccs.campaign_id')
             ->leftJoin('ccs', MAUTIC_TABLE_PREFIX.'contactclient', 'cc', 'cc.id = ccs.contact_client_id')
             ->where('ccs.date_added BETWEEN :dateFrom AND :dateTo')
             ->groupBy('ccs.campaign_id')
@@ -174,7 +174,8 @@ class CampaignClientStatsRepository extends CommonRepository
             ->where('ccs.date_added BETWEEN :dateFrom AND :dateTo')
             ->andWhere('ccs.campaign_id =  :campaignId')
             ->groupBy('ccs.contact_client_id', 'ccs.utm_source')
-            ->orderBy('cc.name', 'ASC');
+            ->orderBy('cc.name', 'ASC')
+            ->addOrderBy('ccs.utm_source', 'ASC');
 
         $query
             ->setParameter('dateFrom', $params['dateFrom'])
