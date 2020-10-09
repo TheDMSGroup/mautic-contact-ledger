@@ -67,7 +67,8 @@ class CampaignClientStatsRepository extends CommonRepository
             ->leftJoin('ccs', MAUTIC_TABLE_PREFIX.'contactclient', 'cc', 'cc.id = ccs.contact_client_id')
             ->where('ccs.date_added BETWEEN :dateFrom AND :dateTo')
             ->groupBy('ccs.campaign_id')
-            ->orderBy('c.name', 'ASC');
+            ->orderBy('c.name', 'ASC')
+            ->addOrderBy('ccs.utm_source', 'ASC');
 
         if ('Client Category' == $groupBy) {
             $query->addSelect(
